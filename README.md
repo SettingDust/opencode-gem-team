@@ -28,20 +28,22 @@ npm run sync:agents
 npm run validate:sync
 npm test
 npm run typecheck
-npm run build
+npm run compile
 npm run validate:dist
 npm run validate:no-model-ids
 npm run lint
 ```
 
-`npm test` builds first and runs Node's built-in test runner against `dist/test/**/*.test.js`.
+`npm test` compiles first and runs Node's built-in test runner against `dist/test/**/*.test.js`.
+
+The TypeScript build command is intentionally named `compile` instead of `build`: npm pacote treats a `build` script as git-dependency preparation work, which can make `opencode plugin --global github:SettingDust/opencode-gem-team` fail as `git dep preparation failed` in packaged OpenCode runtimes.
 
 ## Local development install
 
 For local development, use a project fixture and a local package path. This patches only the fixture/project `.opencode/opencode.json` when run from that fixture:
 
 ```sh
-npm run build
+npm run compile
 opencode plugin /absolute/path/to/opencode-gem-team --force
 opencode agent list
 ```

@@ -18,7 +18,8 @@ This document records only evidence that was obtained without real provider/API 
 | Package target detection      | Verified         | OpenCode source inspection of `readPluginManifest` expects one of `exports["./tui"]`, `exports["./server"]`, package `main`, or `oc-themes`; the first local install attempt failed until this repo exposed a server target.   | Source was inspected from public GitHub mirrors/source, not by modifying OpenCode itself.                                      |
 | Package manager behavior      | Partial          | Official docs say npm plugins are installed automatically using Bun and cached under the OpenCode cache. Source inspection shows non-path plugin specs are sent to package resolution, while path specs are file plugins.      | GitHub package spec handling was not verified end-to-end against a published remote repository.                                |
 | GitHub source syntax          | Format observed / end-to-end install Pending | User-approved read-only inspection of the user's global OpenCode config found a plugin entry string with redacted form `"plugin": ["github:<owner>/<repo>#<ref>"]`. | This proves only an observed config entry format. It does not prove this repo installs or loads from GitHub, nor package-manager lifecycle or dist behavior. Do not publish a final command. |
-| `dist` need                   | Partial/Prepared | Because this package's package entrypoints point to `./dist/src/index.js`, package-style installs require `dist/src` to exist. `npm run validate:dist` now checks package exports and import smoke.                            | Whether GitHub remote install specifically needs committed `dist/src` remains dependent on the unverified GitHub install path. |
+| `dist` need                   | Partial/Prepared | Because this package's package entrypoints point to `./dist/src/index.js`, package-style installs require `dist/src` to exist. `npm run compile` creates it and `npm run validate:dist` checks package exports and import smoke. | Whether GitHub remote install specifically needs committed `dist/src` remains dependent on the unverified GitHub install path. |
+| Git dependency lifecycle prep | Fixed in package shape | The GitHub install failure was caused by npm pacote treating `package.json` `scripts.build` as a git-dependency preparation trigger and attempting an inner `npm install` spawn during OpenCode plugin installation. The script is now named `compile`, and `npm run validate:package-scripts` rejects `build`, `prepare`, `prepack`, `preinstall`, `install`, and `postinstall`. | This package-side fix avoids the known pacote prep trigger; remote install/load should still be re-run after publishing the changed package shape. |
 | AC-20 actual request mutation | Partial/Pending  | Tests prove typed/mock `chat.params` mutation of `output.options.model` for opaque complexity model strings only.                                                                                                              | No real provider/API call was made; actual OpenCode runtime request model mutation is not verified.                            |
 
 ## Dist strategy decision
@@ -39,7 +40,7 @@ The project still does **not** claim that GitHub source install is fully verifie
 Verified local development path:
 
 ```sh
-npm run build
+npm run compile
 opencode plugin /absolute/path/to/opencode-gem-team --force
 opencode agent list
 ```

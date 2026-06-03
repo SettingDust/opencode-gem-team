@@ -82,7 +82,7 @@ export async function validateDist(projectRoot = process.cwd()) {
 
   for (const file of requiredFiles) {
     const fullPath = path.join(projectRoot, file)
-    if (!(await exists(fullPath))) failures.push(`missing ${file}; run npm run build`)
+    if (!(await exists(fullPath))) failures.push(`missing ${file}; run npm run compile`)
   }
 
   if (await exists(path.join(projectRoot, "dist", "src", "index.js"))) {
