@@ -2,10 +2,10 @@
   "context_envelope": {
     "meta": {
       "plan_id": "20260603-implement-opencode-gem-team-plugin",
-        "version": 14,
+        "version": 15,
       "updated_at": "2026-06-03",
-      "last_updated": "2026-06-03T00:00:00+08:00",
-      "previous_version_fields_changed": ["meta", "facts", "patterns", "gotchas", "failure_modes", "decisions", "conventions", "final_wave_hardening_results", "codebase_validation", "final_review_readiness"],
+      "last_updated": "2026-06-03T12:00:00+08:00",
+      "previous_version_fields_changed": ["meta", "facts", "patterns", "gotchas", "failure_modes", "decisions", "conventions", "codebase_validation", "model_selection_toast_followup"],
       "created_at": "2026-06-03T00:00:00+08:00",
       "baseline_commit_sha": "ee708a8f9046b46054776345f05bf62b37b188d7",
       "source": [
@@ -21,7 +21,8 @@
         "T07 install/load and dist strategy evidence",
         "T07 reviewer pass findings",
         "final implementation hardening completion",
-        "user-approved redacted global OpenCode config inspection for GitHub plugin source syntax"
+        "user-approved redacted global OpenCode config inspection for GitHub plugin source syntax",
+        "user follow-up decision for default model-selection toast notification"
       ]
     },
     "scope": {
@@ -538,6 +539,22 @@
       {
         "statement": "No commit was created by the implementer; final orchestrator/reviewer must inspect git status, diff, and recent log before any commit.",
         "category": "git"
+      },
+      {
+        "statement": "User decision: model selection should notify by default via toast, and debug_model_routing is not needed.",
+        "category": "ux"
+      },
+      {
+        "statement": "Follow-up source evidence is OpenCode SDK client.tui.showToast() plus opencode-acp reference behavior, not chat.message or session.prompt messaging.",
+        "category": "sdk"
+      },
+      {
+        "statement": "Implementation summary for the follow-up contract is default-enabled toast notification with a minimal compatibility wrapper and in-session memory deduplication; no chat.message or session.prompt path is used.",
+        "category": "routing"
+      },
+      {
+        "statement": "Follow-up validation passed npm test (42 passed), npm run typecheck, npm run compile, npm run lint, npm run validate:no-model-ids, and npm run validate:dist.",
+        "category": "validation"
       }
     ],
     "patterns": [
@@ -590,6 +607,11 @@
         "name": "Deterministic dist forbidden-surface scan",
         "description": "validate:dist scans built dist/src line-by-line for forbidden capability/config strings and reports stable path:line reason failures, with defensive strings allowlisted only in known validation modules.",
         "confidence": 1.0
+      },
+      {
+        "name": "Default toast with session dedup",
+        "description": "Model-selection notification should default to toast via a minimal compatibility wrapper and deduplicate in memory for the active plugin session so repeated routing decisions do not spam the UI.",
+        "confidence": 0.98
       }
     ],
     "gotchas": [
@@ -612,7 +634,10 @@
       "When previewModelRouting upgrades tiers from reasoning-critical or risk signals, keep the tier space to simple, medium, and complex only and do not add per-agent/role model mappings.",
       "validate:dist now scans dist/src for broad forbidden capability strings, but defensive validation/rejection code is intentionally allowlisted only in scoped validation modules.",
       "Package exports pointing to dist/src create a freshness risk if dist is committed or regenerated outside validate:dist; rerun build and validate:dist and inspect git diff before any commit.",
-      "Final hardening left GitHub source install syntax Pending; follow-up redacted global config evidence moved syntax to format observed while GitHub package-manager/lifecycle behavior, remote GitHub dist necessity, repo end-to-end install/load, and AC-20 runtime request model mutation remain honest Pending or Partial/Pending risks."
+      "Final hardening left GitHub source install syntax Pending; follow-up redacted global config evidence moved syntax to format observed while GitHub package-manager/lifecycle behavior, remote GitHub dist necessity, repo end-to-end install/load, and AC-20 runtime request model mutation remain honest Pending or Partial/Pending risks.",
+      "A session.prompt marked ignored: true cannot be described as a true non-context toast equivalent; document that limitation explicitly.",
+      "Default notifications need in-session deduplication to avoid toast spam when the same routing decision repeats.",
+      "If client.tui.showToast is unavailable, compatibility behavior must silently skip notification rather than backfill with chat.message or session.prompt."
     ],
     "failure_modes": [
       {
@@ -654,6 +679,11 @@
         "scenario": "validate:dist allowlist grows beyond defensive validation modules.",
         "symptoms": ["forbidden strings pass in capability implementation modules", "dist scanner no longer reports deterministic path:line reason failures for forbidden config names"],
         "mitigation": "Keep allowlisting limited to dist/src/routing/resolve-model.js(.d.ts) and dist/src/sync/validation.js(.d.ts); add failing validator tests before changing allowlist scope."
+      },
+      {
+        "scenario": "Plugin instance is rebuilt during the same user workflow.",
+        "symptoms": ["in-memory dedup state is lost", "the same default model-selection toast can appear again after reload/reconstruction"],
+        "mitigation": "Document the behavior as low-risk follow-up compatibility debt; keep dedup scoped to session memory unless a stronger persistence requirement is explicitly approved."
       }
     ],
     "decisions": [
@@ -748,6 +778,14 @@
       {
         "decision": "Treat final validation hardening as complete and ready for final review, not commit-ready without reviewer/orchestrator git inspection.",
         "rationale": ["Full validation chain passed after broad dist forbidden-surface scanning was added", "Pending GitHub/runtime risks remain accurately labeled", "All implementation artifacts remain uncommitted and require final status/diff/log review before any commit"]
+      },
+      {
+        "decision": "Default model-selection notification should use toast and be enabled by default without debug_model_routing.",
+        "rationale": ["User explicitly chose default-visible notification behavior", "OpenCode SDK exposes client.tui.showToast() and opencode-acp provides the reference direction", "chat.message and session.prompt are intentionally excluded to avoid claiming a non-context notification path they do not faithfully provide"]
+      },
+      {
+        "decision": "Fallback behavior when toast is unavailable is silent skip only.",
+        "rationale": ["Maintains low-risk compatibility across SDK surfaces", "Avoids misrepresenting ignored session prompts or chat messages as equivalent to a real toast", "Keeps the wrapper minimal and non-invasive"]
       }
     ],
     "conventions": [
@@ -762,7 +800,8 @@
       "Newly injected generated agents omit model; only pre-existing OpenCode user config may carry model.",
       "Model-routing documentation and review notes must label chat.params request mutation as Partial/Pending unless runtime evidence proves AC-20 without provider/API calls."
       ,"Before any commit, inspect git status, git diff, and git log --oneline -10; if dist is committed, ensure clean regeneration and validate:dist green.",
-      "validate:dist allowlists defensive validation/rejection strings only in dist/src/routing/resolve-model.js(.d.ts) and dist/src/sync/validation.js(.d.ts)."
+      "validate:dist allowlists defensive validation/rejection strings only in dist/src/routing/resolve-model.js(.d.ts) and dist/src/sync/validation.js(.d.ts).",
+      "Default model-selection notification documentation must describe toast-first behavior, minimal compatibility wrapping, in-session memory deduplication, and silent skip when client.tui.showToast is unavailable."
     ],
     "t04_sync_results": {
       "completed_at": "2026-06-03",
@@ -1051,6 +1090,7 @@
       "context_version_after_t07_enrichment": 11,
       "context_version_after_final_hardening": 13,
       "context_version_after_github_syntax_followup": 14,
+      "context_version_after_model_selection_toast_followup": 15,
       "wave_4_status": "completed",
       "wave_5_status": "completed",
       "wave_6_status": "completed",
@@ -1069,6 +1109,40 @@
       "same_wave_dependency_edges_expected": 0,
       "same_wave_conflicts_expected": 0,
       "all_dependency_edges_have_contracts": true
+    },
+    "model_selection_toast_followup": {
+      "completed_at": "2026-06-03",
+      "status": "documented",
+      "source_evidence": [
+        "User decision: default show model-selection notification",
+        "OpenCode SDK client.tui.showToast()",
+        "opencode-acp reference"
+      ],
+      "decision_summary": {
+        "default_enabled": true,
+        "transport": "toast",
+        "debug_model_routing_required": false
+      },
+      "implementation_summary": [
+        "Default notification path is toast-first.",
+        "Do not use chat.message or session.prompt as the notification transport.",
+        "Use a minimal compatibility wrapper around client.tui.showToast when available.",
+        "Deduplicate repeated notifications in session-memory scope only."
+      ],
+      "compatibility_constraints": [
+        "session.prompt with ignored: true is not equivalent to a true non-context toast and must not be documented that way.",
+        "If client.tui.showToast is unavailable, silently skip the notification rather than substituting chat.message or session.prompt.",
+        "Default-visible notifications must control repeat prompting to avoid toast spam."
+      ],
+      "validation": {
+        "npm_test": "42 passed",
+        "typecheck": "passed",
+        "compile": "passed",
+        "lint": "passed",
+        "validate_no_model_ids": "passed",
+        "validate_dist": "passed"
+      },
+      "follow_up_risk": "Plugin instance reconstruction resets in-memory dedup state, so the same toast may be shown again within a broader user workflow."
     },
     "final_wave_hardening_results": {
       "completed_at": "2026-06-03",

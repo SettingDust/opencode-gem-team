@@ -1,4 +1,4 @@
-import type { Hooks } from "@opencode-ai/plugin"
+import type { PluginInput, Hooks } from "@opencode-ai/plugin"
 
 import type { OpenCodeAgentConfig, OpenCodeConfigWithAgents } from "./config.js"
 import { classifyComplexityTier } from "../routing/complexity.js"
@@ -9,6 +9,8 @@ import type {
   ModelRoutingHookMutationPreview,
   PreviewModelRoutingInput,
   PreviewModelRoutingResult,
+  RoutingToastNotifier,
+  RoutingToastPayload,
 } from "../types.js"
 
 type ChatParamsHook = NonNullable<Hooks["chat.params"]>
@@ -35,20 +37,22 @@ export function previewModelRouting(input: PreviewModelRoutingInput): PreviewMod
 export function createModelRoutingHooks(
   options: GemTeamPluginOptions = {},
   getConfig: ConfigProvider = () => undefined,
+  notifyRoutingToast?: RoutingToastNotifier,
 ): Pick<Hooks, "chat.params"> {
   return {
     "chat.params": async (input, output) => {
-      applyChatParamsModelRouting(input, output, options, getConfig())
+      await applyChatParamsModelRouting(input, output, options, getConfig(), notifyRoutingToast)
     },
   }
 }
 
-export function applyChatParamsModelRouting(
+export async function applyChatParamsModelRouting(
   input: ChatParamsInput,
   output: ChatParamsOutput,
   options: GemTeamPluginOptions = {},
   config?: OpenCodeConfigWithAgents,
-): PreviewModelRoutingResult {
+  notifyRoutingToast?: RoutingToastNotifier,
+): Promise<PreviewModelRoutingResult> {
   const agentConfig = config?.agent?.[input.agent]
   const preview = previewModelRouting({
     signals: signalsFromChatParams(input),
@@ -68,7 +72,39 @@ export function applyChatParamsModelRouting(
     reason: preview.resolution.reason,
   }
 
+  if (preview.resolution.model !== undefined) {
+    await notifyRoutingToast?.({
+      sessionID: input.sessionID,
+      agent: input.agent,
+      tier: preview.resolution.tier,
+      source: preview.resolution.source,
+      model: preview.resolution.model,
+    })
+  }
+
   return preview
+}
+
+export function createRoutingToastNotifier(client: PluginInput["client"] | undefined): RoutingToastNotifier {
+  const shown = new Set<string>()
+
+  return async (payload) => {
+    const showToast = client?.tui?.showToast
+    if (typeof showToast !== "function") return
+
+    const dedupeKey = routingToastKey(payload)
+    if (shown.has(dedupeKey)) return
+
+    shown.add(dedupeKey)
+    await showToast({
+      body: {
+        title: "Gem Team model",
+        message: formatRoutingToastMessage(payload),
+        variant: payload.source === "native_agent_model" ? "info" : "success",
+        duration: 2500,
+      },
+    })
+  }
 }
 
 function previewHookMutation(resolution: PreviewModelRoutingResult["resolution"]): ModelRoutingHookMutationPreview {
@@ -102,6 +138,27 @@ function previewHookMutation(resolution: PreviewModelRoutingResult["resolution"]
     wouldMutateOutputOptions: false,
     status: "no_model_available_no_hook_model_override",
     reason: "no_resolved_model_available_for_hook_output",
+  }
+}
+
+function routingToastKey(payload: RoutingToastPayload): string {
+  return [payload.sessionID, payload.agent, payload.tier, payload.source, payload.model].join("|")
+}
+
+function formatRoutingToastMessage(payload: RoutingToastPayload): string {
+  return `${payload.agent} · ${routingToastSourceLabel(payload.source)} · ${payload.model}`
+}
+
+function routingToastSourceLabel(source: RoutingToastPayload["source"]): string {
+  switch (source) {
+    case "native_agent_model":
+      return "agent model"
+    case "complexity_model":
+      return "tier route"
+    case "current_selected_model":
+      return "selected model"
+    case "no_model":
+      return "no model"
   }
 }
 
