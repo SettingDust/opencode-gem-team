@@ -1,0 +1,2 @@
+export declare const GENERATED_GEM_TEAM_AGENT_SLUGS: readonly ["gem-browser-tester", "gem-code-simplifier", "gem-critic", "gem-debugger", "gem-designer-mobile", "gem-designer", "gem-devops", "gem-documentation-writer", "gem-implementer-mobile", "gem-implementer", "gem-mobile-tester", "gem-orchestrator", "gem-planner", "gem-researcher", "gem-reviewer", "gem-skill-creator"];
+export declare const GENERATED_GEM_TEAM_AGENT_COUNT: 16;

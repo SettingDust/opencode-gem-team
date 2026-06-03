@@ -1,0 +1,15 @@
+{
+  "name": "opencode-gem-team-minimal-plugin-poc",
+  "version": "0.0.0-poc",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "1.15.13"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -47,14 +47,14 @@ OpenCode Gem Team 插件是一个面向 OpenCode 的 agent 集成插件，核心
 
 ## 4. 用户故事
 
-| 编号 | 用户故事 | 价值 |
-| --- | --- | --- |
-| US-01 | 作为 OpenCode 用户，我希望从 GitHub 安装插件后即可使用 Gem Team agents。 | 避免手工复制大段配置。 |
-| US-02 | 作为 OpenCode 用户，我希望 `gem-orchestrator` 能作为入口 agent 调用上游 Gem Team 编排逻辑。 | 保持 Gem Team 原有工作流。 |
-| US-03 | 作为 OpenCode 用户，我希望为简单、中等、复杂任务分别可选配置模型。 | 在成本、速度和推理能力之间做全局权衡。 |
-| US-04 | 作为 OpenCode 用户，我希望插件在未配置某档模型时使用当前 selected model。 | 保证开箱可用与配置最小化。 |
-| US-05 | 作为维护者，我希望同步产物记录 upstream URL、commit 与 body/content hash。 | 便于审计、回滚和对齐上游变更。 |
-| US-06 | 作为维护者，我希望同步校验能发现 slug 缺失、额外 slug 或行为性改写。 | 降低偏离上游 Gem Team 的风险。 |
+| 编号  | 用户故事                                                                                    | 价值                                   |
+| ----- | ------------------------------------------------------------------------------------------- | -------------------------------------- |
+| US-01 | 作为 OpenCode 用户，我希望从 GitHub 安装插件后即可使用 Gem Team agents。                    | 避免手工复制大段配置。                 |
+| US-02 | 作为 OpenCode 用户，我希望 `gem-orchestrator` 能作为入口 agent 调用上游 Gem Team 编排逻辑。 | 保持 Gem Team 原有工作流。             |
+| US-03 | 作为 OpenCode 用户，我希望为简单、中等、复杂任务分别可选配置模型。                          | 在成本、速度和推理能力之间做全局权衡。 |
+| US-04 | 作为 OpenCode 用户，我希望插件在未配置某档模型时使用当前 selected model。                   | 保证开箱可用与配置最小化。             |
+| US-05 | 作为维护者，我希望同步产物记录 upstream URL、commit 与 body/content hash。                  | 便于审计、回滚和对齐上游变更。         |
+| US-06 | 作为维护者，我希望同步校验能发现 slug 缺失、额外 slug 或行为性改写。                        | 降低偏离上游 Gem Team 的风险。         |
 
 ## 5. 功能需求
 
@@ -157,24 +157,24 @@ kimchi 参考边界：
 
 ## 6. Agent 清单与同步契约
 
-| Slug | OpenCode 中的定位 | 同步契约 |
-| --- | --- | --- |
-| `gem-browser-tester` | 浏览器测试与交互验证 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-code-simplifier` | 代码简化与复杂度降低 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-critic` | 批判性审视与方案压力测试 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-debugger` | 故障定位与调试 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-designer-mobile` | 移动端设计 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-designer` | 通用设计 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-devops` | DevOps、CI/CD、环境与发布 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-documentation-writer` | 文档写作 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-implementer-mobile` | 移动端实现 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-implementer` | 通用实现 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-mobile-tester` | 移动端测试 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-orchestrator` | 入口编排 agent | 从上游同名 agent 同步，保留 slug 与行为；不得作为自身 child/subagent。 |
-| `gem-planner` | 计划与任务拆解 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-researcher` | 研究与资料整理 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-reviewer` | 审查与验收核对 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
-| `gem-skill-creator` | 技能创建 agent | 从上游同名 agent 同步，保留 slug 与行为。 |
+| Slug                       | OpenCode 中的定位               | 同步契约                                                               |
+| -------------------------- | ------------------------------- | ---------------------------------------------------------------------- |
+| `gem-browser-tester`       | 浏览器测试与交互验证 agent      | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-code-simplifier`      | 代码简化与复杂度降低 agent      | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-critic`               | 批判性审视与方案压力测试 agent  | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-debugger`             | 故障定位与调试 agent            | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-designer-mobile`      | 移动端设计 agent                | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-designer`             | 通用设计 agent                  | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-devops`               | DevOps、CI/CD、环境与发布 agent | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-documentation-writer` | 文档写作 agent                  | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-implementer-mobile`   | 移动端实现 agent                | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-implementer`          | 通用实现 agent                  | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-mobile-tester`        | 移动端测试 agent                | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-orchestrator`         | 入口编排 agent                  | 从上游同名 agent 同步，保留 slug 与行为；不得作为自身 child/subagent。 |
+| `gem-planner`              | 计划与任务拆解 agent            | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-researcher`           | 研究与资料整理 agent            | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-reviewer`             | 审查与验收核对 agent            | 从上游同名 agent 同步，保留 slug 与行为。                              |
+| `gem-skill-creator`        | 技能创建 agent                  | 从上游同名 agent 同步，保留 slug 与行为。                              |
 
 同步契约：
 
@@ -190,11 +190,11 @@ kimchi 参考边界：
 
 插件仅接受以下全局配置键：
 
-| 配置键 | 含义 | 是否必填 |
-| --- | --- | --- |
-| `complexity_models.simple` | 低复杂度、低风险、短上下文任务使用的模型。 | 否 |
-| `complexity_models.medium` | 中等复杂度、需要一定推理或多步骤处理任务使用的模型。 | 否 |
-| `complexity_models.complex` | 高复杂度、高风险、深度推理或关键质量任务使用的模型。 | 否 |
+| 配置键                      | 含义                                                 | 是否必填 |
+| --------------------------- | ---------------------------------------------------- | -------- |
+| `complexity_models.simple`  | 低复杂度、低风险、短上下文任务使用的模型。           | 否       |
+| `complexity_models.medium`  | 中等复杂度、需要一定推理或多步骤处理任务使用的模型。 | 否       |
+| `complexity_models.complex` | 高复杂度、高风险、深度推理或关键质量任务使用的模型。 | 否       |
 
 PRD、README、示例配置和验收标准不得为这些键提供具体模型 ID 默认值。
 
@@ -216,14 +216,14 @@ OpenCode agent.model > plugin complexity_models[tier] > current OpenCode selecte
 
 插件应从上游 Gem Team 编排上下文中读取复杂度信号，并映射为三档 tier：
 
-| 上游信号 | 目标 tier |
-| --- | --- |
-| orchestrator `LOW` | `simple` |
-| orchestrator `MEDIUM` | `medium` |
-| orchestrator `HIGH` | `complex` |
-| planner `simple` | `simple` |
-| planner `medium` | `medium` |
-| planner `complex` | `complex` |
+| 上游信号              | 目标 tier |
+| --------------------- | --------- |
+| orchestrator `LOW`    | `simple`  |
+| orchestrator `MEDIUM` | `medium`  |
+| orchestrator `HIGH`   | `complex` |
+| planner `simple`      | `simple`  |
+| planner `medium`      | `medium`  |
+| planner `complex`     | `complex` |
 
 当多个复杂度信号同时存在时，应选择不低于最高复杂度信号的 tier。
 
@@ -290,30 +290,30 @@ OpenCode agent.model > plugin complexity_models[tier] > current OpenCode selecte
 
 ## 10. 验收标准
 
-| 编号 | 标准 | 验证方式 |
-| --- | --- | --- |
-| AC-01 | PRD 为 Markdown 文档。 | 检查文件路径与格式为 `docs/PRD.md`。 |
-| AC-02 | PRD 明确 GitHub-only 发布/安装目标，不出现 npm publish 或 npm registry 发布要求，并将 GitHub source 语法、`dist`、package manager 需求列为待验证。 | 检查第 1、3、5 节。 |
-| AC-03 | OpenCode 加载后可用全部 16 个真实 slug。 | 检查第 5.3 节与第 6 节清单。 |
-| AC-04 | `gem-orchestrator` 是入口 agent，但不能作为自身 child/subagent。 | 检查第 3.1、5.3、5.6、6 节。 |
-| AC-05 | 每个同步 agent 必须记录 upstream source URL、commit 与 body/content hash（例如 source body hash 或 converted body hash）。 | 检查第 5.2、5.6、6 节。 |
-| AC-06 | PRD 明确只做 OpenCode 兼容转换，不重写 agent 行为。 | 检查第 2、5.2、6、8 节。 |
-| AC-07 | PRD 明确 preserve 上游编排逻辑。 | 检查第 1、3.1、5.2、8 节。 |
-| AC-08 | 对外只暴露 `complexity_models.simple`、`complexity_models.medium`、`complexity_models.complex`。 | 检查第 5.4、7.1、9 节。 |
-| AC-09 | 三档 complexity model 均可选，缺省 fallback 当前 OpenCode selected model。 | 检查第 5.4、5.5、7.1、7.2、9 节。 |
-| AC-10 | 优先级为 OpenCode `agent.model` > plugin `complexity_models[tier]` > current OpenCode selected model，且注入默认 agent/model 时不得覆盖用户已有 OpenCode `agent.model`。 | 检查第 5.4、5.7、7.2、9 节。 |
-| AC-11 | 禁止 plugin per-agent override、`agent_complexity_models`、role_models。 | 检查第 3.2、5.4、7.5、9 节。 |
-| AC-12 | reasoning-critical roles 只作为 tier hints，不作为模型配置维度。 | 检查第 7.5、9 节。 |
-| AC-13 | PRD 不硬编码任何具体模型 ID、供应商模型名或示例模型值。 | 搜索全文，确认没有具体模型默认值或示例值。 |
-| AC-14 | PRD 明确 OpenCode SDK 插件技术路线：default export `PluginModule { id, server }`，`server` 返回 hooks，`config` hook 动态注入 `gem-orchestrator` 与 15 个非 orchestrator `gem-*` agents，`chat.params` 可用于子代理调用时设置实际请求 model。 | 检查第 5.7 节。 |
-| AC-15 | PRD 明确 kimchi 仅作为 SDK 插件机制参考，不包含 provider virtual models、profiles、telemetry、slash commands、provider auto-router、context auto-compaction、model fallback chain。 | 检查第 5.7、9、11 节。 |
-| AC-16 | PoC 可证明 GitHub 安装加载成功。 | 按第 10.1 节 PoC 清单执行。 |
-| AC-17 | PoC 可证明 16 个 agents 可见。 | 按第 10.1 节 PoC 清单执行。 |
-| AC-18 | PoC 可证明用户已有 OpenCode `agent.model` 不被覆盖。 | 按第 10.1 节 PoC 清单执行。 |
-| AC-19 | PoC 可证明缺省 fallback 使用 current OpenCode selected model。 | 按第 10.1 节 PoC 清单执行。 |
-| AC-20 | PoC 可证明 medium/complex tier 能应用到实际请求 model。 | 按第 10.1 节 PoC 清单执行。 |
-| AC-21 | PoC 可证明 `gem-orchestrator` 不会路由到自身。 | 按第 10.1 节 PoC 清单执行。 |
-| AC-22 | PRD、README、示例配置、验收清单均不包含具体模型 ID。 | 搜索全文与示例文件确认。 |
+| 编号  | 标准                                                                                                                                                                                                                                          | 验证方式                                   |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| AC-01 | PRD 为 Markdown 文档。                                                                                                                                                                                                                        | 检查文件路径与格式为 `docs/PRD.md`。       |
+| AC-02 | PRD 明确 GitHub-only 发布/安装目标，不出现 npm publish 或 npm registry 发布要求，并将 GitHub source 语法、`dist`、package manager 需求列为待验证。                                                                                            | 检查第 1、3、5 节。                        |
+| AC-03 | OpenCode 加载后可用全部 16 个真实 slug。                                                                                                                                                                                                      | 检查第 5.3 节与第 6 节清单。               |
+| AC-04 | `gem-orchestrator` 是入口 agent，但不能作为自身 child/subagent。                                                                                                                                                                              | 检查第 3.1、5.3、5.6、6 节。               |
+| AC-05 | 每个同步 agent 必须记录 upstream source URL、commit 与 body/content hash（例如 source body hash 或 converted body hash）。                                                                                                                    | 检查第 5.2、5.6、6 节。                    |
+| AC-06 | PRD 明确只做 OpenCode 兼容转换，不重写 agent 行为。                                                                                                                                                                                           | 检查第 2、5.2、6、8 节。                   |
+| AC-07 | PRD 明确 preserve 上游编排逻辑。                                                                                                                                                                                                              | 检查第 1、3.1、5.2、8 节。                 |
+| AC-08 | 对外只暴露 `complexity_models.simple`、`complexity_models.medium`、`complexity_models.complex`。                                                                                                                                              | 检查第 5.4、7.1、9 节。                    |
+| AC-09 | 三档 complexity model 均可选，缺省 fallback 当前 OpenCode selected model。                                                                                                                                                                    | 检查第 5.4、5.5、7.1、7.2、9 节。          |
+| AC-10 | 优先级为 OpenCode `agent.model` > plugin `complexity_models[tier]` > current OpenCode selected model，且注入默认 agent/model 时不得覆盖用户已有 OpenCode `agent.model`。                                                                      | 检查第 5.4、5.7、7.2、9 节。               |
+| AC-11 | 禁止 plugin per-agent override、`agent_complexity_models`、role_models。                                                                                                                                                                      | 检查第 3.2、5.4、7.5、9 节。               |
+| AC-12 | reasoning-critical roles 只作为 tier hints，不作为模型配置维度。                                                                                                                                                                              | 检查第 7.5、9 节。                         |
+| AC-13 | PRD 不硬编码任何具体模型 ID、供应商模型名或示例模型值。                                                                                                                                                                                       | 搜索全文，确认没有具体模型默认值或示例值。 |
+| AC-14 | PRD 明确 OpenCode SDK 插件技术路线：default export `PluginModule { id, server }`，`server` 返回 hooks，`config` hook 动态注入 `gem-orchestrator` 与 15 个非 orchestrator `gem-*` agents，`chat.params` 可用于子代理调用时设置实际请求 model。 | 检查第 5.7 节。                            |
+| AC-15 | PRD 明确 kimchi 仅作为 SDK 插件机制参考，不包含 provider virtual models、profiles、telemetry、slash commands、provider auto-router、context auto-compaction、model fallback chain。                                                           | 检查第 5.7、9、11 节。                     |
+| AC-16 | PoC 可证明 GitHub 安装加载成功。                                                                                                                                                                                                              | 按第 10.1 节 PoC 清单执行。                |
+| AC-17 | PoC 可证明 16 个 agents 可见。                                                                                                                                                                                                                | 按第 10.1 节 PoC 清单执行。                |
+| AC-18 | PoC 可证明用户已有 OpenCode `agent.model` 不被覆盖。                                                                                                                                                                                          | 按第 10.1 节 PoC 清单执行。                |
+| AC-19 | PoC 可证明缺省 fallback 使用 current OpenCode selected model。                                                                                                                                                                                | 按第 10.1 节 PoC 清单执行。                |
+| AC-20 | PoC 可证明 medium/complex tier 能应用到实际请求 model。                                                                                                                                                                                       | 按第 10.1 节 PoC 清单执行。                |
+| AC-21 | PoC 可证明 `gem-orchestrator` 不会路由到自身。                                                                                                                                                                                                | 按第 10.1 节 PoC 清单执行。                |
+| AC-22 | PRD、README、示例配置、验收清单均不包含具体模型 ID。                                                                                                                                                                                          | 搜索全文与示例文件确认。                   |
 
 ### 10.1 PoC / 验收清单
 
@@ -331,12 +331,12 @@ OpenCode agent.model > plugin complexity_models[tier] > current OpenCode selecte
 
 ## 11. 风险与缓解
 
-| 风险 | 影响 | 缓解 |
-| --- | --- | --- |
-| 上游 Gem Team agent 发生新增、删除或重命名。 | 本地注册清单与上游偏离。 | 同步校验暴露差异，并要求更新 PRD 与注册清单。 |
-| OpenCode 兼容转换误改 agent 行为。 | 上游编排语义被破坏。 | 限制转换范围，校验关键片段与 metadata，记录 upstream commit 与 body/content hash。 |
-| 用户误以为 reasoning-critical roles 是独立模型配置维度。 | 配置复杂度上升并偏离三档契约。 | 文档明确它们仅为 tier hints，禁止 role_models。 |
-| 某档 complexity model 未配置。 | 用户担心无法调用 agent。 | 透明 fallback 当前 OpenCode selected model。 |
-| 插件模型解析覆盖 OpenCode 原生 agent 设置。 | 破坏 OpenCode 用户预期。 | 固化优先级链，`agent.model` 永远最高。 |
-| GitHub 安装机制未实测。 | 安装文档可能误写 source 语法、`dist` 要求或 package manager 步骤。 | PoC 先验证 GitHub source 语法、构建产物要求与是否无需 npm publish，再发布安装说明。 |
-| kimchi 参考范围扩张。 | 插件偏离 Gem Team agent 同步目标，变成 provider virtual models、profiles、telemetry、slash commands 或 provider auto-router。 | PRD 仅允许借鉴 OpenCode SDK 插件机制，其他 kimchi 能力不进入产品范围。 |
+| 风险                                                     | 影响                                                                                                                          | 缓解                                                                                |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 上游 Gem Team agent 发生新增、删除或重命名。             | 本地注册清单与上游偏离。                                                                                                      | 同步校验暴露差异，并要求更新 PRD 与注册清单。                                       |
+| OpenCode 兼容转换误改 agent 行为。                       | 上游编排语义被破坏。                                                                                                          | 限制转换范围，校验关键片段与 metadata，记录 upstream commit 与 body/content hash。  |
+| 用户误以为 reasoning-critical roles 是独立模型配置维度。 | 配置复杂度上升并偏离三档契约。                                                                                                | 文档明确它们仅为 tier hints，禁止 role_models。                                     |
+| 某档 complexity model 未配置。                           | 用户担心无法调用 agent。                                                                                                      | 透明 fallback 当前 OpenCode selected model。                                        |
+| 插件模型解析覆盖 OpenCode 原生 agent 设置。              | 破坏 OpenCode 用户预期。                                                                                                      | 固化优先级链，`agent.model` 永远最高。                                              |
+| GitHub 安装机制未实测。                                  | 安装文档可能误写 source 语法、`dist` 要求或 package manager 步骤。                                                            | PoC 先验证 GitHub source 语法、构建产物要求与是否无需 npm publish，再发布安装说明。 |
+| kimchi 参考范围扩张。                                    | 插件偏离 Gem Team agent 同步目标，变成 provider virtual models、profiles、telemetry、slash commands 或 provider auto-router。 | PRD 仅允许借鉴 OpenCode SDK 插件机制，其他 kimchi 能力不进入产品范围。              |

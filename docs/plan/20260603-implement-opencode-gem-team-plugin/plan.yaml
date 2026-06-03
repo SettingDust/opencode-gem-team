@@ -1,0 +1,745 @@
+plan_id: 20260603-implement-opencode-gem-team-plugin
+objective: "Implement OpenCode Gem Team plugin from clean baseline using PoC-gated, reviewer-approved executable DAG."
+created_at: "2026-06-03T00:00:00+08:00"
+updated_at: "2026-06-03T00:00:00+08:00"
+created_by: gem-planner
+status: ready_for_final_review
+baseline:
+  commit: ee708a8f9046b46054776345f05bf62b37b188d7
+  final_status: clean
+plan_metrics:
+  waves_count: 12
+  tasks_count: 12
+  contracts_count: 21
+  total_dependencies: 21
+  risk_score: high
+tldr: |
+  Twelve-wave implementation plan. Wave 1 proves feasibility before implementation; later hooks, docs, dist, and release/commit paths are blocked by the PoC gates. GitHub install, dist, and package-manager conclusions remain Pending/Blocked until PoC evidence verifies them.
+
+canonical_slugs:
+  - gem-browser-tester
+  - gem-code-simplifier
+  - gem-critic
+  - gem-debugger
+  - gem-designer-mobile
+  - gem-designer
+  - gem-devops
+  - gem-documentation-writer
+  - gem-implementer-mobile
+  - gem-implementer
+  - gem-mobile-tester
+  - gem-orchestrator
+  - gem-planner
+  - gem-researcher
+  - gem-reviewer
+  - gem-skill-creator
+
+mvp_gates:
+  - id: MVP-1
+    name: agent load
+    required_by: [T07]
+    acceptance: "Local OpenCode load evidence or typed/mock-compatible evidence shows all 16 agents injected."
+  - id: MVP-2
+    name: agent.model preservation
+    required_by: [T03, T07, T11]
+    acceptance: "Existing OpenCode native agent.model is never overwritten; priority remains agent.model > complexity_models[tier] > selected model."
+  - id: MVP-3
+    name: tier routing
+    required_by: [T03, T08]
+    acceptance: "Only simple, medium, and complex tiers are supported; no per-agent, role, provider router, or fallback-chain model config."
+
+global_guards:
+  sync_network_guard:
+    - "GitHub access is read-only."
+    - "No token is required."
+    - "Do not read, print, or persist environment secrets."
+    - "Do not POST, PUT, upload, mutate remote state, or emit telemetry."
+  poc_guard:
+    - "Default PoC flow must not call real providers."
+    - "Use dry-run, mock, local fixture, or local OpenCode load evidence."
+    - "Do not record API keys or tokens."
+    - "Do not leak concrete provider model IDs or provider model names."
+  body_preserve_guard:
+    - "Upstream agent body content is preserved verbatim by default."
+    - "Any non-metadata/header body diff fails validation unless allowlisted with reason and evidence."
+  preserve_orchestration_guard:
+    - "Do not convert-delete or semantically rewrite phases, DAG/waves, task schemas, failure handling, memory, or context envelope content."
+  docs_guard:
+    - "README/examples installation instructions must use Verified/Pending/Blocked status labels."
+    - "Before PoC completion, do not publish final unverified install commands."
+  dist_guard:
+    - "dist is not submitted by default."
+    - "Optional dist task runs only if T01 PoC proves dist is necessary."
+    - "If dist exists, validate:dist freshness is mandatory."
+
+poc_dependent_items:
+  - "@opencode-ai/plugin type shape and PluginModule/legacy function support."
+  - "GitHub source syntax for OpenCode plugin install; format observed from redacted global config, end-to-end install/load still Pending."
+  - "Whether dist must be committed for GitHub install/load."
+  - "Whether a package manager participates in GitHub install/load."
+  - "Whether OpenCode model mutation hooks can prove AC-20 beyond experimental/limited behavior."
+
+open_questions:
+  - question: "Does the observed GitHub source syntax load this repository as an OpenCode plugin end-to-end?"
+    status: format_observed_end_to_end_pending
+    blocks: [T09, T10, T12]
+  - question: "Does the installed @opencode-ai/plugin version expose PluginModule and/or legacy function support?"
+    status: pending_poc
+    blocks: [T02, T07]
+  - question: "Is committed dist necessary for GitHub install/load?"
+    status: pending_poc
+    blocks: [T10, T12]
+
+contracts:
+  - id: C01
+    from_task: T01
+    to_task: T02
+    interface: "Feasibility findings define supported plugin shape and verified scaffold assumptions."
+    format: "docs/installation-poc.md evidence plus minimal-plugin fixture notes"
+  - id: C02
+    from_task: T02
+    to_task: T03
+    interface: "TypeScript scaffold, scripts, and shared plugin/routing types exist."
+    format: "package.json, tsconfig.json, src/types.ts"
+  - id: C03
+    from_task: T02
+    to_task: T04
+    interface: "Script runtime and sync metadata types are available."
+    format: "package scripts and src/types.ts/src/sync contracts"
+  - id: C04
+    from_task: T04
+    to_task: T05
+    interface: "Read-only upstream records contain slug, source URL, commit, body, hash, and timestamp/batch."
+    format: "typed sync records"
+  - id: C05
+    from_task: T05
+    to_task: T06
+    interface: "Converted agents and manifest are ready for parity and preservation validation."
+    format: "agents/generated/** or src/agents/** plus src/agents/manifest.json"
+  - id: C06
+    from_task: T03
+    to_task: T06
+    interface: "Allowed tier and model precedence contracts are available to validators."
+    format: "src/routing/complexity.ts, src/routing/resolve-model.ts"
+  - id: C07
+    from_task: T06
+    to_task: T07
+    interface: "Validated generated constants and manifest are safe for config injection."
+    format: "validate:sync pass plus src/agents/generated.ts"
+  - id: C08
+    from_task: T01
+    to_task: T07
+    interface: "PoC confirms or constrains plugin hook shape/load path before hook implementation."
+    format: "docs/installation-poc.md PluginModule/legacy support finding"
+  - id: C09
+    from_task: T07
+    to_task: T08
+    interface: "Config hook injection behavior is available for routing-hook PoC tests."
+    format: "src/index.ts and src/hooks/config.ts exports"
+  - id: C10
+    from_task: T03
+    to_task: T08
+    interface: "Pure routing resolver is available for model-routing hook."
+    format: "resolver API and routing tests"
+  - id: C11
+    from_task: T01
+    to_task: T08
+    interface: "PoC constraints define whether model mutation can be claimed or must be limited."
+    format: "dry-run/mock/local evidence in docs/installation-poc.md"
+  - id: C12
+    from_task: T08
+    to_task: T09
+    interface: "Model routing capability status is known for docs."
+    format: "Verified/Pending/Blocked or limited/experimental finding"
+  - id: C13
+    from_task: T01
+    to_task: T09
+    interface: "Install/load/dist/package-manager facts are available for status-labeled docs."
+    format: "docs/installation-poc.md PoC table"
+  - id: C14
+    from_task: T09
+    to_task: T10
+    interface: "Docs identify whether dist remains pending/blocked/necessary after PoC."
+    format: "README.md and docs/installation-poc.md status sections"
+  - id: C15
+    from_task: T07
+    to_task: T10
+    interface: "Buildable plugin source exists if optional dist is necessary."
+    format: "src/index.ts and hook modules"
+  - id: C16
+    from_task: T10
+    to_task: T11
+    interface: "Optional dist state is ready for security review."
+    format: "dist/** if present, validate:dist output if applicable"
+  - id: C17
+    from_task: T09
+    to_task: T11
+    interface: "Docs/examples are ready for overclaim and secret/model-ID review."
+    format: "README.md, examples/**, docs/installation-poc.md"
+  - id: C18
+    from_task: T08
+    to_task: T11
+    interface: "Model-routing hook evidence is ready for capability-claim review."
+    format: "test/model-routing-hook.test.ts and PoC status notes"
+  - id: C19
+    from_task: T07
+    to_task: T11
+    interface: "Config hook implementation is ready for agent injection and agent.model preservation review."
+    format: "src/index.ts, src/hooks/config.ts, tests"
+  - id: C20
+    from_task: T06
+    to_task: T11
+    interface: "Sync validation outputs are ready for full scope review."
+    format: "scripts/validate-sync.ts, generated constants, validation logs"
+  - id: C21
+    from_task: T11
+    to_task: T12
+    interface: "Reviewer pass/fail findings determine final verification and commit eligibility."
+    format: "review report and validation evidence"
+
+waves:
+  - wave: 1
+    title: "Early feasibility PoC gate"
+    tasks: [T01]
+  - wave: 2
+    title: "Package scaffold"
+    tasks: [T02]
+  - wave: 3
+    title: "Pure routing/types"
+    tasks: [T03]
+  - wave: 4
+    title: "Read-only upstream sync"
+    tasks: [T04]
+    status: completed
+    review_status: passed_no_blocking_findings
+    continue_to_next_wave: true
+  - wave: 5
+    title: "Runtime loader and config hook injection"
+    tasks: [T05]
+    status: completed
+    review_status: passed_no_blocking_findings
+    continue_to_next_wave: true
+  - wave: 6
+    title: "Sync validation and generated constants"
+    tasks: [T06]
+    status: completed
+    review_status: passed_no_blocking_findings
+    continue_to_next_wave: true
+  - wave: 7
+    title: "Plugin config hook load evidence"
+    tasks: [T07]
+    status: completed
+    review_status: passed_no_blocking_findings
+    continue_to_next_wave: true
+  - wave: 8
+    title: "PoC-dependent model routing hooks"
+    tasks: [T08]
+  - wave: 9
+    title: "README, examples, installation docs"
+    tasks: [T09]
+  - wave: 10
+    title: "Optional dist packaging"
+    tasks: [T10]
+  - wave: 11
+    title: "Full security/scope review"
+    tasks: [T11]
+  - wave: 12
+    title: "Verification and commit"
+    tasks: [T12]
+
+tasks:
+  - id: T01
+    title: "Early feasibility PoC"
+    wave: 1
+    agent: gem-devops
+    status: completed
+    dependencies: []
+    deps: []
+    conflicts_with: []
+    blocks: [T02, T07, T08, T09, T10, T12]
+    files:
+      - docs/installation-poc.md
+      - test/fixtures/minimal-plugin/**
+    acceptance:
+      - "Verify and record @opencode-ai/plugin installed type surface."
+      - "Verify and record PluginModule support and legacy function support status."
+      - "Record local minimal plugin load evidence using dry-run/mock/local OpenCode load evidence only."
+      - "Record GitHub source syntax status as Verified, Pending, or Blocked; do not claim final syntax without evidence."
+      - "Record dist necessity status as Verified, Pending, or Blocked."
+      - "Record package-manager involvement status as Verified, Pending, or Blocked."
+      - "Provider calls are dry-run/mock only; no real provider calls."
+      - "Do not read/output env secrets; do not record API keys/tokens; do not write concrete provider model IDs."
+    verification: ["local PoC evidence", "no secrets/model IDs in PoC docs"]
+    outputs:
+      - docs/plan/20260603-implement-opencode-gem-team-plugin/poc-report.md
+    findings:
+      plugin_module: Verified
+      legacy_function: "Verified with caveat"
+      config_hook: Verified
+      chat_hooks: Verified
+      github_source_syntax: format_observed_end_to_end_pending
+      github_source_syntax_evidence: "User-approved read-only global OpenCode config inspection observed redacted plugin array form github:<owner>/<repo>#<ref>; no secrets, unrelated config, config writes, or repo end-to-end install proof."
+      github_install: Pending
+      package_manager_for_npm_plugins: Verified
+      package_manager_for_github_source: Pending
+      needs_dist: pending
+      model_routing_hook: Partial
+
+  - id: T02
+    title: "Scaffold TypeScript package"
+    wave: 2
+    agent: gem-implementer
+    status: completed
+    dependencies: [T01]
+    deps: [T01]
+    conflicts_with: []
+    contract_refs: [C01]
+    files:
+      - package.json
+      - tsconfig.json
+      - src/index.ts
+      - src/types.ts
+      - test/**
+    acceptance:
+      - "Scripts typecheck, test, build, sync:agents, validate:sync, validate:no-model-ids exist."
+      - "Script validate:dist exists if T01 proves dist may be needed."
+      - "src/index.ts is placeholder only; no plugin feature implementation yet."
+      - "No concrete model IDs, provider model names, API keys, tokens, or secrets."
+    verification: ["npm run typecheck", "npm test"]
+    outputs:
+      - package.json
+      - package-lock.json
+      - tsconfig.json
+      - src/index.ts
+      - src/constants.ts
+      - src/types.ts
+      - test/plugin-shape.test.ts
+      - scripts/sync-agents-placeholder.mjs
+      - scripts/validate-sync-placeholder.mjs
+      - scripts/validate-no-model-ids.mjs
+      - .gitignore
+    contracts:
+      C02: "TypeScript ESM scaffold, build/typecheck/test/lint scripts, PluginModule default export, and shared constants/types are available for T03."
+      C03: "Package script placeholders and initial schema/sync-adjacent type entry points are available for T04; sync logic remains deferred."
+    findings:
+      scaffold_shape: "Completed with PluginModule default export, id opencode-gem-team, and minimal config hook placeholder."
+      test_runner: "Uses built-in node:test after TypeScript build to avoid adding a test framework dependency."
+      lint: "lint script delegates to typecheck as the current lightweight scaffold lint gate."
+      dist_policy: "dist remains ignored and not submitted; validate:dist not added because T01 kept dist necessity Pending."
+    verification_results:
+      install: "npm install passed."
+      typecheck: "npm run typecheck passed."
+      test: "npm test passed: 2 tests, 2 passed."
+      build: "npm run build passed."
+      lint: "npm run lint passed."
+      validators: "npm run validate:no-model-ids passed; sync placeholders ran and are explicitly deferred."
+
+  - id: T03
+    title: "Pure routing/types"
+    wave: 3
+    agent: gem-implementer
+    status: completed
+    dependencies: [T02]
+    deps: [T02]
+    conflicts_with: []
+    contract_refs: [C02]
+    files:
+      - src/routing/complexity.ts
+      - src/routing/resolve-model.ts
+      - test/routing.test.ts
+    acceptance:
+      - "Priority chain is OpenCode agent.model > complexity_models[tier] > selected model."
+      - "Only simple, medium, and complex tiers exist."
+      - "No per-agent, role, provider router, fallback-chain, or hardcoded model config."
+      - "MVP-2 agent.model preservation and MVP-3 tier routing tests pass."
+    verification: ["npm test", "npm run validate:no-model-ids"]
+    outputs:
+      - src/routing/complexity.ts
+      - src/routing/resolve-model.ts
+      - test/routing.test.ts
+    contracts:
+      C06: "Allowed simple/medium/complex tier normalization and role/risk tier classification are available for sync validation; role slugs are tier hints only."
+      C10: "Pure resolveModel API proves OpenCode agent.model > complexity_models[tier] > selected model without mutating agent config or implementing chat hook model mutation."
+    findings:
+      priority_chain: "resolveModel returns native_agent_model before complexity_model before current_selected_model and no_model when all are absent."
+      tier_scope: "Only simple, medium, and complex tiers are accepted; missing or unknown tiers deterministically fallback to medium with reason metadata."
+      role_scope: "Reasoning-critical roles can raise minimum tier but do not create role_models, per-agent mappings, or model overrides."
+      validator: "validate:no-model-ids now scans docs/plan and model-assignment provider-style patterns while avoiding package-scope false positives such as @opencode-ai/plugin."
+    verification_results:
+      test: "npm test passed: 13 tests, 13 passed."
+
+  - id: T04
+    title: "Read-only upstream sync script"
+    wave: 4
+    agent: gem-implementer
+    status: completed
+    dependencies: [T02]
+    deps: [T02]
+    conflicts_with: []
+    contract_refs: [C03]
+    files:
+      - scripts/sync-agents.ts
+      - src/sync/**
+    acceptance:
+      - "GitHub network use is read-only."
+      - "No token is required; no env secret is read or output."
+      - "No POST, PUT, upload, mutation, telemetry, or provider call."
+      - "Manifest/sync records include upstream source URL, upstream commit, body/content hash, local slug, and sync timestamp or sync batch id."
+      - "Slug set equals canonical_slugs exactly."
+    verification: ["npm run sync:agents with mock or read-only source", "npm run validate:no-model-ids"]
+    outputs:
+      - scripts/sync-agents.mjs
+      - scripts/validate-sync.mjs
+      - src/sync/validation.ts
+      - test/sync-validation.test.ts
+      - agents/generated/manifest.json
+      - agents/generated/*.agent.md
+    contracts:
+      C04: "Read-only upstream sync now writes 16 preserved upstream agent bodies and manifest entries with slug, URL, commit, SHA-256 body hash, local slug, sync timestamp, and sync batch id."
+    findings:
+      sync_source: "Unauthenticated read-only GitHub fetch from mubaidr/gem-team .apm/agents raw files."
+      upstream_commit: "Best-effort unauthenticated GitHub commits API resolved commit 0c2afe46dc0136439e668b04e551c465d68eaf39 for this sync batch; script records unknown-public-github-commit-unavailable if commit metadata cannot be obtained."
+      output_path: "agents/generated contains one .agent.md file per canonical slug plus manifest.json."
+      body_preservation: "Generated .agent.md files are upstream bodies written verbatim; manifest records sourceBodySha256 and bodyBytes."
+      orchestrator_routing_metadata: "Manifest metadata.routingTargets is generated from gem-orchestrator available_agents and excludes gem-orchestrator."
+    verification_results:
+      sync_agents: "npm run sync:agents passed; generated 16 agents under agents/generated."
+      validate_sync: "npm run validate:sync passed; verified 16 agents, metadata, hashes, and orchestrator self-route guard."
+      test: "npm test passed: 17 tests, 17 passed."
+      typecheck: "npm run typecheck passed."
+      build: "npm run build passed."
+      validate_no_model_ids: "npm run validate:no-model-ids passed."
+      lint: "npm run lint passed."
+      json_parse: "Generated manifest and context envelope JSON parse passed."
+    review_results:
+      status: passed_no_blocking_findings
+      continue_to_wave_5: true
+      warnings:
+        - "docs/PRD.yaml is absent; docs/PRD.md is the actual PRD source."
+        - "Commit API fallback unknown-public-github-commit-unavailable can reduce sync reproducibility if public commit metadata is unavailable."
+      next_wave_guards:
+        - "Preserve agents/generated/*.agent.md bodies."
+        - "Keep gem-orchestrator excluded from child routing targets."
+        - "Do not introduce forbidden model dimensions, provider router, standalone auto, slash commands, telemetry, or global config writes."
+        - "Keep model values opaque and avoid env secrets."
+        - "Keep GitHub install syntax, dist necessity/package-manager behavior, and actual request model mutation pending until proven."
+        - "Run validators and add conversion-layer parity checks if body diffs appear."
+
+  - id: T05
+    title: "Runtime generated loader and config hook injection"
+    wave: 5
+    agent: gem-implementer
+    status: completed
+    dependencies: [T04]
+    deps: [T04]
+    conflicts_with: []
+    contract_refs: [C04]
+    files:
+      - agents/generated/**
+      - src/agents/**
+      - src/agents/manifest.json
+    acceptance:
+      - "Upstream agent body is preserved by default."
+      - "Non-metadata/header body diff fails unless allowlist includes reason and evidence."
+      - "Each entry has upstream source URL, upstream commit, body/content hash, local slug, sync timestamp or batch id."
+      - "gem-orchestrator child/subagent list excludes itself."
+      - "Phases, DAG/waves, task schemas, failure handling, memory/context envelope are not converted away or semantically rewritten."
+    verification: ["npm run sync:agents", "npm run validate:sync"]
+    outputs:
+      - src/agents/generated-loader.ts
+      - src/hooks/config.ts
+      - test/plugin-config.test.ts
+    contracts:
+      C05: "Generated manifest and upstream bodies are loaded at runtime with hash parity checks; config injection can use preserved prompt text without body rewrites."
+    findings:
+      runtime_loader: "Added a build-compatible generated asset loader that reads agents/generated/manifest.json and generated .agent.md bodies at runtime and verifies SHA-256 parity."
+      config_injection: "Added non-destructive config hook injection for exactly 16 Gem Team agents using preserved generated prompt bodies."
+      merge_behavior: "Existing OpenCode agent fields, including model, prompt, mode, permission, and arbitrary user fields, win over generated defaults. Newly injected agents do not get a model field."
+      orchestrator_guard: "gem-orchestrator is injected as primary and routingTargets exclude gem-orchestrator; other Gem Team agents are injected as subagents."
+      metadata_guard: "Manifest remains audit metadata; unsupported metadata is not injected into OpenCode agent config."
+    verification_results:
+      sync_agents: "npm run sync:agents passed."
+      test: "npm test passed: 24 tests, 24 passed."
+      validate_sync: "npm run validate:sync passed."
+      typecheck: "npm run typecheck passed."
+      build: "npm run build passed."
+      validate_no_model_ids: "npm run validate:no-model-ids passed."
+      lint: "npm run lint passed."
+      data_parse: "JSON/YAML parse passed."
+    review_results:
+      status: passed_no_blocking_findings
+      continue_to_wave_6: true
+      warnings:
+        - "docs/PRD.yaml is absent; docs/PRD.md is the actual PRD source."
+        - "Plan labels drifted because config hook injection was implemented in Wave 5/T05; T07 is kept as load-evidence validation without inventing a new task."
+        - "package exports point to dist but dist is not present/committed; GitHub install behavior remains Pending."
+      next_wave_guards:
+        - "Preserve generated bodies and SHA-256 prompt parity."
+        - "Do not add model fields to newly injected agents."
+        - "Preserve existing user fields including model, prompt, mode, permission, and unknown fields."
+        - "Keep gem-orchestrator excluded from self-routing."
+        - "Do not inject unsupported metadata into OpenCode agent config."
+        - "Do not introduce concrete provider model IDs, provider examples, secrets/env output, forbidden routing dimensions, forbidden features, or global config writes."
+        - "Keep T03 priority chain and keep GitHub install, dist/package-manager behavior, and actual request model mutation AC-20 pending until proven."
+
+  - id: T06
+    title: "Sync validation and generated constants"
+    wave: 6
+    agent: gem-implementer
+    status: completed
+    dependencies: [T05, T03]
+    deps: [T05, T03]
+    conflicts_with: []
+    contract_refs: [C05, C06]
+    files:
+      - scripts/validate-sync.ts
+      - src/agents/generated.ts
+      - test/sync-validation.test.ts
+    acceptance:
+      - "16-slug parity validates against canonical_slugs."
+      - "Metadata validation enforces upstream source URL, upstream commit, body/content hash, local slug, sync timestamp or sync batch id."
+      - "Validation checks preserve phases, DAG/waves, task schemas, failure handling, memory/context envelope sentinels."
+      - "Generated constants expose exactly the canonical slugs."
+    verification: ["npm run validate:sync", "npm test"]
+    outputs:
+      - src/agents/generated.ts
+      - src/hooks/model-routing.ts
+      - test/model-routing-hook.test.ts
+      - test/sync-validation.test.ts
+    contracts:
+      C05: "Generated manifest and preserved bodies remain validation-safe; generated constants expose exactly the canonical slug list."
+      C06: "Dry-run model routing hook integration uses the T03 classifier/resolver priority chain without adding forbidden model dimensions."
+    findings:
+      generated_constants: "src/agents/generated.ts exports GENERATED_GEM_TEAM_AGENT_SLUGS and GENERATED_GEM_TEAM_AGENT_COUNT from the canonical slug source."
+      dry_run_helper: "previewModelRouting derives tier from structured signals, resolves OpenCode agent.model > complexity_models[tier] > current selected model, and reports mock hook mutation status."
+      chat_params_hook: "createModelRoutingHooks wires chat.params; mock invocation mutates only output.options.model when the resolved source is complexity_model. Native agent.model and current selected model fallbacks do not force a hook model override."
+      ac20_status: "partial: SDK type surface has chat.params output.options but no direct model field; mock hook evidence is deterministic and no provider/API was called, but actual OpenCode request model mutation is not runtime-verified."
+      guards: "No provider calls, env secret reads, global config writes, hardcoded provider model IDs, per-agent model maps, role_models, provider router, virtual models, slash commands, telemetry, or fallback chains were added."
+    verification_results:
+      validate_sync: "npm run validate:sync passed; verified 16 generated agents."
+      test: "npm test passed: 34 tests, 34 passed."
+      typecheck: "npm run typecheck passed."
+      build: "npm run build passed."
+      validate_no_model_ids: "npm run validate:no-model-ids passed; 31 files scanned."
+      lint: "npm run lint passed."
+      data_parse: "JSON parse for manifest/context passed; plan.yaml smoke syntax check passed."
+      git_status: "git status --short shows repository files as untracked in this workspace snapshot."
+    review_results:
+      status: passed_no_blocking_findings
+      continue_to_wave_7: true
+      warnings:
+        - "docs/PRD.yaml is absent; docs/PRD.md is the actual PRD source."
+        - "package exports point to dist but dist/install behavior remains Pending."
+        - "chat.params proof is limited to mock/type evidence; actual request model mutation AC-20 remains Partial/Pending."
+      next_wave_guards:
+        - "No provider/API calls, env secret reads, global config writes, or concrete provider model IDs."
+        - "Keep model values opaque and preserve OpenCode agent.model > complexity_models[tier] > current selected model."
+        - "Keep tiers simple, medium, and complex only; do not add per-agent/role model mappings or forbidden routing features."
+        - "Newly injected agents continue to omit default model fields."
+        - "Keep GitHub install syntax, dist/package-manager behavior, package exports, and AC-20 runtime mutation Pending until verified."
+
+  - id: T07
+    title: "Plugin config hook load evidence"
+    wave: 7
+    agent: gem-implementer
+    status: completed
+    dependencies: [T06, T01]
+    deps: [T06, T01]
+    conflicts_with: []
+    contract_refs: [C07, C08]
+    files:
+      - src/index.ts
+      - src/hooks/config.ts
+      - test/plugin-config.test.ts
+    acceptance:
+      - "Validates injected exactly 16 agents from generated manifest/bodies."
+      - "Validates gem-orchestrator is primary/entry agent; remaining agents are subagents."
+      - "Does not overwrite any existing OpenCode agent.model and does not add model fields to newly injected agents."
+      - "No provider router, telemetry, slash commands, virtual models, profiles, compaction, or fallback chain."
+      - "MVP-1 local/mock load evidence and MVP-2 preservation tests pass."
+    verification: ["npm run typecheck", "npm test", "npm run validate:sync", "npm run validate:no-model-ids"]
+    outputs:
+      - README.md
+      - docs/installation-poc.md
+      - examples/opencode.json.example
+      - scripts/validate-dist.mjs
+      - dist/src/**
+    findings:
+      local_load: "Verified local package-path install from a temp fixture after adding package main and exports[\"./server\"]; opencode agent list showed 16 gem-* agents."
+      github_source_syntax: "format_observed_end_to_end_pending; user-approved redacted global config inspection observed github:<owner>/<repo>#<ref>, but this repo was not verified end-to-end from GitHub."
+      package_manager_behavior: "Partial; official docs state npm plugins are Bun-installed, and source inspection shows path specs are file plugins while non-path specs use package resolution."
+      dist_need: "Partial/prepared; package-style entrypoints target dist/src, so built dist/src must exist for package target detection/import."
+      ac20: "Partial/Pending; only typed/mock chat.params output.options.model mutation is proven without provider/API calls."
+      dist_strategy: "Prepare dist/src inclusion and validate:dist, but do not claim remote GitHub install is verified."
+    verification_results:
+      validate_sync: "npm run validate:sync passed."
+      test: "npm test passed."
+      typecheck: "npm run typecheck passed."
+      build: "npm run build passed."
+      validate_dist: "npm run validate:dist passed."
+      validate_no_model_ids: "npm run validate:no-model-ids passed."
+      lint: "npm run lint passed."
+      local_install_poc: "opencode plugin local path succeeded in temp fixture; opencode agent list exposed 16 gem-* agents."
+      opencode_cli: "OpenCode CLI version observed as 1.15.13."
+    review_results:
+      status: passed_no_blocking_findings
+      continue_to_final_waves: true
+      warnings:
+        - "validate:dist currently checks package entrypoints, root declaration/import shape, API-key-like assignments, and provider-style model assignments, but broader forbidden string scan is still recommended."
+        - "GitHub source syntax format observed; no final GitHub install command should be published until this repo is verified end-to-end."
+        - "Package-manager behavior is Partial for GitHub specs; local/path behavior is observed, remote GitHub behavior remains unverified."
+        - "dist need is Partial/Prepared; package entrypoints target dist/src and validate:dist exists, but remote GitHub requirement remains Pending."
+        - "AC-20 remains Partial/Pending; only mock/type chat.params mutation is proven."
+      next_wave_guards:
+        - "Keep GitHub install syntax as format observed / end-to-end Pending unless verified end-to-end with safe remote-source evidence."
+        - "Keep package-manager behavior Partial/Pending for GitHub specs."
+        - "Keep AC-20 Partial/Pending until actual runtime request mutation is verified without provider/API calls."
+        - "Do not introduce provider model IDs, provider examples, API keys, secrets, telemetry, slash commands, provider routers, virtual models, fallback chains, per-agent override, role_models, or agent_complexity_models."
+        - "Do not write global OpenCode config."
+        - "If dist is committed, ensure regenerate-clean and validate:dist green."
+        - "Inspect git status, diff, and recent log before any commit."
+
+  - id: final-wave-hardening
+    title: "Final validation hardening before review"
+    status: completed
+    completed_at: "2026-06-03"
+    scope: "Reviewer-recommended deterministic dist forbidden string scanning only; no product scope expansion."
+    files:
+      - scripts/validate-dist.mjs
+      - test/validate-dist.test.ts
+      - docs/plan/20260603-implement-opencode-gem-team-plugin/context_envelope.json
+      - docs/plan/20260603-implement-opencode-gem-team-plugin/plan.yaml
+      - dist/test/validate-dist.test.js
+      - dist/test/validate-dist.test.js.map
+    validation_hardening_summary:
+      - "validate:dist now scans dist/src line-by-line for forbidden capability/config strings and reports path:line reason failures."
+      - "Rules cover telemetry, slash commands, provider routers/routing, virtual models, fallback chains, standalone auto model, role_models, agent_complexity_models, per-agent override dimensions, global OpenCode config writes, API-key/token/secret-like assignments, and provider-style model assignments."
+      - "Defensive validation/rejection strings are allowlisted only in known validation modules, not in capability implementation modules."
+    verification_results:
+      sync_agents: "npm run sync:agents passed; sync completed 16 agents."
+      validate_sync: "npm run validate:sync passed."
+      test: "npm test passed: 37 tests, 37 passed."
+      typecheck: "npm run typecheck passed."
+      build: "npm run build passed."
+      validate_no_model_ids: "npm run validate:no-model-ids passed; 35 files scanned."
+      lint: "npm run lint passed."
+      validate_dist: "npm run validate:dist passed; 30 dist/src files checked."
+      data_parse: "package.json, agents/generated/manifest.json, and context_envelope.json JSON parse passed; plan.yaml smoke parse passed."
+      guards: "No provider/API calls and no global OpenCode config writes."
+    pending_items_preserved:
+      - "GitHub source install syntax format observed; end-to-end install/load remains Pending."
+      - "GitHub package-manager/lifecycle behavior remains Partial/Pending."
+      - "Remote GitHub dist necessity remains Pending."
+      - "AC-20 actual OpenCode request model mutation remains Partial/Pending."
+    review_readiness:
+      status: ready_for_final_review
+      commit_created_by_implementer: false
+      reviewer_required_actions:
+        - "Inspect git status, git diff, and git log --oneline -10 before any commit."
+        - "Confirm uncommitted/untracked implementation artifacts are intended."
+        - "Preserve Verified/Partial/Pending boundaries for GitHub install, package-manager behavior, remote dist necessity, and AC-20 runtime mutation."
+
+  - id: T08
+    title: "PoC-dependent model routing hooks"
+    wave: 8
+    agent: gem-implementer
+    dependencies: [T07, T03, T01]
+    deps: [T07, T03, T01]
+    conflicts_with: []
+    contract_refs: [C09, C10, C11]
+    files:
+      - src/hooks/model-routing.ts
+      - test/model-routing-hook.test.ts
+    acceptance:
+      - "Uses observable dry-run/mock/local evidence only."
+      - "No actual provider calls."
+      - "If actual OpenCode model mutation is not proven, mark capability limited/experimental and do not claim AC-20 as verified."
+      - "Never overrides OpenCode agent.model and never emits concrete model IDs or provider model names."
+    verification: ["npm test", "npm run validate:no-model-ids"]
+
+  - id: T09
+    title: "README, examples, installation docs"
+    wave: 9
+    agent: gem-documentation-writer
+    dependencies: [T08, T01]
+    deps: [T08, T01]
+    conflicts_with: []
+    contract_refs: [C12, C13]
+    files:
+      - README.md
+      - examples/opencode.json.example
+      - docs/installation-poc.md
+    acceptance:
+      - "Installation and capability claims use Verified/Pending/Blocked statuses."
+      - "No final unverified install command before PoC completion."
+      - "No concrete model IDs, provider model names, API keys, tokens, or secrets."
+      - "Target remains GitHub-only with PoC caveats; no npm registry publish claim."
+      - "Docs preserve PoC-dependent status for GitHub install, dist, and package-manager conclusions."
+    verification: ["npm run validate:no-model-ids", "docs status table review"]
+
+  - id: T10
+    title: "Optional dist packaging only if necessary"
+    wave: 10
+    agent: gem-implementer
+    dependencies: [T09, T07]
+    deps: [T09, T07]
+    conflicts_with: []
+    contract_refs: [C14, C15]
+    files:
+      - dist/**
+      - scripts/validate-dist.ts
+    acceptance:
+      - "Skip or mark Blocked if T01 does not prove dist necessary."
+      - "dist is not default-submitted."
+      - "If produced, clean source build creates no dist diff."
+      - "If produced, validate:dist freshness and export smoke test pass."
+      - "No secrets or concrete model IDs in dist."
+    verification: ["npm run build", "npm run validate:dist if applicable", "export smoke test if applicable"]
+
+  - id: T11
+    title: "Full security and scope review"
+    wave: 11
+    agent: gem-reviewer
+    dependencies: [T10, T09, T08, T07, T06]
+    deps: [T10, T09, T08, T07, T06]
+    conflicts_with: []
+    contract_refs: [C16, C17, C18, C19, C20]
+    files:
+      - package.json
+      - src/**
+      - scripts/**
+      - agents/**
+      - src/agents/**
+      - dist/**
+      - test/**
+      - README.md
+      - examples/**
+      - docs/installation-poc.md
+      - docs/PRD.md
+      - docs/plan/20260603-implement-opencode-gem-team-plugin/**
+    acceptance:
+      - "Review scope covers package.json, src/**, scripts/**, agents/** or generated agents, dist/** if exists, test/**, README.md, examples/**, docs/installation-poc.md, docs/PRD.md, and this plan directory."
+      - "No secrets, no hardcoded concrete model IDs, and no provider model names."
+      - "No forbidden kimchi capabilities: provider virtual models, profiles, telemetry, slash commands, provider routers, compaction, fallback chains."
+      - "No overwrite of OpenCode agent.model."
+      - "Plan and PRD compliance confirmed."
+    verification: ["npm run validate:no-model-ids", "npm run validate:sync", "manual review report"]
+
+  - id: T12
+    title: "Verification and commit"
+    wave: 12
+    agent: gem-devops
+    dependencies: [T11]
+    deps: [T11]
+    conflicts_with: []
+    contract_refs: [C21]
+    files:
+      - git status/diff/log evidence
+    acceptance:
+      - "Install dependencies using available package manager; record manager used without assuming GitHub install package-manager behavior."
+      - "Run typecheck, test, build, validate:sync, validate:no-model-ids."
+      - "Run validate:dist only if dist is applicable/present."
+      - "Inspect git status, diff, and log before commit."
+      - "Commit implementation with Conventional Commit only after review pass and validation pass."
+      - "Do not commit secrets or unintended files."
+    verification: ["npm run typecheck", "npm test", "npm run build", "npm run validate:sync", "npm run validate:no-model-ids", "npm run validate:dist if applicable", "git status", "git diff", "git log --oneline -10"]

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    [
+      "/absolute/path/to/opencode-gem-team",
+      {
+        "complexity_models": {
+          "simple": "opaque-simple-model",
+          "medium": "opaque-medium-model",
+          "complex": "opaque-complex-model"
+        }
+      }
+    ]
+  ]
+}
