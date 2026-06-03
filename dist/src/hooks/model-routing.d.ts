@@ -1,11 +1,12 @@
-import type { Hooks } from "@opencode-ai/plugin";
+import type { PluginInput, Hooks } from "@opencode-ai/plugin";
 import type { OpenCodeAgentConfig, OpenCodeConfigWithAgents } from "./config.js";
-import type { GemTeamPluginOptions, PreviewModelRoutingInput, PreviewModelRoutingResult } from "../types.js";
+import type { GemTeamPluginOptions, PreviewModelRoutingInput, PreviewModelRoutingResult, RoutingToastNotifier } from "../types.js";
 type ChatParamsHook = NonNullable<Hooks["chat.params"]>;
 type ChatParamsInput = Parameters<ChatParamsHook>[0];
 type ChatParamsOutput = Parameters<ChatParamsHook>[1];
 type ConfigProvider = () => OpenCodeConfigWithAgents | undefined;
 export declare function previewModelRouting(input: PreviewModelRoutingInput): PreviewModelRoutingResult;
-export declare function createModelRoutingHooks(options?: GemTeamPluginOptions, getConfig?: ConfigProvider): Pick<Hooks, "chat.params">;
-export declare function applyChatParamsModelRouting(input: ChatParamsInput, output: ChatParamsOutput, options?: GemTeamPluginOptions, config?: OpenCodeConfigWithAgents): PreviewModelRoutingResult;
+export declare function createModelRoutingHooks(options?: GemTeamPluginOptions, getConfig?: ConfigProvider, notifyRoutingToast?: RoutingToastNotifier): Pick<Hooks, "chat.params">;
+export declare function applyChatParamsModelRouting(input: ChatParamsInput, output: ChatParamsOutput, options?: GemTeamPluginOptions, config?: OpenCodeConfigWithAgents, notifyRoutingToast?: RoutingToastNotifier): Promise<PreviewModelRoutingResult>;
+export declare function createRoutingToastNotifier(client: PluginInput["client"] | undefined): RoutingToastNotifier;
 export type { ChatParamsInput, ChatParamsOutput, OpenCodeAgentConfig };

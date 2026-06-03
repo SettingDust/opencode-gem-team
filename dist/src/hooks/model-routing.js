@@ -14,14 +14,14 @@ export function previewModelRouting(input) {
         hookMutation: previewHookMutation(resolution),
     };
 }
-export function createModelRoutingHooks(options = {}, getConfig = () => undefined) {
+export function createModelRoutingHooks(options = {}, getConfig = () => undefined, notifyRoutingToast) {
     return {
         "chat.params": async (input, output) => {
-            applyChatParamsModelRouting(input, output, options, getConfig());
+            await applyChatParamsModelRouting(input, output, options, getConfig(), notifyRoutingToast);
         },
     };
 }
-export function applyChatParamsModelRouting(input, output, options = {}, config) {
+export async function applyChatParamsModelRouting(input, output, options = {}, config, notifyRoutingToast) {
     const agentConfig = config?.agent?.[input.agent];
     const preview = previewModelRouting({
         signals: signalsFromChatParams(input),
@@ -38,7 +38,36 @@ export function applyChatParamsModelRouting(input, output, options = {}, config)
         source: preview.resolution.source,
         reason: preview.resolution.reason,
     };
+    if (preview.resolution.model !== undefined) {
+        await notifyRoutingToast?.({
+            sessionID: input.sessionID,
+            agent: input.agent,
+            tier: preview.resolution.tier,
+            source: preview.resolution.source,
+            model: preview.resolution.model,
+        });
+    }
     return preview;
+}
+export function createRoutingToastNotifier(client) {
+    const shown = new Set();
+    return async (payload) => {
+        const showToast = client?.tui?.showToast;
+        if (typeof showToast !== "function")
+            return;
+        const dedupeKey = routingToastKey(payload);
+        if (shown.has(dedupeKey))
+            return;
+        shown.add(dedupeKey);
+        await showToast({
+            body: {
+                title: "Gem Team model",
+                message: formatRoutingToastMessage(payload),
+                variant: payload.source === "native_agent_model" ? "info" : "success",
+                duration: 2500,
+            },
+        });
+    };
 }
 function previewHookMutation(resolution) {
     if (resolution.source === "complexity_model" && resolution.model !== undefined) {
@@ -69,6 +98,24 @@ function previewHookMutation(resolution) {
         status: "no_model_available_no_hook_model_override",
         reason: "no_resolved_model_available_for_hook_output",
     };
+}
+function routingToastKey(payload) {
+    return [payload.sessionID, payload.agent, payload.tier, payload.source, payload.model].join("|");
+}
+function formatRoutingToastMessage(payload) {
+    return `${payload.agent} · ${routingToastSourceLabel(payload.source)} · ${payload.model}`;
+}
+function routingToastSourceLabel(source) {
+    switch (source) {
+        case "native_agent_model":
+            return "agent model";
+        case "complexity_model":
+            return "tier route";
+        case "current_selected_model":
+            return "selected model";
+        case "no_model":
+            return "no model";
+    }
 }
 function signalsFromChatParams(input) {
     const messageSignals = recordValue(input.message.gemTeam)

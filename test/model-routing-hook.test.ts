@@ -2,7 +2,9 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 
 import plugin, {
+  applyChatParamsModelRouting,
   createModelRoutingHooks,
+  createRoutingToastNotifier,
   previewModelRouting,
   validateGemTeamConfig,
 } from "../src/index.js"
@@ -197,9 +199,75 @@ describe("chat.params hook dry-run integration", () => {
   })
 
   it("plugin server wires config and chat.params hooks without provider calls", async () => {
-    const hooks = await plugin.server({} as never, { complexity_models: { medium: "medium-tier-model" } })
+    const hooks = await plugin.server({ client: { tui: { showToast: async () => undefined } } } as never, { complexity_models: { medium: "medium-tier-model" } })
     assert.equal(typeof hooks.config, "function")
     assert.equal(typeof hooks["chat.params"], "function")
+  })
+
+  it("shows a visible routing toast without injecting chat context", async () => {
+    const toasts: Array<Record<string, unknown>> = []
+
+    await applyChatParamsModelRouting({
+      sessionID: "session-one",
+      agent: "gem-implementer",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: mockMessage("gem-implementer", "selected-model", { tierHint: "medium" }),
+    }, {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: {},
+    }, {
+      complexity_models: { medium: "medium-tier-model" },
+    }, {
+      agent: {},
+    }, createRoutingToastNotifier({
+      tui: {
+        showToast: async (toast: Record<string, unknown>) => {
+          toasts.push(toast)
+        },
+      },
+    } as never))
+
+    assert.deepEqual(toasts, [{
+      body: {
+        title: "Gem Team model",
+        message: "gem-implementer · tier route · medium-tier-model",
+        variant: "success",
+        duration: 2500,
+      },
+    }])
+  })
+
+  it("deduplicates repeated routing toasts for the same session result", async () => {
+    const toasts: Array<Record<string, unknown>> = []
+    const notify = createRoutingToastNotifier({
+      tui: {
+        showToast: async (toast: Record<string, unknown>) => {
+          toasts.push(toast)
+        },
+      },
+    } as never)
+
+    await notify({
+      sessionID: "session-one",
+      agent: "gem-reviewer",
+      tier: "complex",
+      source: "native_agent_model",
+      model: "review-model",
+    })
+    await notify({
+      sessionID: "session-one",
+      agent: "gem-reviewer",
+      tier: "complex",
+      source: "native_agent_model",
+      model: "review-model",
+    })
+
+    assert.equal(toasts.length, 1)
+    assert.equal((toasts[0] as { body?: { message?: string } })?.body?.message, "gem-reviewer · agent model · review-model")
   })
 })
 

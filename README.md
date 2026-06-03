@@ -19,6 +19,7 @@ OpenCode Gem Team Plugin integrates the 16 canonical Gem Team agents into OpenCo
 - Documentation and examples intentionally avoid concrete provider model IDs. Model values are opaque user-owned strings.
 - The plugin does not implement provider-side routing, per-agent model overrides, role model maps, fallback chains, slash commands, telemetry, profiles, virtual models, or global OpenCode config writes.
 - Newly injected generated agents do not receive default `model` fields. Existing user `agent.model` values win.
+- Normal Gem Team routing now shows a short TUI toast with the resolved model result by calling the OpenCode client TUI notification API, not by injecting chat/session messages into model context.
 
 ## Development commands
 

@@ -91,6 +91,16 @@ export type ModelRoutingHookMutationPreview = {
   reason: string
 }
 
+export type RoutingToastPayload = {
+  sessionID: string
+  agent: string
+  tier: ComplexityTier
+  source: ModelResolutionSource
+  model: string
+}
+
+export type RoutingToastNotifier = (payload: RoutingToastPayload) => Promise<void> | void
+
 export type PreviewModelRoutingResult = {
   classification: ComplexityClassificationResult
   resolution: ResolveModelResult
