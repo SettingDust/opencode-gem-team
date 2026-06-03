@@ -1,0 +1,255 @@
+plan_id: 20260603-rewrite-prd-opencode-gem-team-plugin
+objective: >-
+  Update docs/PRD.md using the completed opencode-kimchi feasibility research: add an OpenCode SDK plugin feasibility/technical-route section, remove old-solution content entirely, and preserve the existing GitHub-only/Gem Team/model-routing product decisions.
+created_at: "2026-06-03T00:00:00+08:00"
+created_by: gem-planner
+status: pending
+plan_metrics:
+  wave_1_task_count: 1
+  total_dependencies: 1
+  risk_score: medium
+quality_score:
+  overall: 0.94
+  breakdown:
+    prd_coverage: 0.97
+    target_files_verified: 1.0
+    contracts_complete: 0.92
+    wave_assignment_valid: 1.0
+  blocking_issues: 0
+  warnings: 1
+  reviewer_focus:
+    - "GitHub-only wording must require source-syntax/dist/package-manager verification without overclaiming npm-free implementation mechanics."
+    - "Old方案 references must be deleted or rewritten, not moved into a deprecation note."
+tldr: |
+  Modify only docs/PRD.md: insert kimchi-informed SDK plugin feasibility/route, remove section 12 and old-solution references, then review preserved product constraints.
+open_questions:
+  - question: "OpenCode GitHub plugin source syntax and packaging requirements still need implementation-time verification."
+    context: "kimchi README demonstrates package install, not this repo's GitHub-only installation target."
+    type: research
+    affects: ["GitHub installation requirement", "technical route", "acceptance criteria"]
+gaps:
+  - description: "Official OpenCode plugin GitHub source syntax, dist requirements, and package-manager touchpoints are not yet proven by the kimchi research."
+    refinement_requests:
+      - query: "Verify OpenCode plugin GitHub source syntax, whether committed dist/build artifacts are needed, and whether install can avoid npm publish while possibly still using package manager resolution."
+        source_hint: "OpenCode official plugin/config docs and current opencode source/tests"
+pre_mortem:
+  overall_risk_level: medium
+  critical_failure_modes:
+    - scenario: "PRD copies kimchi's provider virtual models, profiles, telemetry, or slash-command shape."
+      likelihood: medium
+      impact: high
+      mitigation: "Constrain kimchi references to SDK plugin mechanics only: default export PluginModule, server hooks, config injection, chat.params model setting."
+    - scenario: "Old方案废弃说明 remains as section 12 or AC/risk references keep pointing to it."
+      likelihood: medium
+      impact: medium
+      mitigation: "Delete section 12 entirely; rewrite AC-14 and risk wording to direct positive constraints."
+    - scenario: "GitHub-only is overstated as zero package-manager involvement."
+      likelihood: medium
+      impact: medium
+      mitigation: "State GitHub-only release/install target, but require verification of OpenCode GitHub source syntax, dist artifacts, and npm publish avoidance."
+  assumptions:
+    - "docs/PRD.md is the only PRD source; docs/PRD.yaml is absent."
+    - "No code implementation is requested in this planning task."
+    - "User-approved deletion of old方案 means no deprecation archive/notes in PRD."
+implementation_specification:
+  code_structure: "Documentation-only change to docs/PRD.md; no source code or config files."
+  affected_areas:
+    - "docs/PRD.md sections 1, 3, 5, 7, 10, 11, 12"
+  component_details:
+    - component: "docs/PRD.md"
+      responsibility: "Product requirements and implementation-route constraints for OpenCode Gem Team plugin."
+      interfaces:
+        - "Markdown sections and acceptance criteria table"
+        - "Functional requirement bullets"
+        - "Risk table"
+      dependencies:
+        - component: "opencode-kimchi feasibility research"
+          relationship: "Provides proven SDK plugin implementation shape and anti-pattern boundaries."
+        - component: "Existing product decisions"
+          relationship: "Must remain unchanged while adding feasibility route."
+      integration_points:
+        - "New feasibility/technical-route section before acceptance criteria or after upstream orchestration section."
+        - "Rewritten GitHub installation requirement and acceptance criteria."
+contracts:
+  - from_task: T01-update-prd-kimchi-route
+    to_task: T02-review-prd-update
+    interface: "Updated docs/PRD.md"
+    format: "Markdown diff that only changes PRD content; no code changes."
+tasks:
+  - id: T01-update-prd-kimchi-route
+    title: "Rewrite PRD with kimchi-informed plugin route"
+    description: >-
+      Update docs/PRD.md to add a feasibility/technical-route section based on opencode-kimchi's OpenCode SDK plugin shape, remove the old方案 section entirely, rewrite old-solution references, and preserve all fixed product decisions.
+    wave: 1
+    agent: gem-implementer
+    prototype: false
+    covers:
+      - "Need to modify PRD sections/new content"
+      - "Must delete or rewrite old方案 content"
+      - "Acceptance criteria update"
+      - "Kimchi feasibility analysis"
+    priority: high
+    status: pending
+    flags:
+      flaky: false
+      retries_used: 0
+      requires_design_validation: false
+    dependencies: []
+    conflicts_with: []
+    context_files:
+      - path: docs/PRD.md
+        description: "Current PRD; section 12 and AC-14/risk old方案 references require edits."
+      - path: docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/context_envelope.json
+        description: "Prior constraints and current plan context cache."
+    planning_pass: 1
+    planning_history:
+      - pass: 1
+        reason: "Initial executable PRD update plan based on user-provided kimchi research."
+        timestamp: "2026-06-03T00:00:00+08:00"
+    estimated_effort: medium
+    estimated_files: 1
+    estimated_lines: 220
+    focus_area: "PRD feasibility/route and old方案 removal"
+    verification:
+      - "Inspect docs/PRD.md diff only; no code/config changes."
+      - "Search PRD for section heading '旧方案废弃说明' and ensure absent."
+      - "Search PRD for provider virtual models/profiles/telemetry/slash commands as requirements and ensure absent."
+      - "Check model priority chain remains exact."
+    acceptance_criteria:
+      - "PRD includes a new implementation feasibility/technical-route section referencing kimchi only as SDK plugin precedent: default export PluginModule { id, server }, server hooks, config hook dynamic agent injection, chat.params model setting."
+      - "PRD states config hook may inject agents without overwriting existing OpenCode agent.model."
+      - "PRD states chat.params can set actual request model for tier resolution while respecting OpenCode agent.model priority."
+      - "PRD explicitly excludes kimchi provider virtual models, profiles, telemetry, slash commands, and provider-side router patterns from this product."
+      - "Section 12 is deleted entirely; no deprecated/old方案 note is retained."
+      - "AC-14 is rewritten to validate absence of old-solution residue without referencing section 12."
+      - "Risk table old方案 row is rewritten into concrete drift risks such as npm publish/install, provider router, global config modification, or auto model resurfacing."
+      - "Existing decisions remain: GitHub-only publish/install target; plugin bundles/syncs Gem Team agents; upstream orchestrator preserved; three complexity_models tiers; priority OpenCode agent.model > plugin complexity_models[tier] > current selected model; no per-agent override, role_models, provider-side router, or auto model."
+      - "GitHub-only language requires verification of OpenCode GitHub source syntax, dist commit needs, and no npm publish requirement; it must not overclaim that no package manager is involved anywhere."
+    success_criteria:
+      - "prd.diff.files == ['docs/PRD.md']"
+      - "contains('default export') && contains('PluginModule') && contains('config hook') && contains('chat.params')"
+      - "not contains_heading('## 12. 旧方案废弃说明')"
+      - "model_priority == 'OpenCode agent.model > plugin complexity_models[tier] > current OpenCode selected model'"
+    failure_modes:
+      - scenario: "PRD preserves old section as historical/deprecated note."
+        likelihood: medium
+        impact: medium
+        mitigation: "Delete rather than archive; fold only necessary constraints into positive requirements/non-goals."
+      - scenario: "Technical route commits to unverified GitHub install syntax."
+        likelihood: medium
+        impact: high
+        mitigation: "Phrase as verification requirement until official syntax is proven."
+    tech_stack:
+      - "Markdown"
+      - "OpenCode SDK plugin concepts"
+      - "TypeScript feasibility reference"
+    test_coverage: "Documentation acceptance checks only."
+    debugger_diagnosis: null
+    implementation_handoff:
+      do_not_reinvestigate:
+        - "Kimchi research conclusions are user-provided and sufficient for PRD planning."
+        - "Do not modify code, package files, or agent definitions."
+        - "Do not keep a deleted-old-solution section."
+      required_test_first: "N/A; documentation-only edit."
+      target_files:
+        - docs/PRD.md
+      minimal_change: "Patch existing PRD sections instead of rewriting unrelated product requirements."
+      acceptance_checks:
+        - "Manual Markdown review against all T01 acceptance criteria."
+        - "Full-text check for forbidden old方案 and forbidden kimchi patterns."
+    requires_review: false
+    review_depth: null
+    review_security_sensitive: false
+    validation_matrix: []
+    flows: []
+    fixtures: {}
+    test_data: []
+    cleanup: false
+    visual_regression: {}
+    environment: null
+    requires_approval: false
+    devops_security_sensitive: false
+    task_type: null
+    audience: null
+    coverage_matrix: []
+  - id: T02-review-prd-update
+    title: "Review PRD for feasibility-route accuracy and decision preservation"
+    description: >-
+      Review the PRD edit for accuracy against kimchi feasibility findings, deletion of old方案 content, GitHub-only wording, and preservation of existing product decisions.
+    wave: 2
+    agent: gem-reviewer
+    prototype: false
+    covers:
+      - "Reviewer validation"
+      - "Product decision preservation"
+      - "Old方案 removal verification"
+    priority: high
+    status: pending
+    flags:
+      flaky: false
+      retries_used: 0
+      requires_design_validation: false
+    dependencies:
+      - T01-update-prd-kimchi-route
+    conflicts_with: []
+    context_files:
+      - path: docs/PRD.md
+        description: "Updated PRD under review."
+      - path: docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/plan.yaml
+        description: "Review criteria and expected PRD changes."
+    planning_pass: 1
+    planning_history:
+      - pass: 1
+        reason: "Reviewer follows implementation task to validate documentation-only PRD changes."
+        timestamp: "2026-06-03T00:00:00+08:00"
+    estimated_effort: small
+    estimated_files: 1
+    estimated_lines: 80
+    focus_area: "PRD review"
+    verification:
+      - "Validate every T01 acceptance criterion."
+      - "Confirm no unrelated PRD decisions were changed."
+      - "Confirm no code/config files were modified."
+    acceptance_criteria:
+      - "Review passes only if the kimchi route is framed as feasibility/technical route, not copied product scope."
+      - "Review passes only if all forbidden mechanisms remain prohibited: per-agent override, role_models, provider-side router, auto model, kimchi virtual models/profiles/telemetry/slash commands."
+      - "Review passes only if old方案 section is absent and references are rewritten."
+      - "Review passes only if GitHub-only target is retained with explicit verification requirements for source syntax/dist/npm publish avoidance."
+    success_criteria:
+      - "review.blocking_findings == 0"
+      - "review.validated_acceptance_criteria == 100%"
+    failure_modes:
+      - scenario: "Reviewer focuses on prose style and misses product-scope regressions."
+        likelihood: low
+        impact: high
+        mitigation: "Use reviewer_focus and T01 acceptance checklist as mandatory review matrix."
+    tech_stack:
+      - "Markdown"
+      - "OpenCode SDK plugin concepts"
+    test_coverage: "Reviewer checklist coverage for PRD acceptance criteria."
+    debugger_diagnosis: null
+    implementation_handoff:
+      do_not_reinvestigate:
+        - "Use the plan and user-provided kimchi findings as the review baseline."
+        - "Do not request implementation code changes."
+      required_test_first: "N/A; documentation review."
+      target_files:
+        - docs/PRD.md
+      minimal_change: "Request only PRD corrections needed to satisfy acceptance criteria."
+      acceptance_checks:
+        - "Checklist pass for T01 and T02 acceptance criteria."
+    requires_review: true
+    review_depth: standard
+    review_security_sensitive: false
+    validation_matrix: []
+    flows: []
+    fixtures: {}
+    test_data: []
+    cleanup: false
+    visual_regression: {}
+    environment: null
+    requires_approval: false
+    devops_security_sensitive: false
+    task_type: null
+    audience: null
+    coverage_matrix: []

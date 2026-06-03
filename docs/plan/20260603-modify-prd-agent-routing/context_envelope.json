@@ -1,0 +1,230 @@
+{
+  "meta": {
+    "version": 2,
+    "last_updated": "2026-06-03",
+    "previous_version_fields_changed": [
+      "objective",
+      "decisions",
+      "facts",
+      "gotchas",
+      "verification",
+      "learnings"
+    ]
+  },
+  "plan_id": "20260603-modify-prd-agent-routing",
+  "objective": "Record completed PRD corrections for Gem Team agent routing requirements after user feedback, preserving real agent slugs, decisions, verification outcomes, and gotchas for future agents.",
+  "modified_files": [
+    "docs/PRD.md",
+    "docs/plan/20260603-modify-prd-agent-routing/context_envelope.json"
+  ],
+  "decisions": [
+    {
+      "decision": "Use docs/PRD.md as the PRD source of truth.",
+      "rationale": [
+        "docs/PRD.yaml was not found.",
+        "No YAML PRD was created because the existing repository PRD format is Markdown."
+      ]
+    },
+    {
+      "decision": "Use real gem-* slugs for routable/configurable agent references in the PRD, not uppercase display titles.",
+      "rationale": [
+        "User feedback stated the earlier PRD agent names were wrong.",
+        "Research confirmed real agent slugs from https://github.com/mubaidr/gem-team/tree/main/.apm/agents."
+      ]
+    },
+    {
+      "decision": "Keep gem-orchestrator in the canonical agent list but exclude it from its own child/subagent routing list.",
+      "rationale": [
+        "gem-orchestrator is the primary user-invoked routing agent.",
+        "The child/subagent routing list must contain only the other 15 real Gem Team agents."
+      ]
+    },
+    {
+      "decision": "Do not hardcode litellm/xxx model defaults in the PRD.",
+      "rationale": [
+        "Model default values must be configurable.",
+        "Default, recommended, and acceptance-criteria text must avoid fixed litellm/xxx values.",
+        "Model selection is expressed through model_profiles.* keys."
+      ]
+    },
+    {
+      "decision": "Route through gem-orchestrator without a separate auto model or /auto command.",
+      "rationale": [
+        "The user specified routing occurs when calling gem-orchestrator.",
+        "A dedicated auto model and slash command are out of scope."
+      ]
+    },
+    {
+      "decision": "Exclude long-term routing strategy and opencode configuration changes from this project.",
+      "rationale": [
+        "The user stated long-term plans are not part of this project.",
+        "Modifying opencode configuration, provider-side routers, LiteLLM router strategy, and opencode.json acceptance criteria are outside scope."
+      ]
+    }
+  ],
+  "facts": [
+    "User feedback stated the previous PRD used wrong agent names and required checking https://github.com/mubaidr/gem-team/tree/main/.apm/agents.",
+    "Research confirmed the real Gem Team agent slugs: gem-browser-tester, gem-code-simplifier, gem-critic, gem-debugger, gem-designer-mobile, gem-designer, gem-devops, gem-documentation-writer, gem-implementer-mobile, gem-implementer, gem-mobile-tester, gem-orchestrator, gem-planner, gem-researcher, gem-reviewer, gem-skill-creator.",
+    "Actual PRD file is docs/PRD.md.",
+    "docs/PRD.yaml was not found and was not forcibly created.",
+    "docs/PRD.md has been modified to use real gem-* slugs for canonical and routable agent references.",
+    "The prior uppercase accepted agent-name list is superseded and must not be used for routable/configurable identifiers.",
+    "Model defaults must be configurable and must not be hardcoded as litellm/xxx values.",
+    "Model selection is expressed through model_profiles.* keys.",
+    "Routing occurs when invoking gem-orchestrator; no /auto command or standalone auto model is in scope.",
+    "Prompts, instructions, and slash commands are not positive implementation requirements in this PRD.",
+    "Long-term LiteLLM/provider-side router/plugin/opencode global configuration modification content is out of scope.",
+    "Acceptance criteria verify the PRD document itself."
+  ],
+  "superseded": {
+    "uppercase_accepted_agent_name_list": {
+      "status": "superseded",
+      "reason": "User feedback and source research confirmed routable/configurable identifiers must be real gem-* slugs rather than uppercase display titles.",
+      "old_values": [
+        "ORCHESTRATOR",
+        "RESEARCHER",
+        "PLANNER",
+        "IMPLEMENTER",
+        "REVIEWER",
+        "CRITIC",
+        "DEBUGGER",
+        "BROWSER TESTER",
+        "SIMPLIFIER",
+        "SKILL CREATOR",
+        "DEVOPS",
+        "DOCUMENTATION",
+        "DESIGNER",
+        "IMPLEMENTER-MOBILE",
+        "DESIGNER-MOBILE",
+        "MOBILE TESTER"
+      ],
+      "replacement_values": [
+        "gem-browser-tester",
+        "gem-code-simplifier",
+        "gem-critic",
+        "gem-debugger",
+        "gem-designer-mobile",
+        "gem-designer",
+        "gem-devops",
+        "gem-documentation-writer",
+        "gem-implementer-mobile",
+        "gem-implementer",
+        "gem-mobile-tester",
+        "gem-orchestrator",
+        "gem-planner",
+        "gem-researcher",
+        "gem-reviewer",
+        "gem-skill-creator"
+      ]
+    }
+  },
+  "gotchas": [
+    "Do not introduce docs/PRD.yaml unless explicitly requested or repository standards change.",
+    "Do not reuse the old uppercase accepted list as routable/configurable identifiers; it is superseded by real gem-* slugs.",
+    "SIMPLIFIER must be represented as gem-code-simplifier.",
+    "DOCUMENTATION must be represented as gem-documentation-writer.",
+    "gem-orchestrator may appear in the canonical agent list but must not appear in its own child/subagent routing list.",
+    "Do not re-add hardcoded litellm/xxx defaults, recommendations, or acceptance criteria.",
+    "Do not describe /auto, slash-command workflows, standalone auto models, prompts, or instructions except as explicitly rejected/non-goals.",
+    "Do not add long-term solution, LiteLLM/provider-side router/plugin, opencode global configuration edits, or opencode.json acceptance criteria to this PRD."
+  ],
+  "verification": {
+    "status": "passed",
+    "checked_file": "docs/PRD.md",
+    "results": [
+      "docs/PRD.md lines 36-51 use 16 real gem-* slugs.",
+      "docs/PRD.md line 104 routable child/subagent list contains 15 agents and excludes gem-orchestrator.",
+      "No old erroneous routing/configuration names are used as routable/configurable identifiers.",
+      "No hardcoded default model ID such as litellm/xxx remains.",
+      "Model selection is expressed through model_profiles.* keys.",
+      "No /auto command or standalone auto model remains.",
+      "Routing occurs when invoking gem-orchestrator.",
+      "No positive requirement to generate or maintain prompts, instructions, or slash commands remains.",
+      "No long-term LiteLLM/provider-side router/plugin/opencode global configuration modification content remains.",
+      "Acceptance criteria verify only the PRD document itself."
+    ]
+  },
+  "learnings": {
+    "patterns": [
+      {
+        "name": "Markdown PRD source of truth",
+        "description": "When docs/PRD.md exists and docs/PRD.yaml is absent, update the existing Markdown PRD instead of creating a YAML PRD unless instructed.",
+        "confidence": 0.95
+      },
+      {
+        "name": "Gem Team slug-based routing identifiers",
+        "description": "Use real gem-* slugs from the upstream .apm/agents directory for canonical, routable, and configurable agent references.",
+        "confidence": 0.98
+      },
+      {
+        "name": "gem-orchestrator-driven routing",
+        "description": "Agent model routing requirements are expressed around gem-orchestrator invocation, not a standalone auto model or slash command; gem-orchestrator routes only to the other 15 child agents.",
+        "confidence": 0.98
+      }
+    ],
+    "facts": [
+      {
+        "statement": "The real canonical Gem Team agent slug set is gem-browser-tester, gem-code-simplifier, gem-critic, gem-debugger, gem-designer-mobile, gem-designer, gem-devops, gem-documentation-writer, gem-implementer-mobile, gem-implementer, gem-mobile-tester, gem-orchestrator, gem-planner, gem-researcher, gem-reviewer, gem-skill-creator.",
+        "category": "agent-routing"
+      },
+      {
+        "statement": "The old uppercase accepted list is superseded and must not be reused as routable/configurable identifiers.",
+        "category": "agent-routing"
+      },
+      {
+        "statement": "gem-orchestrator is the primary user-invoked routing agent and is excluded from its own child/subagent routing list.",
+        "category": "agent-routing"
+      },
+      {
+        "statement": "Model defaults must be configurable and must not be hardcoded to litellm/xxx values.",
+        "category": "configuration"
+      },
+      {
+        "statement": "Model selection is expressed through model_profiles.* keys.",
+        "category": "configuration"
+      }
+    ],
+    "gotchas": [
+      "Old uppercase agent names can reappear during edits; verify that routable/configurable identifiers are gem-* slugs.",
+      "SIMPLIFIER maps to gem-code-simplifier, not gem-simplifier.",
+      "DOCUMENTATION maps to gem-documentation-writer, not gem-documentation.",
+      "gem-orchestrator must be excluded from its own child routing list even though it belongs in the canonical list.",
+      "Negative-scope mentions of prompts, instructions, and chat commands are allowed, but implementation or acceptance requirements for them are not."
+    ],
+    "failure_modes": [
+      {
+        "scenario": "PRD update accidentally preserves stale routing requirements.",
+        "symptoms": [
+          "uppercase display titles appear as routable/configurable identifiers",
+          "SIMPLIFIER or DOCUMENTATION appears instead of gem-code-simplifier or gem-documentation-writer",
+          "gem-orchestrator appears in its own child routing list",
+          "litellm/xxx appears as a default or recommendation",
+          "/auto or standalone auto model appears",
+          "opencode.json acceptance criteria appear"
+        ],
+        "mitigation": "Re-run a PRD review for real gem-* slugs, child routing exclusions, banned model defaults, banned /auto references, and scope boundaries before marking the task complete."
+      }
+    ],
+    "decisions": [
+      {
+        "decision": "Use real gem-* slugs as PRD agent identifiers.",
+        "rationale": [
+          "User feedback invalidated the uppercase accepted list.",
+          "Upstream .apm/agents research confirmed the real slugs."
+        ]
+      },
+      {
+        "decision": "Keep PRD scope focused on current project routing behavior only.",
+        "rationale": [
+          "User excluded long-term solution work.",
+          "User excluded opencode configuration modification work."
+        ]
+      }
+    ],
+    "conventions": [
+      "Use gem-* slugs exactly as specified in the real canonical list for routable/configurable agent references.",
+      "Represent model choices as model_profiles.* keys, not provider/model IDs.",
+      "Represent prompts/instructions/chat commands only as exclusions or non-goals in this PRD context."
+    ]
+  }
+}

@@ -1,0 +1,598 @@
+{
+  "context_envelope": {
+    "meta": {
+      "plan_id": "20260603-rewrite-prd-opencode-gem-team-plugin",
+      "created_at": "2026-06-03T00:00:00+08:00",
+      "last_updated": "2026-06-03T00:00:00+08:00",
+      "version": 3,
+      "previous_version_fields_changed": [
+        "meta",
+        "status",
+        "user_latest_request",
+        "research_digest",
+        "prd_update_result",
+        "review_result",
+        "product_decisions_kept",
+        "task_registry",
+        "learnings"
+      ],
+      "source": [
+        "user request to record opencode-kimchi feasibility-informed PRD update and review",
+        "docs/PRD.md",
+        "docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/plan.yaml",
+        "prior context_envelope.json"
+      ]
+    },
+    "status": {
+      "phase": "post_prd_update_review",
+      "prd_updated": true,
+      "review_completed": true,
+      "blocking_findings": 0,
+      "warnings": [],
+      "confidence": 0.97
+    },
+    "user_latest_request": {
+      "summary": "参考 https://github.com/castai/opencode-kimchi 分析 OpenCode Gem Team 插件实现可行性；旧方案可以删除。",
+      "must_not_modify": [
+        "docs/PRD.md in this context-envelope update task"
+      ],
+      "write_scope": [
+        "docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/context_envelope.json only"
+      ]
+    },
+    "scope": {
+      "purpose": [
+        "Reusable context for follow-up agents after kimchi-informed PRD rewrite and review.",
+        "Preserve exact product constraints and review outcomes without rereading deleted old-solution context."
+      ],
+      "applies_to": [
+        "docs/PRD.md review and future implementation planning",
+        "OpenCode Gem Team plugin product decisions"
+      ],
+      "non_goals": [
+        "No code implementation recorded as complete.",
+        "No package/config edits.",
+        "No docs/PRD.yaml creation.",
+        "No old方案 deprecation archive retained in PRD."
+      ]
+    },
+    "project_summary": {
+      "business_domain": "OpenCode plugin for bundling/syncing Gem Team agents and resolving model tiers.",
+      "primary_users": [
+        "OpenCode users",
+        "Gem Team plugin maintainers"
+      ],
+      "key_features": [
+        "GitHub-only publish/install target with PoC-gated install mechanics",
+        "Built-in synchronized Gem Team agents from upstream",
+        "Upstream gem-orchestrator preservation",
+        "Three optional complexity model tiers"
+      ],
+      "current_phase": "PRD updated and reviewed after opencode-kimchi feasibility research"
+    },
+    "tech_stack": [
+      {
+        "name": "Markdown",
+        "version": "N/A",
+        "usage_context": "PRD source",
+        "config_files": [
+          "docs/PRD.md"
+        ]
+      },
+      {
+        "name": "OpenCode SDK plugin",
+        "version": "unverified",
+        "usage_context": "Feasibility route based on kimchi: PluginModule, server hooks, config hook, chat.params",
+        "config_files": []
+      },
+      {
+        "name": "TypeScript",
+        "version": "unverified",
+        "usage_context": "Likely implementation language inferred from kimchi reference",
+        "config_files": []
+      }
+    ],
+    "conventions": [
+      "Use docs/PRD.md as PRD source of truth.",
+      "Write plan artifacts under docs/plan/{plan_id}/.",
+      "Use exact gem-* slugs; do not use display-name aliases.",
+      "Model priority string must remain exact: OpenCode agent.model > plugin complexity_models[tier] > current OpenCode selected model.",
+      "Kimchi references are implementation-shape evidence, not product-scope inheritance.",
+      "PRD content is Chinese; final agent outputs may summarize in Chinese unless overridden."
+    ],
+    "constraints": {
+      "hard": [
+        "Future context-envelope update tasks may modify only docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/context_envelope.json unless explicitly instructed otherwise.",
+        "Do not restore old方案废弃说明 or old-solution deprecation sections in docs/PRD.md.",
+        "Preserve GitHub-only publish/install target while PoC verifies GitHub source syntax, dist requirements, and npm publish avoidance.",
+        "Preserve plugin built-in/synced Gem Team agents and upstream orchestrator orchestration.",
+        "Preserve only complexity_models.simple|medium|complex.",
+        "Preserve model priority OpenCode agent.model > plugin complexity_models[tier] > current selected model.",
+        "Forbid per-agent override, agent_complexity_models, role_models, provider-side router, third-party long-term router, standalone auto model."
+      ],
+      "soft": [
+        "Keep PRD concise and implementation-route focused.",
+        "Patch existing sections rather than rewrite unrelated PRD decisions."
+      ],
+      "compatibility": [
+        "OpenCode GitHub source syntax, dist/package requirements, and no-npm-publish path must be verified by PoC before precise install docs."
+      ],
+      "security_requirements": [
+        "Do not document or require API keys/tokens/secrets in PRD examples.",
+        "Tier resolve metadata must not record secrets or full user content."
+      ]
+    },
+    "research_digest": {
+      "relevant_files": [
+        {
+          "path": "docs/PRD.md",
+          "purpose": [
+            "Updated PRD source and review target"
+          ],
+          "why_relevant": [
+            "Contains kimchi-informed SDK plugin route, updated AC-14/AC-15, PoC checklist, risk table, and preserved product decisions."
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 1.0
+        },
+        {
+          "path": "docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/plan.yaml",
+          "purpose": [
+            "Review baseline and acceptance matrix"
+          ],
+          "why_relevant": [
+            "Defines required kimchi route, deletion of old方案, GitHub-only caveats, and reviewer checks."
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 1.0
+        }
+      ],
+      "kimchi_feasibility_findings": [
+        {
+          "finding": "OpenCode SDK plugin can default export PluginModule { id, server }.",
+          "source": "https://github.com/castai/opencode-kimchi",
+          "confidence": 0.95
+        },
+        {
+          "finding": "server returns hooks; config hook can dynamically inject agents.",
+          "source": "opencode-kimchi feasibility analysis",
+          "confidence": 0.95
+        },
+        {
+          "finding": "config hook injection can avoid overwriting existing OpenCode agent.model.",
+          "source": "opencode-kimchi feasibility analysis",
+          "confidence": 0.92
+        },
+        {
+          "finding": "chat.params can set the actual request model for resolved complexity tier requests.",
+          "source": "opencode-kimchi feasibility analysis",
+          "confidence": 0.92
+        },
+        {
+          "finding": "Kimchi proves npm package installation shape, not GitHub-only installation for this repo.",
+          "source": "opencode-kimchi README feasibility boundary",
+          "confidence": 0.98
+        }
+      ],
+      "kimchi_boundaries_do_not_copy": [
+        "provider virtual models",
+        "profiles",
+        "telemetry",
+        "slash commands",
+        "provider auto-router",
+        "context auto-compaction",
+        "model fallback chain"
+      ],
+      "patterns_found": [
+        {
+          "name": "Kimchi SDK plugin shape",
+          "category": "feasibility",
+          "confidence": 0.95,
+          "source": "external_reference",
+          "example_location": [
+            "docs/PRD.md:133-157"
+          ]
+        },
+        {
+          "name": "Old-solution section removed",
+          "category": "PRD drift correction",
+          "confidence": 1.0,
+          "source": "codebase_analysis",
+          "example_location": [
+            "docs/PRD.md ends at section 11; no ## 12 old方案 section"
+          ]
+        },
+        {
+          "name": "PoC-gated GitHub-only install wording",
+          "category": "install accuracy",
+          "confidence": 1.0,
+          "source": "codebase_analysis",
+          "example_location": [
+            "docs/PRD.md:9",
+            "docs/PRD.md:61-67",
+            "docs/PRD.md:318-322"
+          ]
+        }
+      ],
+      "dependencies": {
+        "internal": [
+          "docs/PRD.md",
+          "docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/plan.yaml"
+        ],
+        "external": [
+          "https://github.com/castai/opencode-kimchi",
+          "OpenCode official plugin/config docs for future PoC verification"
+        ]
+      },
+      "gotchas": [
+        {
+          "text": "Kimchi README proves npm package install only; it does not prove this repo's GitHub-only install syntax.",
+          "confidence": 0.98
+        },
+        {
+          "text": "Do not copy kimchi provider virtual models/profiles/telemetry/slash commands/provider auto-router/context auto-compaction/model fallback chain.",
+          "confidence": 0.98
+        },
+        {
+          "text": "Old方案 content was deleted and must not be reintroduced as a historical or deprecated note.",
+          "confidence": 1.0
+        },
+        {
+          "text": "Hardcoding concrete model IDs in PRD, README, examples, or acceptance criteria violates the product boundary.",
+          "confidence": 1.0
+        }
+      ],
+      "open_questions": [
+        {
+          "question": "What exact OpenCode GitHub source syntax, dist commitment policy, and package-manager involvement apply?",
+          "context": "Required before final install instructions can be precise.",
+          "type": "research",
+          "affects": [
+            "GitHub installation docs",
+            "implementation PoC"
+          ]
+        }
+      ]
+    },
+    "prd_update_result": {
+      "path": "docs/PRD.md",
+      "modified": true,
+      "summary": [
+        "新增 kimchi-informed OpenCode SDK 插件路线与可行性说明。",
+        "删除旧方案废弃说明章节及引用。",
+        "改写 AC-14/AC-15、PoC 清单与风险表，转为正向技术路线和边界要求。",
+        "补强 upstream source URL、commit、body/content hash 的同步与校验要求。",
+        "保留 GitHub-only 目标但将 GitHub source 语法、dist、无需 npm publish 列为 PoC 验证项。"
+      ],
+      "key_locations": [
+        {
+          "range": "docs/PRD.md:9",
+          "content": "GitHub-only 发布/安装目标与 PoC-gated 安装机制声明"
+        },
+        {
+          "range": "docs/PRD.md:61-67",
+          "content": "GitHub 安装要求与不得 overclaim package manager involvement"
+        },
+        {
+          "range": "docs/PRD.md:71-80",
+          "content": "上游 agent 同步 metadata: source URL, commit, body/content hash"
+        },
+        {
+          "range": "docs/PRD.md:133-157",
+          "content": "OpenCode SDK 插件技术路线与 kimchi 参考边界"
+        },
+        {
+          "range": "docs/PRD.md:291-317",
+          "content": "更新后的验收标准 AC-01 至 AC-22"
+        },
+        {
+          "range": "docs/PRD.md:332-342",
+          "content": "更新后的风险与缓解表"
+        }
+      ]
+    },
+    "review_result": {
+      "passed": true,
+      "blocking_findings": [],
+      "warnings": [],
+      "reviewer_confidence": 0.97,
+      "checks": {
+        "legacy_references_not_found": true,
+        "hardcoded_model_ids_not_found": true,
+        "forbidden_positive_requirements_not_found": true,
+        "hash_requirement_satisfied": true,
+        "kimchi_scope_limited_to_sdk_plugin_mechanics": true,
+        "github_only_overclaim_not_found": true,
+        "product_decisions_preserved": true
+      },
+      "notes": [
+        "复核后 warnings=[]。",
+        "无 blocking findings。",
+        "AC-14 已改为验证 SDK 插件技术路线；AC-15 已明确 kimchi 禁止继承能力。",
+        "风险表包含 GitHub 安装机制未实测与 kimchi 参考范围扩张的缓解。"
+      ]
+    },
+    "product_decisions_kept": [
+      {
+        "decision": "GitHub-only 发布/安装目标保持不变。",
+        "caveat": "需要 PoC 验证 OpenCode GitHub source 语法、是否需要提交 dist、以及无需 npm publish 是否足够；PRD 不承诺完全无 package manager involvement。",
+        "confidence": 1.0
+      },
+      {
+        "decision": "插件同步上游 mubaidr/gem-team/.apm/agents/*.agent.md。",
+        "caveat": "同步必须保留 slug，并记录 upstream source URL、commit、body/content hash。",
+        "confidence": 1.0
+      },
+      {
+        "decision": "OpenCode 加载后必须注册完整 16 个真实 gem-* slug。",
+        "caveat": "如上游新增、删除或重命名，需通过同步校验暴露差异并更新 PRD 与注册清单。",
+        "confidence": 1.0
+      },
+      {
+        "decision": "gem-orchestrator 是入口 agent，且不得路由到自身。",
+        "caveat": "插件不重写上游 orchestration framework。",
+        "confidence": 1.0
+      },
+      {
+        "decision": "模型配置只允许 complexity_models.simple|medium|complex。",
+        "caveat": "reasoning-critical roles 只能作为 tier hints，不得成为 role_models 或 per-agent overrides。",
+        "confidence": 1.0
+      },
+      {
+        "decision": "模型优先级保持 OpenCode agent.model > plugin complexity_models[tier] > current selected model。",
+        "caveat": "config hook 注入和 chat.params 设置都必须尊重 OpenCode 原生 agent.model 最高优先级。",
+        "confidence": 1.0
+      }
+    ],
+    "architecture_snapshot": {
+      "key_dirs": {
+        "docs/": [
+          "PRD.md"
+        ],
+        "docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/": [
+          "plan.yaml",
+          "context_envelope.json"
+        ]
+      },
+      "patterns": [
+        "Documentation-first PRD planning",
+        "OpenCode SDK plugin feasibility route",
+        "Positive constraints replace deprecated old-solution notes",
+        "PoC-gated installation claims"
+      ],
+      "key_components": [
+        {
+          "name": "PRD",
+          "location": "docs/PRD.md",
+          "responsibility": [
+            "Product decisions",
+            "requirements",
+            "acceptance criteria",
+            "risks"
+          ],
+          "confidence": 1.0
+        },
+        {
+          "name": "Plan",
+          "location": "docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/plan.yaml",
+          "responsibility": [
+            "Executable DAG and handoff"
+          ],
+          "confidence": 1.0
+        },
+        {
+          "name": "Context envelope",
+          "location": "docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/context_envelope.json",
+          "responsibility": [
+            "Reusable memory of PRD update and review results"
+          ],
+          "confidence": 1.0
+        }
+      ]
+    },
+    "system_assertions": [
+      {
+        "description": "PRD target file exists",
+        "predicate": "exists('docs/PRD.md')",
+        "expected_value": true,
+        "last_checked": "2026-06-03T00:00:00+08:00"
+      },
+      {
+        "description": "docs/PRD.yaml absent",
+        "predicate": "exists('docs/PRD.yaml')",
+        "expected_value": false,
+        "last_checked": "2026-06-03T00:00:00+08:00"
+      },
+      {
+        "description": "Only context envelope was modified by this documentation-writer task",
+        "predicate": "changed_files == ['docs/plan/20260603-rewrite-prd-opencode-gem-team-plugin/context_envelope.json']",
+        "expected_value": true,
+        "last_checked": "2026-06-03T00:00:00+08:00"
+      }
+    ],
+    "task_registry": {
+      "waves": [
+        {
+          "wave": 1,
+          "agents": [
+            "gem-implementer"
+          ],
+          "task_count": 1,
+          "completed": 1,
+          "failed": 0,
+          "blocked": 0
+        },
+        {
+          "wave": 2,
+          "agents": [
+            "gem-reviewer"
+          ],
+          "task_count": 1,
+          "completed": 1,
+          "failed": 0,
+          "blocked": 0
+        },
+        {
+          "wave": 3,
+          "agents": [
+            "gem-documentation-writer"
+          ],
+          "task_count": 1,
+          "completed": 1,
+          "failed": 0,
+          "blocked": 0
+        }
+      ],
+      "tasks": [
+        {
+          "id": "T01-update-prd-kimchi-route",
+          "title": "Rewrite PRD with kimchi-informed plugin route",
+          "agent": "gem-implementer",
+          "wave": 1,
+          "priority": "high",
+          "status": "completed",
+          "estimated_effort": "medium",
+          "estimated_files": 1,
+          "focus_area": "PRD feasibility/route and old方案 removal"
+        },
+        {
+          "id": "T02-review-prd-update",
+          "title": "Review PRD for feasibility-route accuracy and decision preservation",
+          "agent": "gem-reviewer",
+          "wave": 2,
+          "priority": "high",
+          "status": "completed",
+          "estimated_effort": "small",
+          "estimated_files": 1,
+          "focus_area": "PRD review"
+        },
+        {
+          "id": "T03-update-context-envelope-after-review",
+          "title": "Record kimchi-informed PRD update and review result",
+          "agent": "gem-documentation-writer",
+          "wave": 3,
+          "priority": "high",
+          "status": "completed",
+          "estimated_effort": "small",
+          "estimated_files": 1,
+          "focus_area": "Context envelope memory update"
+        }
+      ]
+    },
+    "learnings": {
+      "patterns": [
+        {
+          "name": "SDK hook-limited reuse",
+          "description": "Use opencode-kimchi only to validate OpenCode SDK plugin mechanics: PluginModule default export, server hooks, config injection, and chat.params request mutation.",
+          "confidence": 0.95
+        },
+        {
+          "name": "PoC-gated install claims",
+          "description": "When external reference proves npm package installation but product requires GitHub-only, PRD should keep the target and require PoC verification instead of overclaiming mechanics.",
+          "confidence": 0.98
+        },
+        {
+          "name": "Positive replacement for deprecated routes",
+          "description": "Delete legacy old方案 sections and restate current boundaries as direct requirements, acceptance checks, and risks.",
+          "confidence": 1.0
+        }
+      ],
+      "gotchas": [
+        "Kimchi cannot prove GitHub-only installation; it only supports feasibility of SDK plugin mechanics and npm package install shape.",
+        "Do not convert kimchi provider features into positive product requirements for this Gem Team plugin.",
+        "Do not reintroduce model fallback chains beyond current OpenCode selected model fallback.",
+        "Do not let reasoning-critical roles become model configuration dimensions."
+      ],
+      "facts": [
+        {
+          "statement": "docs/PRD.md now contains section 5.7 for OpenCode SDK plugin technical route and kimchi reference boundaries.",
+          "category": "prd_update"
+        },
+        {
+          "statement": "docs/PRD.md acceptance criteria include AC-14 for PluginModule/server/config/chat.params route and AC-15 for kimchi boundary exclusions.",
+          "category": "reviewed_prd"
+        },
+        {
+          "statement": "Review result passed with no blocking findings and warnings=[].",
+          "category": "review"
+        },
+        {
+          "statement": "Hash requirement is satisfied by upstream source URL, commit, and body/content hash requirements in sync and validation sections.",
+          "category": "review"
+        }
+      ],
+      "failure_modes": [
+        {
+          "scenario": "Implementation copies kimchi provider/product features instead of only SDK mechanics.",
+          "symptoms": [
+            "provider virtual models appear as requirements",
+            "profiles or telemetry are added",
+            "slash commands or provider auto-router become core scope"
+          ],
+          "mitigation": "Use docs/PRD.md 5.7, 9, 10, and 11 as boundary checks; reject these as non-goals."
+        },
+        {
+          "scenario": "Installation docs overstate GitHub-only as proven zero package-manager involvement.",
+          "symptoms": [
+            "docs claim exact GitHub source syntax before PoC",
+            "docs claim no package manager involvement without evidence"
+          ],
+          "mitigation": "Run PoC to verify source syntax, dist needs, and npm publish avoidance before publishing install docs."
+        },
+        {
+          "scenario": "Model resolution violates priority chain.",
+          "symptoms": [
+            "plugin complexity tier overrides OpenCode agent.model",
+            "per-agent override or role_models appear",
+            "hardcoded concrete model IDs appear in examples"
+          ],
+          "mitigation": "Enforce exact priority chain and search docs/examples for forbidden model IDs and config dimensions."
+        }
+      ],
+      "decisions": [
+        {
+          "decision": "Keep GitHub-only target but require PoC verification for source syntax, dist, and no npm publish path.",
+          "rationale": [
+            "User requested GitHub-only decision preservation.",
+            "Kimchi cannot prove GitHub-only mechanics."
+          ]
+        },
+        {
+          "decision": "Use opencode-kimchi as feasibility reference only for OpenCode SDK plugin hooks and chat.params.",
+          "rationale": [
+            "Kimchi demonstrates relevant SDK shape.",
+            "Kimchi provider features would expand product scope incorrectly."
+          ]
+        },
+        {
+          "decision": "Delete old方案 PRD section and references rather than keeping a deprecation note.",
+          "rationale": [
+            "User explicitly said old方案 can be deleted.",
+            "Review confirmed legacy references not found."
+          ]
+        }
+      ],
+      "conventions": [
+        "Future PRD changes must cite upstream source URL, commit, and body/content hash requirements when discussing synced agents.",
+        "Future docs must use the exact model priority string and exact complexity_models.simple|medium|complex keys.",
+        "Future implementation docs must distinguish GitHub-only release target from unverified install mechanics until PoC completes."
+      ]
+    },
+    "verification": {
+      "performed": [
+        "Read existing context_envelope.json.",
+        "Read docs/PRD.md for updated kimchi route, AC table, PoC checklist, risks, hash requirements, and section structure.",
+        "Read plan.yaml for original acceptance criteria and review matrix.",
+        "Updated only context_envelope.json.",
+        "Validated JSON parse with Python json.load."
+      ],
+      "parity_check": "passed",
+      "walkthrough_verified": true,
+      "issues_found": []
+    }
+  }
+}
