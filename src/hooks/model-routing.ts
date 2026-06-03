@@ -9,14 +9,20 @@ import type {
   ModelRoutingHookMutationPreview,
   PreviewModelRoutingInput,
   PreviewModelRoutingResult,
-  RoutingToastNotifier,
-  RoutingToastPayload,
+  RoutingSessionNotifier,
+  RoutingSessionPayload,
 } from "../types.js"
 
 type ChatParamsHook = NonNullable<Hooks["chat.params"]>
 type ChatParamsInput = Parameters<ChatParamsHook>[0]
 type ChatParamsOutput = Parameters<ChatParamsHook>[1]
 type ConfigProvider = () => OpenCodeConfigWithAgents | undefined
+type SessionPromptRequest = {
+  sessionID: string
+  noReply: true
+  parts: [{ type: "text"; text: string; ignored: true }]
+}
+type SessionPromptMethod = (request: SessionPromptRequest) => Promise<unknown>
 
 export function previewModelRouting(input: PreviewModelRoutingInput): PreviewModelRoutingResult {
   const classification = classifyComplexityTier(input.signals)
@@ -37,11 +43,11 @@ export function previewModelRouting(input: PreviewModelRoutingInput): PreviewMod
 export function createModelRoutingHooks(
   options: GemTeamPluginOptions = {},
   getConfig: ConfigProvider = () => undefined,
-  notifyRoutingToast?: RoutingToastNotifier,
+  notifyRoutingSession?: RoutingSessionNotifier,
 ): Pick<Hooks, "chat.params"> {
   return {
     "chat.params": async (input, output) => {
-      await applyChatParamsModelRouting(input, output, options, getConfig(), notifyRoutingToast)
+      await applyChatParamsModelRouting(input, output, options, getConfig(), notifyRoutingSession)
     },
   }
 }
@@ -51,7 +57,7 @@ export async function applyChatParamsModelRouting(
   output: ChatParamsOutput,
   options: GemTeamPluginOptions = {},
   config?: OpenCodeConfigWithAgents,
-  notifyRoutingToast?: RoutingToastNotifier,
+  notifyRoutingSession?: RoutingSessionNotifier,
 ): Promise<PreviewModelRoutingResult> {
   const agentConfig = config?.agent?.[input.agent]
   const preview = previewModelRouting({
@@ -73,7 +79,7 @@ export async function applyChatParamsModelRouting(
   }
 
   if (preview.resolution.model !== undefined) {
-    await notifyRoutingToast?.({
+    await notifyRoutingSession?.({
       sessionID: input.sessionID,
       agent: input.agent,
       tier: preview.resolution.tier,
@@ -85,26 +91,66 @@ export async function applyChatParamsModelRouting(
   return preview
 }
 
-export function createRoutingToastNotifier(client: PluginInput["client"] | undefined): RoutingToastNotifier {
+export function createRoutingSessionNotifier(client: PluginInput["client"] | undefined): RoutingSessionNotifier {
   const shown = new Set<string>()
+  const prompt = resolveSessionPrompt(client)
 
   return async (payload) => {
-    const showToast = client?.tui?.showToast
-    if (typeof showToast !== "function") return
+    if (prompt === undefined) return
 
-    const dedupeKey = routingToastKey(payload)
+    const dedupeKey = routingSessionKey(payload)
     if (shown.has(dedupeKey)) return
 
-    shown.add(dedupeKey)
-    await showToast({
-      body: {
-        title: "Gem Team model",
-        message: formatRoutingToastMessage(payload),
-        variant: payload.source === "native_agent_model" ? "info" : "success",
-        duration: 2500,
-      },
-    })
+    const text = formatRoutingSessionMessage(payload)
+    const parts: SessionPromptRequest["parts"] = [{ type: "text", text, ignored: true }]
+
+    try {
+      await prompt({
+        sessionID: payload.sessionID,
+        noReply: true,
+        parts,
+      })
+      shown.add(dedupeKey)
+    } catch {
+      // Silent skip: session notifications are best-effort only.
+    }
   }
+}
+
+function resolveSessionPrompt(client: PluginInput["client"] | undefined): SessionPromptMethod | undefined {
+  const session = client?.session
+  if (session === undefined) return undefined
+  if (typeof session.promptAsync === "function") {
+    return async (request) => {
+      try {
+        return await session.promptAsync(request as never)
+      } catch {
+        return await session.promptAsync({
+          path: { id: request.sessionID },
+          body: {
+            noReply: request.noReply,
+            parts: request.parts,
+          },
+        } as never)
+      }
+    }
+  }
+  if (typeof session.prompt === "function") {
+    return async (request) => {
+      try {
+        return await session.prompt(request as never)
+      } catch {
+        return await session.prompt({
+          path: { id: request.sessionID },
+          body: {
+            noReply: request.noReply,
+            parts: request.parts,
+          },
+        } as never)
+      }
+    }
+  }
+  return undefined
 }
 
 function previewHookMutation(resolution: PreviewModelRoutingResult["resolution"]): ModelRoutingHookMutationPreview {
@@ -141,15 +187,15 @@ function previewHookMutation(resolution: PreviewModelRoutingResult["resolution"]
   }
 }
 
-function routingToastKey(payload: RoutingToastPayload): string {
+function routingSessionKey(payload: RoutingSessionPayload): string {
   return [payload.sessionID, payload.agent, payload.tier, payload.source, payload.model].join("|")
 }
 
-function formatRoutingToastMessage(payload: RoutingToastPayload): string {
-  return `${payload.agent} · ${routingToastSourceLabel(payload.source)} · ${payload.model}`
+function formatRoutingSessionMessage(payload: RoutingSessionPayload): string {
+  return `${payload.agent} · ${routingSessionSourceLabel(payload.source)} · ${payload.model}`
 }
 
-function routingToastSourceLabel(source: RoutingToastPayload["source"]): string {
+function routingSessionSourceLabel(source: RoutingSessionPayload["source"]): string {
   switch (source) {
     case "native_agent_model":
       return "agent model"

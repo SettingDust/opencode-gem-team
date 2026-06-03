@@ -91,7 +91,7 @@ export type ModelRoutingHookMutationPreview = {
   reason: string
 }
 
-export type RoutingToastPayload = {
+export type RoutingSessionPayload = {
   sessionID: string
   agent: string
   tier: ComplexityTier
@@ -99,7 +99,7 @@ export type RoutingToastPayload = {
   model: string
 }
 
-export type RoutingToastNotifier = (payload: RoutingToastPayload) => Promise<void> | void
+export type RoutingSessionNotifier = (payload: RoutingSessionPayload) => Promise<void> | void
 
 export type PreviewModelRoutingResult = {
   classification: ComplexityClassificationResult

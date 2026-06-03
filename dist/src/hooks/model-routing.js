@@ -14,14 +14,14 @@ export function previewModelRouting(input) {
         hookMutation: previewHookMutation(resolution),
     };
 }
-export function createModelRoutingHooks(options = {}, getConfig = () => undefined, notifyRoutingToast) {
+export function createModelRoutingHooks(options = {}, getConfig = () => undefined, notifyRoutingSession) {
     return {
         "chat.params": async (input, output) => {
-            await applyChatParamsModelRouting(input, output, options, getConfig(), notifyRoutingToast);
+            await applyChatParamsModelRouting(input, output, options, getConfig(), notifyRoutingSession);
         },
     };
 }
-export async function applyChatParamsModelRouting(input, output, options = {}, config, notifyRoutingToast) {
+export async function applyChatParamsModelRouting(input, output, options = {}, config, notifyRoutingSession) {
     const agentConfig = config?.agent?.[input.agent];
     const preview = previewModelRouting({
         signals: signalsFromChatParams(input),
@@ -39,7 +39,7 @@ export async function applyChatParamsModelRouting(input, output, options = {}, c
         reason: preview.resolution.reason,
     };
     if (preview.resolution.model !== undefined) {
-        await notifyRoutingToast?.({
+        await notifyRoutingSession?.({
             sessionID: input.sessionID,
             agent: input.agent,
             tier: preview.resolution.tier,
@@ -49,25 +49,67 @@ export async function applyChatParamsModelRouting(input, output, options = {}, c
     }
     return preview;
 }
-export function createRoutingToastNotifier(client) {
+export function createRoutingSessionNotifier(client) {
     const shown = new Set();
+    const prompt = resolveSessionPrompt(client);
     return async (payload) => {
-        const showToast = client?.tui?.showToast;
-        if (typeof showToast !== "function")
+        if (prompt === undefined)
             return;
-        const dedupeKey = routingToastKey(payload);
+        const dedupeKey = routingSessionKey(payload);
         if (shown.has(dedupeKey))
             return;
-        shown.add(dedupeKey);
-        await showToast({
-            body: {
-                title: "Gem Team model",
-                message: formatRoutingToastMessage(payload),
-                variant: payload.source === "native_agent_model" ? "info" : "success",
-                duration: 2500,
-            },
-        });
+        const text = formatRoutingSessionMessage(payload);
+        const parts = [{ type: "text", text, ignored: true }];
+        try {
+            await prompt({
+                sessionID: payload.sessionID,
+                noReply: true,
+                parts,
+            });
+            shown.add(dedupeKey);
+        }
+        catch {
+            // Silent skip: session notifications are best-effort only.
+        }
     };
+}
+function resolveSessionPrompt(client) {
+    const session = client?.session;
+    if (session === undefined)
+        return undefined;
+    if (typeof session.promptAsync === "function") {
+        return async (request) => {
+            try {
+                return await session.promptAsync(request);
+            }
+            catch {
+                return await session.promptAsync({
+                    path: { id: request.sessionID },
+                    body: {
+                        noReply: request.noReply,
+                        parts: request.parts,
+                    },
+                });
+            }
+        };
+    }
+    if (typeof session.prompt === "function") {
+        return async (request) => {
+            try {
+                return await session.prompt(request);
+            }
+            catch {
+                return await session.prompt({
+                    path: { id: request.sessionID },
+                    body: {
+                        noReply: request.noReply,
+                        parts: request.parts,
+                    },
+                });
+            }
+        };
+    }
+    return undefined;
 }
 function previewHookMutation(resolution) {
     if (resolution.source === "complexity_model" && resolution.model !== undefined) {
@@ -99,13 +141,13 @@ function previewHookMutation(resolution) {
         reason: "no_resolved_model_available_for_hook_output",
     };
 }
-function routingToastKey(payload) {
+function routingSessionKey(payload) {
     return [payload.sessionID, payload.agent, payload.tier, payload.source, payload.model].join("|");
 }
-function formatRoutingToastMessage(payload) {
-    return `${payload.agent} · ${routingToastSourceLabel(payload.source)} · ${payload.model}`;
+function formatRoutingSessionMessage(payload) {
+    return `${payload.agent} · ${routingSessionSourceLabel(payload.source)} · ${payload.model}`;
 }
-function routingToastSourceLabel(source) {
+function routingSessionSourceLabel(source) {
     switch (source) {
         case "native_agent_model":
             return "agent model";

@@ -2,10 +2,10 @@
   "context_envelope": {
     "meta": {
       "plan_id": "20260603-implement-opencode-gem-team-plugin",
-        "version": 15,
+        "version": 16,
       "updated_at": "2026-06-03",
-      "last_updated": "2026-06-03T12:00:00+08:00",
-      "previous_version_fields_changed": ["meta", "facts", "patterns", "gotchas", "failure_modes", "decisions", "conventions", "codebase_validation", "model_selection_toast_followup"],
+      "last_updated": "2026-06-03T13:00:00+08:00",
+      "previous_version_fields_changed": ["meta", "facts", "patterns", "gotchas", "failure_modes", "decisions", "conventions", "model_selection_toast_followup", "model_selection_session_followup"],
       "created_at": "2026-06-03T00:00:00+08:00",
       "baseline_commit_sha": "ee708a8f9046b46054776345f05bf62b37b188d7",
       "source": [
@@ -22,7 +22,8 @@
         "T07 reviewer pass findings",
         "final implementation hardening completion",
         "user-approved redacted global OpenCode config inspection for GitHub plugin source syntax",
-        "user follow-up decision for default model-selection toast notification"
+        "user follow-up decision for default model-selection toast notification",
+        "user superseding decision for session-based default model-selection notification"
       ]
     },
     "scope": {
@@ -555,6 +556,26 @@
       {
         "statement": "Follow-up validation passed npm test (42 passed), npm run typecheck, npm run compile, npm run lint, npm run validate:no-model-ids, and npm run validate:dist.",
         "category": "validation"
+      },
+      {
+        "statement": "Superseded by later user decision: the earlier default toast notification direction is no longer the active model-selection notification transport.",
+        "category": "ux"
+      },
+      {
+        "statement": "Current user decision: default model-selection notification should use a session-based path instead of TUI toast, should remain enabled by default, and does not require debug_model_routing.",
+        "category": "ux"
+      },
+      {
+        "statement": "Current preferred transport is ACP-like client.session.prompt(...) with noReply: true and a text part marked ignored: true; compatibility fallback may use SDK path/body prompt shapes when host support differs.",
+        "category": "sdk"
+      },
+      {
+        "statement": "Current implementation summary: default-enabled session notification, in-session memory deduplication, anti-spam behavior for repeated routing decisions, and silent failure when the session notification path is unavailable or rejected.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Current validation passed npm test (43 passed), npm run typecheck, npm run compile, npm run lint, npm run validate:no-model-ids, and npm run validate:dist.",
+        "category": "validation"
       }
     ],
     "patterns": [
@@ -612,6 +633,11 @@
         "name": "Default toast with session dedup",
         "description": "Model-selection notification should default to toast via a minimal compatibility wrapper and deduplicate in memory for the active plugin session so repeated routing decisions do not spam the UI.",
         "confidence": 0.98
+      },
+      {
+        "name": "Session prompt with transport-shape fallback",
+        "description": "The active notification path prefers ACP-like client.session.prompt(...) with noReply: true and an ignored text part, while keeping compatibility fallback between direct-shape and SDK path/body-shape prompt calls because host support may differ.",
+        "confidence": 0.98
       }
     ],
     "gotchas": [
@@ -635,9 +661,11 @@
       "validate:dist now scans dist/src for broad forbidden capability strings, but defensive validation/rejection code is intentionally allowlisted only in scoped validation modules.",
       "Package exports pointing to dist/src create a freshness risk if dist is committed or regenerated outside validate:dist; rerun build and validate:dist and inspect git diff before any commit.",
       "Final hardening left GitHub source install syntax Pending; follow-up redacted global config evidence moved syntax to format observed while GitHub package-manager/lifecycle behavior, remote GitHub dist necessity, repo end-to-end install/load, and AC-20 runtime request model mutation remain honest Pending or Partial/Pending risks.",
-      "A session.prompt marked ignored: true cannot be described as a true non-context toast equivalent; document that limitation explicitly.",
-      "Default notifications need in-session deduplication to avoid toast spam when the same routing decision repeats.",
-      "If client.tui.showToast is unavailable, compatibility behavior must silently skip notification rather than backfill with chat.message or session.prompt."
+      "A session.prompt marked ignored: true is not equivalent to a truly non-context toast; document that limitation explicitly.",
+      "Plugin instance reconstruction clears in-memory dedup state, so the same model-selection notification can reappear after reload/recreation.",
+      "Hosts may differ in support for direct-shape session.prompt calls versus SDK path/body prompt shapes; keep compatibility fallback and do not assume one shape is universal.",
+      "Default notifications need in-session deduplication to avoid session-prompt spam when the same routing decision repeats.",
+      "If the session notification transport is unavailable or rejected, compatibility behavior must fail silently rather than fall back to chat.message or reintroduce toast."
     ],
     "failure_modes": [
       {
@@ -684,6 +712,11 @@
         "scenario": "Plugin instance is rebuilt during the same user workflow.",
         "symptoms": ["in-memory dedup state is lost", "the same default model-selection toast can appear again after reload/reconstruction"],
         "mitigation": "Document the behavior as low-risk follow-up compatibility debt; keep dedup scoped to session memory unless a stronger persistence requirement is explicitly approved."
+      },
+      {
+        "scenario": "Host runtime accepts only one session.prompt call shape.",
+        "symptoms": ["direct-shape prompt call fails or is ignored", "path/body-shape prompt call succeeds only on some hosts", "notification silently does not appear on one transport shape"],
+        "mitigation": "Prefer ACP-like direct client.session.prompt(...) first, keep SDK path/body-shape compatibility fallback, and preserve silent failure if neither path is supported."
       }
     ],
     "decisions": [
@@ -786,6 +819,18 @@
       {
         "decision": "Fallback behavior when toast is unavailable is silent skip only.",
         "rationale": ["Maintains low-risk compatibility across SDK surfaces", "Avoids misrepresenting ignored session prompts or chat messages as equivalent to a real toast", "Keeps the wrapper minimal and non-invasive"]
+      },
+      {
+        "decision": "Supersede the earlier toast-first notification direction with a session-first notification direction.",
+        "rationale": ["User explicitly replaced the earlier TUI toast decision with a session-based approach", "The active behavior must still show model selection by default while removing any dependency on debug_model_routing", "Historical toast conclusions should remain documented but clearly marked as superseded rather than deleted"]
+      },
+      {
+        "decision": "Prefer ACP-like client.session.prompt(...) with noReply: true and an ignored text part, with compatibility fallback across prompt call shapes.",
+        "rationale": ["Matches the new user-selected session transport direction", "Host support may vary between direct-shape and SDK path/body-shape prompt invocation", "Compatibility fallback preserves behavior without overclaiming universal host support"]
+      },
+      {
+        "decision": "Keep model-selection notification default-enabled with in-session deduplication and silent failure boundaries.",
+        "rationale": ["Default visibility remains a user requirement", "Memory-only dedup reduces repeated-session spam without adding persistence complexity", "Silent failure avoids breaking chat flow when the host rejects or lacks the session prompt transport"]
       }
     ],
     "conventions": [
@@ -801,8 +846,54 @@
       "Model-routing documentation and review notes must label chat.params request mutation as Partial/Pending unless runtime evidence proves AC-20 without provider/API calls."
       ,"Before any commit, inspect git status, git diff, and git log --oneline -10; if dist is committed, ensure clean regeneration and validate:dist green.",
       "validate:dist allowlists defensive validation/rejection strings only in dist/src/routing/resolve-model.js(.d.ts) and dist/src/sync/validation.js(.d.ts).",
-      "Default model-selection notification documentation must describe toast-first behavior, minimal compatibility wrapping, in-session memory deduplication, and silent skip when client.tui.showToast is unavailable."
+      "Superseded historical notification decisions should stay documented, but the currently effective model-selection notification path must be identified explicitly.",
+      "Current model-selection notification documentation must describe session-first behavior, noReply: true plus ignored: true text-part transport intent, direct-shape/path-body compatibility fallback, in-session memory deduplication, and silent failure when the host does not support the session prompt path."
     ],
+    "model_selection_session_followup": {
+      "status": "active",
+      "supersedes": "model_selection_toast_followup",
+      "historical_status_of_toast_conclusion": "superseded_by_user_decision",
+      "current_effective_transport": {
+        "primary": "client.session.prompt(...)",
+        "transport_style": "ACP-like direct session prompt",
+        "options": {
+          "noReply": true
+        },
+        "content_shape": {
+          "preferred": [
+            {
+              "type": "text",
+              "ignored": true
+            }
+          ],
+          "compatibility_note": "If host/runtime support differs, compatibility fallback may use SDK path/body prompt shapes while preserving the same noReply and ignored-text intent."
+        }
+      },
+      "current_user_requirements": [
+        "Model-selection notification remains enabled by default.",
+        "debug_model_routing is not required.",
+        "Do not delete the prior toast history; mark it superseded instead."
+      ],
+      "implementation_summary": [
+        "Default-enabled session notification path.",
+        "In-session memory-level deduplication.",
+        "Repeated routing decisions are deduplicated to reduce spam.",
+        "Failures to send the session notification are silent and non-blocking."
+      ],
+      "validation_summary": [
+        "npm test: 43 passed",
+        "npm run typecheck: passed",
+        "npm run compile: passed",
+        "npm run lint: passed",
+        "npm run validate:no-model-ids: passed",
+        "npm run validate:dist: passed"
+      ],
+      "risks_and_gotchas": [
+        "ignored: true session prompt text is still not a true non-context toast equivalent.",
+        "Plugin instance reconstruction drops in-memory dedup state.",
+        "Host support may differ between direct-shape and path/body-shape session prompt calls, so compatibility fallback remains necessary."
+      ]
+    },
     "t04_sync_results": {
       "completed_at": "2026-06-03",
       "status": "completed",

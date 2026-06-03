@@ -1,7 +1,7 @@
 plan_id: 20260603-implement-opencode-gem-team-plugin
 objective: "Implement OpenCode Gem Team plugin from clean baseline using PoC-gated, reviewer-approved executable DAG."
 created_at: "2026-06-03T00:00:00+08:00"
-updated_at: "2026-06-03T12:00:00+08:00"
+updated_at: "2026-06-03T13:00:00+08:00"
 created_by: gem-planner
 status: ready_for_final_review
 baseline:
@@ -658,12 +658,12 @@ tasks:
       - "Never overrides OpenCode agent.model and never emits concrete model IDs or provider model names."
     verification: ["npm test", "npm run validate:no-model-ids"]
     findings:
-      notification_decision: "User chose default-visible model-selection notification via toast; debug_model_routing is not needed."
-      source_reference: "Use OpenCode SDK client.tui.showToast() with opencode-acp as reference; do not use chat.message or session.prompt as the notification transport."
-      compatibility_shape: "Use a minimal toast compatibility wrapper with in-session memory dedup so repeated routing events do not spam the user."
-      fallback_guard: "If client.tui.showToast is unavailable, silently skip notification instead of claiming session.prompt ignored:true or chat.message is equivalent."
+      notification_decision: "Superseded historical note: user previously chose default-visible model-selection notification via toast; current active decision replaces toast with a session-based notification while still not requiring debug_model_routing."
+      source_reference: "Current preferred transport is ACP-like client.session.prompt(...) with noReply: true and an ignored: true text part; keep compatibility fallback for SDK path/body prompt shapes when host support differs."
+      compatibility_shape: "Use a session-first compatibility wrapper with in-session memory dedup so repeated routing events do not spam the user; do not delete the toast history, but mark it superseded."
+      fallback_guard: "If the session prompt transport is unavailable or rejected, silently skip notification; do not fall back to chat.message, and do not treat ignored session text as a true non-context toast equivalent."
     verification_results:
-      test: "npm test passed: 42 tests, 42 passed."
+      test: "npm test passed: 43 tests, 43 passed."
       typecheck: "npm run typecheck passed."
       compile: "npm run compile passed."
       lint: "npm run lint passed."
@@ -674,10 +674,11 @@ tasks:
       continue_to_wave_9: true
       warnings:
         - "session.prompt with ignored: true is not a true non-context toast equivalent and must not be documented as one."
-        - "Plugin instance reconstruction can clear in-memory dedup state and allow a repeated toast later in the broader workflow."
+        - "Plugin instance reconstruction can clear in-memory dedup state and allow a repeated notification later in the broader workflow."
+        - "Host support can differ between direct-shape session.prompt and SDK path/body prompt shapes, so compatibility fallback must remain documented."
       next_wave_guards:
-        - "Document toast-first default behavior and the absence of debug_model_routing."
-        - "Do not substitute chat.message or session.prompt for toast behavior."
+        - "Document session-first default behavior, the absence of debug_model_routing, and the toast decision as superseded history."
+        - "Do not substitute chat.message for session notification behavior."
         - "Keep notification dedup scoped to session memory unless stronger persistence is explicitly approved."
 
   - id: T09

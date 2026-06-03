@@ -4,7 +4,7 @@ import { describe, it } from "node:test"
 import plugin, {
   applyChatParamsModelRouting,
   createModelRoutingHooks,
-  createRoutingToastNotifier,
+  createRoutingSessionNotifier,
   previewModelRouting,
   validateGemTeamConfig,
 } from "../src/index.js"
@@ -199,13 +199,13 @@ describe("chat.params hook dry-run integration", () => {
   })
 
   it("plugin server wires config and chat.params hooks without provider calls", async () => {
-    const hooks = await plugin.server({ client: { tui: { showToast: async () => undefined } } } as never, { complexity_models: { medium: "medium-tier-model" } })
+    const hooks = await plugin.server({ client: { session: { promptAsync: async () => ({}) } } } as never, { complexity_models: { medium: "medium-tier-model" } })
     assert.equal(typeof hooks.config, "function")
     assert.equal(typeof hooks["chat.params"], "function")
   })
 
-  it("shows a visible routing toast without injecting chat context", async () => {
-    const toasts: Array<Record<string, unknown>> = []
+  it("shows a visible routing session prompt without injecting chat context", async () => {
+    const prompts: Array<Record<string, unknown>> = []
 
     await applyChatParamsModelRouting({
       sessionID: "session-one",
@@ -223,30 +223,71 @@ describe("chat.params hook dry-run integration", () => {
       complexity_models: { medium: "medium-tier-model" },
     }, {
       agent: {},
-    }, createRoutingToastNotifier({
-      tui: {
-        showToast: async (toast: Record<string, unknown>) => {
-          toasts.push(toast)
+    }, createRoutingSessionNotifier({
+      session: {
+        promptAsync: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
         },
       },
     } as never))
 
-    assert.deepEqual(toasts, [{
+    assert.deepEqual(prompts, [{
+      sessionID: "session-one",
+      noReply: true,
+      parts: [{
+        type: "text",
+        text: "gem-implementer · tier route · medium-tier-model",
+        ignored: true,
+      }],
+    }])
+  })
+
+  it("falls back to sdk path/body session prompt shape when direct session prompt call rejects", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+    const notify = createRoutingSessionNotifier({
+      session: {
+        promptAsync: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+          if (prompts.length === 1) throw new Error("direct shape unsupported")
+        },
+      },
+    } as never)
+
+    await notify({
+      sessionID: "session-one",
+      agent: "gem-implementer",
+      tier: "medium",
+      source: "complexity_model",
+      model: "medium-tier-model",
+    })
+
+    assert.deepEqual(prompts, [{
+      sessionID: "session-one",
+      noReply: true,
+      parts: [{
+        type: "text",
+        text: "gem-implementer · tier route · medium-tier-model",
+        ignored: true,
+      }],
+    }, {
+      path: { id: "session-one" },
       body: {
-        title: "Gem Team model",
-        message: "gem-implementer · tier route · medium-tier-model",
-        variant: "success",
-        duration: 2500,
+        noReply: true,
+        parts: [{
+          type: "text",
+          text: "gem-implementer · tier route · medium-tier-model",
+          ignored: true,
+        }],
       },
     }])
   })
 
-  it("deduplicates repeated routing toasts for the same session result", async () => {
-    const toasts: Array<Record<string, unknown>> = []
-    const notify = createRoutingToastNotifier({
-      tui: {
-        showToast: async (toast: Record<string, unknown>) => {
-          toasts.push(toast)
+  it("deduplicates repeated routing session prompts for the same session result", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+    const notify = createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
         },
       },
     } as never)
@@ -266,8 +307,8 @@ describe("chat.params hook dry-run integration", () => {
       model: "review-model",
     })
 
-    assert.equal(toasts.length, 1)
-    assert.equal((toasts[0] as { body?: { message?: string } })?.body?.message, "gem-reviewer · agent model · review-model")
+    assert.equal(prompts.length, 1)
+    assert.equal((prompts[0] as { parts?: Array<{ text?: string }> })?.parts?.[0]?.text, "gem-reviewer · agent model · review-model")
   })
 })
 
