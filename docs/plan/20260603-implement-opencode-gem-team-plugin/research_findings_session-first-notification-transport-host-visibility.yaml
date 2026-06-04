@@ -1,0 +1,239 @@
+plan_id: 20260603-implement-opencode-gem-team-plugin
+objective: "补足 session-first 通知 transport 的宿主可见性证据边界，判断 client.session.prompt(... noReply: true, parts:[{type:text, ignored:true}]) 的用户可见可信度。"
+focus_area: session-first-notification-transport-host-visibility
+created_at: "2026-06-04T00:00:00+08:00"
+created_by: gem-researcher
+status: completed
+tldr: |
+  - 本仓库代码与测试已证明：插件会构造并调用 session prompt API，且会按 direct-shape 与 path/body-shape 双形态回退发送 noReply + ignored 文本。
+  - 本仓库没有任何真实 OpenCode 宿主/TUI/UI 运行态观察，无法证明 ignored/noReply session prompt 一定会被用户看到。
+  - 公开资料只能增强“消息会进入 session 或出现在某些 TUI 场景”的可能性，不能证明本仓库当前 ignored:true 变体在真实宿主中稳定可见。
+  - 较强反证边界存在：公开 issue 已证明 noReply 语义在不同版本/调用上下文中曾失效、挂起或仍触发回复，说明宿主行为不应被当作稳定显示契约。
+research_metadata:
+  methodology: local code/test/doc inspection + public GitHub/OpenCode issue/doc search
+  scope: src/hooks/model-routing.ts, test/model-routing-hook.test.ts, README.md, active plan notes, public OpenCode issues and code search
+  confidence: medium
+  coverage: 88
+  decision_blockers: 1
+  research_blockers: 1
+files_analyzed:
+  - file: model-routing.ts
+    path: src/hooks/model-routing.ts
+    purpose: session-first 通知实现
+    key_elements:
+      - element: createRoutingSessionNotifier
+        type: function
+        location: src/hooks/model-routing.ts:104
+        description: 构建 session prompt notifier，调用成功后仅做内存去重；失败静默跳过。
+        language: TypeScript
+      - element: resolveSessionPrompt
+        type: function
+        location: src/hooks/model-routing.ts:127
+        description: 优先 direct-shape 调用 session.promptAsync/prompt，失败后回退到 path/body shape。
+        language: TypeScript
+      - element: buildSessionPromptRequest
+        type: function
+        location: src/hooks/model-routing.ts:204
+        description: 固定生成 noReply: true 与 ignored text part，并按可用性附带 agent/variant/model metadata。
+        language: TypeScript
+    lines: 278
+  - file: model-routing-hook.test.ts
+    path: test/model-routing-hook.test.ts
+    purpose: mock/typed 级别证明 session prompt 请求形状
+    key_elements:
+      - element: applies routing notification through promptAsync
+        type: pattern
+        location: test/model-routing-hook.test.ts:220
+        description: 断言 promptAsync 收到 direct-shape 请求，含 noReply:true 和 ignored:true 文本 part。
+        language: TypeScript
+      - element: falls back to sdk path/body session prompt shape
+        type: pattern
+        location: test/model-routing-hook.test.ts:247
+        description: 断言 direct-shape 抛错后会再次调用 path/body shape。
+        language: TypeScript
+      - element: keeps model metadata when reliably tied
+        type: pattern
+        location: test/model-routing-hook.test.ts:348
+        description: 断言仅在 selected-model 可可靠关联时附带 providerID/modelID。
+        language: TypeScript
+    lines: 441
+  - file: README.md
+    path: README.md
+    purpose: 对外能力表述边界
+    key_elements:
+      - element: Current status / Constraints
+        type: pattern
+        location: README.md:7
+        description: 文档当前把该路径描述为 session-visible notification，但未附真实宿主运行证据。
+        language: Markdown
+    lines: 70
+  - file: plan.yaml
+    path: docs/plan/20260603-implement-opencode-gem-team-plugin/plan.yaml
+    purpose: 现有计划中的证据边界与警告
+    key_elements:
+      - element: T08 findings/review_results
+        type: pattern
+        location: docs/plan/20260603-implement-opencode-gem-team-plugin/plan.yaml:661
+        description: 已明确记录 ignored session prompt 非 true non-context toast，真实 host visibility 仍未验证。
+        language: YAML
+    lines: 777
+patterns_found:
+  - category: structure
+    pattern: session-first notifier uses best-effort prompt transport only
+    description: 代码将通知视为最佳努力副作用；transport 不可用或调用失败时直接静默，不降级为 chat.message。
+    examples:
+      - file: src/hooks/model-routing.ts
+        location: "109-123"
+        snippet: "if (prompt === undefined) return ... try { await prompt(request) } catch { /* Silent skip */ }"
+    prevalence: common
+  - category: architecture
+    pattern: direct-shape first with path/body compatibility fallback
+    description: 说明作者已预期宿主或 SDK 面对不同 prompt 请求形状兼容性可能不一致。
+    examples:
+      - file: src/hooks/model-routing.ts
+        location: "130-150"
+        snippet: "try direct request; catch -> session.promptAsync({ path:{id}, body:{...} })"
+      - file: test/model-routing-hook.test.ts
+        location: "247-286"
+        snippet: "first call rejects, second call uses { path, body }"
+    prevalence: common
+  - category: architecture
+    pattern: ignored text part is treated as transport intent, not visibility proof
+    description: 计划文档已把 ignored:true 定性为“不是 true non-context toast”，因此该标记仅表达意图，非宿主显示契约。
+    examples:
+      - file: docs/plan/20260603-implement-opencode-gem-team-plugin/plan.yaml
+        location: "678-684"
+        snippet: "session.prompt with ignored: true is not a true non-context toast equivalent... Real host-session visibility is still unverified"
+    prevalence: common
+  - category: documentation
+    pattern: README claim is stronger than underlying verified evidence
+    description: README 写成 session-visible notification，但本仓库可核验证据只覆盖 API 调用和 mock shape，不覆盖真实 UI 渲染。
+    examples:
+      - file: README.md
+        location: "22"
+        snippet: "shows a short session-visible notification"
+    prevalence: occasional
+related_architecture:
+  components_relevant_to_domain:
+    - component: createRoutingSessionNotifier
+      responsibility: 生成 routing 结果的 session 通知请求
+      location: src/hooks/model-routing.ts:104
+      relationship_to_domain: 这是 session-first 通知入口
+    - component: resolveSessionPrompt
+      responsibility: 绑定 plugin client 的 session prompt surface
+      location: src/hooks/model-routing.ts:127
+      relationship_to_domain: 决定调用何种 SDK shape，但不校验 UI 是否可见
+    - component: OpenCode host/TUI/ACP runtime
+      responsibility: 接收 session prompt 并决定是否入 session、是否触发回复、是否渲染到用户界面
+      location: public runtime outside this repo
+      relationship_to_domain: 真正的可见性决定点，不在本仓库内
+  interfaces_used_by_domain:
+    - interface: client.session.promptAsync / client.session.prompt
+      location: src/hooks/model-routing.ts:130-150
+      usage_pattern: direct-shape first, path/body fallback second
+  data_flow_involving_domain: "chat.params hook 解析路由结果 -> createRoutingSessionNotifier 组装 text part + metadata -> client.session.prompt/promptAsync -> OpenCode host runtime 处理 -> 是否显示取决于宿主实现与版本，而非本仓库测试。"
+  key_relationships_to_domain:
+    - from: applyChatParamsModelRouting
+      to: createRoutingSessionNotifier
+      relationship: calls
+    - from: createRoutingSessionNotifier
+      to: resolveSessionPrompt
+      relationship: calls
+    - from: resolveSessionPrompt
+      to: client.session.promptAsync / prompt
+      relationship: calls
+related_technology_stack:
+  languages_used_in_domain: [TypeScript, Markdown, YAML]
+  frameworks_used_in_domain:
+    - name: Node built-in test runner/assert
+      usage_in_domain: 本地 mock 断言 notifier request shape
+  libraries_used_in_domain:
+    - name: "@opencode-ai/plugin"
+      purpose_in_domain: PluginInput client surface 来源
+    - name: OpenCode SDK/session API
+      purpose_in_domain: 暴露 session.prompt / promptAsync transport
+  external_apis_used_in_domain:
+    - name: OpenCode session prompt API
+      integration_point: src/hooks/model-routing.ts:127-150
+related_conventions:
+  naming_patterns_in_domain: "RoutingSessionNotifier / SessionPromptRequest / resolveSessionPrompt 等命名围绕 transport 与 payload，而非 UI。"
+  structure_of_domain: "hook 负责决策，notifier 负责 transport，测试只 mock client.session surface。"
+  error_handling_in_domain: "通知为 best-effort；任何 transport 错误都 swallow。"
+  testing_in_domain: "仅验证调用 shape、fallback、dedupe、metadata 选择；未启动真实宿主 UI。"
+  documentation_in_domain: "计划文档比 README 更诚实地记录 visibility 未验证边界。"
+related_dependencies:
+  internal:
+    - component: chat.params hook output mutation path
+      relationship_to_domain: 决定何时触发通知
+      direction: outbound
+    - component: plan/README evidence boundary docs
+      relationship_to_domain: 记录能力声明边界
+      direction: bidirectional
+  external:
+    - name: OpenCode host runtime
+      purpose_for_domain: 解释 noReply/ignored 的实际行为并决定 UI 可见性
+    - name: ACP client/runtime
+      purpose_for_domain: 在 ACP 场景中承载 session/prompt 与 session/update，但不自动证明 ignored message 的最终 UI 呈现策略
+domain_security_considerations:
+  sensitive_areas:
+    - area: notification metadata propagation
+      location: src/hooks/model-routing.ts:212-233
+      concern: agent/variant/model metadata 仅在可靠时传递，避免凭空猜测 provider identity
+  authentication_patterns_in_domain: "本 focus area 未涉及认证。"
+  authorization_patterns_in_domain: "本 focus area 未涉及授权。"
+  data_validation_in_domain: "仅对可选 metadata 做 presence-based 传递；未做宿主响应验证。"
+testing_patterns:
+  framework: node:test + assert
+  coverage_areas: [request shape, fallback shape, dedupe, metadata omission, metadata retention]
+  test_organization: 单元测试 mock client.session surface
+  mock_patterns: [promptAsync capture array, rejection-to-fallback, prompt capture array]
+open_questions:
+  - question: "真实 OpenCode 宿主/TUI 在当前目标版本中是否会把 ignored:true + noReply:true 的 session prompt 渲染为用户可见消息？"
+    context: "本仓库没有真实宿主运行证据；公开 issue 显示不同版本/上下文存在行为差异。"
+    type: decision_blocker
+    affects: [README capability wording, bug-fix diagnosis confidence]
+  - question: "ignored:true 对宿主 UI 的语义究竟是 suppress-context、suppress-render，还是仅影响模型上下文注入？"
+    context: "本地代码和测试从未消费返回值或读取 UI state；公开资料未找到稳定官方契约。"
+    type: research
+    affects: [transport choice, documentation accuracy]
+  - question: "ACP 路径中 session/prompt 是否只保证 protocol-level message flow，而不保证宿主前端如何显示该消息？"
+    context: "ACP 公开材料更强地证明协议存在，不强证明 TUI/桌面 UI 呈现策略。"
+    type: nice_to_know
+    affects: [cross-host portability claims]
+gaps:
+  - area: real-host rendering evidence
+    description: "缺少一次真实 OpenCode 宿主运行观察，无法确认 ignored/noReply prompt 在 UI 中是否可见、以何种形式可见。"
+    impact: decision_blocker
+    affects: [user-visible claim, debugger confidence]
+  - area: stable contract documentation
+    description: "未找到官方 SDK/host 文档明确承诺 ignored:true session prompt 的 UI 展示语义。"
+    impact: research_blocker
+    affects: [portability and compatibility claims]
+  - area: version-specific behavior matrix
+    description: "公开 issue 证明 noReply 行为跨版本有回归/差异，但没有覆盖当前目标宿主版本的精确矩阵。"
+    impact: nice_to_know
+    affects: [support boundary wording]
+conclusion:
+  user_visible_credibility: low_to_medium
+  proven:
+    - "插件代码会构造并调用 client.session.promptAsync/client.session.prompt。"
+    - "请求固定包含 noReply: true 与 parts:[{type:'text', ignored:true}]。"
+    - "当 direct-shape 调用失败时，会尝试 path/body shape 回退。"
+    - "mock/typed tests 证明了 API 调用形状、metadata 透传条件、去重与静默失败策略。"
+  not_proven:
+    - "真实 OpenCode 宿主一定会把该 prompt 渲染为用户可见消息。"
+    - "ignored:true 在真实宿主中等价于 toast、banner、status 或任何稳定的非上下文通知。"
+    - "不同宿主（TUI/桌面/ACP client）对 direct-shape 与 path/body-shape 的显示行为一致。"
+  strongest_public_evidence:
+    - source: "OpenCode issue #6513"
+      boundary: "证明某些真实 TUI 场景中 session.prompt body noReply 消息会作为 user message 出现；但该例没有 ignored:true，而且 noReply 还会触发 assistant reply，因此不能证明本仓库的 ignored noReply 通知是稳定、静默、可见的。"
+    - source: "OpenCode issue #4431"
+      boundary: "证明 noReply 语义曾在版本回归中挂起，说明该 transport 行为并不稳定，不能把可见性当作强契约。"
+    - source: "OpenCode test/server/httpapi-sdk.test.ts code search result"
+      boundary: "证明 SDK 同时存在 sdk.session.prompt 与 sdk.tui.showToast surfaces，且 showToast 是单独 API；这反而削弱了把 ignored session prompt 视作 toast 等价物的说法。"
+    - source: "ACP/agent code and public ACP materials"
+      boundary: "证明存在 session prompt 协议层与 session/update 事件流，不证明最终 UI 必然展示 ignored prompt。"
+  minimum_runtime_observation_needed:
+    - "在真实 OpenCode 目标版本中安装最小 PoC 插件，只执行一次 client.session.prompt(... noReply:true, parts:[{type:'text', text:'sentinel', ignored:true}])。"
+    - "记录三项观测：1) UI 是否出现 sentinel；2) 是否写入 session history/messages API；3) 是否触发 assistant reply / queued / hang。"
+    - "若需更强证据，再做 A/B：ignored:true vs ignored:false、direct-shape vs path/body shape、TUI vs ACP/desktop client。"

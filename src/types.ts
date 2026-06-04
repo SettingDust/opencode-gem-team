@@ -91,15 +91,22 @@ export type ModelRoutingHookMutationPreview = {
   reason: string
 }
 
-export type RoutingToastPayload = {
+export type RoutingSessionPayload = {
   sessionID: string
   agent: string
   tier: ComplexityTier
   source: ModelResolutionSource
   model: string
+  classificationReasons?: string[]
+  resolutionReason?: string
+  variant?: string
+  modelInfo?: {
+    providerID: string
+    modelID: string
+  }
 }
 
-export type RoutingToastNotifier = (payload: RoutingToastPayload) => Promise<void> | void
+export type RoutingSessionNotifier = (payload: RoutingSessionPayload) => Promise<void> | void
 
 export type PreviewModelRoutingResult = {
   classification: ComplexityClassificationResult

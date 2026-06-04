@@ -2,10 +2,25 @@
   "context_envelope": {
     "meta": {
       "plan_id": "20260603-implement-opencode-gem-team-plugin",
-        "version": 15,
-      "updated_at": "2026-06-03",
-      "last_updated": "2026-06-03T12:00:00+08:00",
-      "previous_version_fields_changed": ["meta", "facts", "patterns", "gotchas", "failure_modes", "decisions", "conventions", "codebase_validation", "model_selection_toast_followup"],
+      "version": 27,
+      "updated_at": "2026-06-04",
+      "last_updated": "2026-06-04T20:30:00+08:00",
+      "previous_version_fields_changed": [
+        "meta",
+        "facts",
+        "patterns",
+        "gotchas",
+        "failure_modes",
+        "decisions",
+        "conventions",
+        "session_prompt_hidden_notice_followup",
+        "codebase_validation",
+        "critical_role_limited_boost_policy",
+        "documentation_alignment",
+        "documentation_review_followup",
+        "critical_role_shared_aggressive_policy_finalization",
+        "latest_review_validation_summary"
+      ],
       "created_at": "2026-06-03T00:00:00+08:00",
       "baseline_commit_sha": "ee708a8f9046b46054776345f05bf62b37b188d7",
       "source": [
@@ -22,7 +37,24 @@
         "T07 reviewer pass findings",
         "final implementation hardening completion",
         "user-approved redacted global OpenCode config inspection for GitHub plugin source syntax",
-        "user follow-up decision for default model-selection toast notification"
+        "user follow-up decision for default model-selection toast notification",
+        "user superseding decision for session-based default model-selection notification",
+        "ACP-style session metadata follow-up comparison and best-effort parity update",
+        "session notice provider metadata reviewer-approved fix",
+        "minimal canonical session.prompt probe completion",
+        "minimal canonical session.prompt probe reviewer-approved result",
+        "superseded notice copy optimization and critical-role complex-floor iteration completion",
+        "superseded notice copy optimization and critical-role complex-floor iteration reviewer-approved result",
+        "real OpenCode minimal probe visibility confirmation and old-copy readability follow-up",
+        "production out-of-band English-only toast notice follow-up",
+        "user replacement of toast-only notice with ACP-like hidden-context session prompt",
+        "reviewer-approved session.prompt hidden-context follow-up",
+        "user requirement to include decision-useful information in routing notices",
+        "implementer/reviewer approved multiline routing notice follow-up",
+        "reviewer warning cleanup for superseded critical-role complex-floor narrative",
+        "user clarification: more aggressive does not mean always highest tier",
+        "README and AGENTS documentation alignment follow-up",
+        "reviewer-approved documentation pass with generated-artifacts warning"
       ]
     },
     "scope": {
@@ -178,22 +210,32 @@
       {
         "item": "GitHub install/source syntax",
         "status": "format_observed_end_to_end_pending",
-        "blocked_paths": ["README final install commands", "release/commit final claims"]
+        "blocked_paths": [
+          "README final install commands",
+          "release/commit final claims"
+        ]
       },
       {
         "item": "dist necessity",
         "status": "pending_poc",
-        "blocked_paths": ["optional dist task", "validate:dist applicability"]
+        "blocked_paths": [
+          "optional dist task",
+          "validate:dist applicability"
+        ]
       },
       {
         "item": "package-manager involvement",
         "status": "pending_poc",
-        "blocked_paths": ["installation docs conclusion"]
+        "blocked_paths": [
+          "installation docs conclusion"
+        ]
       },
       {
         "item": "OpenCode model mutation hook proof",
         "status": "pending_poc",
-        "blocked_paths": ["AC-20 verified claim"]
+        "blocked_paths": [
+          "AC-20 verified claim"
+        ]
       }
     ],
     "open_questions": [
@@ -201,27 +243,45 @@
         "question": "Does the observed GitHub source syntax load this repository as an OpenCode plugin end-to-end?",
         "type": "research_poc",
         "status": "format_observed_end_to_end_pending",
-        "affects": ["T01", "T09", "T12"]
+        "affects": [
+          "T01",
+          "T09",
+          "T12"
+        ]
       },
       {
         "question": "Is committed dist required for GitHub install/load?",
         "type": "research_poc",
         "status": "pending",
-        "affects": ["T01", "T10", "T12"]
+        "affects": [
+          "T01",
+          "T10",
+          "T12"
+        ]
       },
       {
         "question": "Can model-routing hook mutation be proven locally without real provider calls?",
         "type": "research_poc",
         "status": "pending",
-        "affects": ["T08", "T09", "T11"]
+        "affects": [
+          "T08",
+          "T09",
+          "T11"
+        ]
       }
     ],
     "research_digest": {
       "relevant_files": [
         {
           "path": "docs/PRD.md",
-          "purpose": ["Product source of truth", "acceptance criteria", "forbidden scope"],
-          "why_relevant": ["Defines GitHub target, sync metadata, slug list, model routing, ACs, risks."],
+          "purpose": [
+            "Product source of truth",
+            "acceptance criteria",
+            "forbidden scope"
+          ],
+          "why_relevant": [
+            "Defines GitHub target, sync metadata, slug list, model routing, ACs, risks."
+          ],
           "security_sensitivity": "none",
           "contains_secrets": false,
           "reliability": "codebase",
@@ -229,8 +289,14 @@
         },
         {
           "path": "docs/plan/20260603-implement-opencode-gem-team-plugin/plan.yaml",
-          "purpose": ["Executable task DAG", "contracts", "PoC gates"],
-          "why_relevant": ["Authoritative implementation sequence after reviewer/critic fixes."],
+          "purpose": [
+            "Executable task DAG",
+            "contracts",
+            "PoC gates"
+          ],
+          "why_relevant": [
+            "Authoritative implementation sequence after reviewer/critic fixes."
+          ],
           "security_sensitivity": "none",
           "contains_secrets": false,
           "reliability": "codebase",
@@ -238,8 +304,12 @@
         },
         {
           "path": "docs/installation-poc.md",
-          "purpose": ["Planned PoC evidence log"],
-          "why_relevant": ["Blocks docs, hooks, dist, and release conclusions."],
+          "purpose": [
+            "Planned PoC evidence log"
+          ],
+          "why_relevant": [
+            "Blocks docs, hooks, dist, and release conclusions."
+          ],
           "security_sensitivity": "must_not_contain_secrets",
           "contains_secrets": false,
           "reliability": "planned",
@@ -252,26 +322,41 @@
           "category": "release",
           "confidence": 1.0,
           "source": "plan",
-          "example_location": ["plan.yaml:T01", "plan.yaml:T09", "plan.yaml:T10"]
+          "example_location": [
+            "plan.yaml:T01",
+            "plan.yaml:T09",
+            "plan.yaml:T10"
+          ]
         },
         {
           "name": "One-task-per-wave DAG",
           "category": "planning",
           "confidence": 1.0,
           "source": "plan",
-          "example_location": ["plan.yaml:waves"]
+          "example_location": [
+            "plan.yaml:waves"
+          ]
         },
         {
           "name": "Generated upstream body preservation",
           "category": "sync",
           "confidence": 1.0,
           "source": "T04",
-          "example_location": ["agents/generated/*.agent.md", "agents/generated/manifest.json"]
+          "example_location": [
+            "agents/generated/*.agent.md",
+            "agents/generated/manifest.json"
+          ]
         }
       ],
       "dependencies": {
-        "internal": ["docs/PRD.md", "plan.yaml"],
-        "external": ["@opencode-ai/plugin", "upstream gem-team GitHub repository"]
+        "internal": [
+          "docs/PRD.md",
+          "plan.yaml"
+        ],
+        "external": [
+          "@opencode-ai/plugin",
+          "upstream gem-team GitHub repository"
+        ]
       },
       "gotchas": [
         {
@@ -297,41 +382,221 @@
       "tasks_count": 12,
       "contracts_count": 21,
       "waves": [
-        { "wave": 1, "tasks": ["T01"], "agents": ["gem-devops"] },
-        { "wave": 2, "tasks": ["T02"], "agents": ["gem-implementer"] },
-        { "wave": 3, "tasks": ["T03"], "agents": ["gem-implementer"] },
-        { "wave": 4, "tasks": ["T04"], "agents": ["gem-implementer"] },
-        { "wave": 5, "tasks": ["T05"], "agents": ["gem-implementer"] },
-        { "wave": 6, "tasks": ["T06"], "agents": ["gem-implementer"] },
-        { "wave": 7, "tasks": ["T07"], "agents": ["gem-implementer"] },
-        { "wave": 8, "tasks": ["T08"], "agents": ["gem-implementer"] },
-        { "wave": 9, "tasks": ["T09"], "agents": ["gem-documentation-writer"] },
-        { "wave": 10, "tasks": ["T10"], "agents": ["gem-implementer"] },
-        { "wave": 11, "tasks": ["T11"], "agents": ["gem-reviewer"] },
-        { "wave": 12, "tasks": ["T12"], "agents": ["gem-devops"] }
+        {
+          "wave": 1,
+          "tasks": [
+            "T01"
+          ],
+          "agents": [
+            "gem-devops"
+          ]
+        },
+        {
+          "wave": 2,
+          "tasks": [
+            "T02"
+          ],
+          "agents": [
+            "gem-implementer"
+          ]
+        },
+        {
+          "wave": 3,
+          "tasks": [
+            "T03"
+          ],
+          "agents": [
+            "gem-implementer"
+          ]
+        },
+        {
+          "wave": 4,
+          "tasks": [
+            "T04"
+          ],
+          "agents": [
+            "gem-implementer"
+          ]
+        },
+        {
+          "wave": 5,
+          "tasks": [
+            "T05"
+          ],
+          "agents": [
+            "gem-implementer"
+          ]
+        },
+        {
+          "wave": 6,
+          "tasks": [
+            "T06"
+          ],
+          "agents": [
+            "gem-implementer"
+          ]
+        },
+        {
+          "wave": 7,
+          "tasks": [
+            "T07"
+          ],
+          "agents": [
+            "gem-implementer"
+          ]
+        },
+        {
+          "wave": 8,
+          "tasks": [
+            "T08"
+          ],
+          "agents": [
+            "gem-implementer"
+          ]
+        },
+        {
+          "wave": 9,
+          "tasks": [
+            "T09"
+          ],
+          "agents": [
+            "gem-documentation-writer"
+          ]
+        },
+        {
+          "wave": 10,
+          "tasks": [
+            "T10"
+          ],
+          "agents": [
+            "gem-implementer"
+          ]
+        },
+        {
+          "wave": 11,
+          "tasks": [
+            "T11"
+          ],
+          "agents": [
+            "gem-reviewer"
+          ]
+        },
+        {
+          "wave": 12,
+          "tasks": [
+            "T12"
+          ],
+          "agents": [
+            "gem-devops"
+          ]
+        }
       ],
       "dependency_edges": [
-        { "contract": "C01", "from": "T01", "to": "T02" },
-        { "contract": "C02", "from": "T02", "to": "T03" },
-        { "contract": "C03", "from": "T02", "to": "T04" },
-        { "contract": "C04", "from": "T04", "to": "T05" },
-        { "contract": "C05", "from": "T05", "to": "T06" },
-        { "contract": "C06", "from": "T03", "to": "T06" },
-        { "contract": "C07", "from": "T06", "to": "T07" },
-        { "contract": "C08", "from": "T01", "to": "T07" },
-        { "contract": "C09", "from": "T07", "to": "T08" },
-        { "contract": "C10", "from": "T03", "to": "T08" },
-        { "contract": "C11", "from": "T01", "to": "T08" },
-        { "contract": "C12", "from": "T08", "to": "T09" },
-        { "contract": "C13", "from": "T01", "to": "T09" },
-        { "contract": "C14", "from": "T09", "to": "T10" },
-        { "contract": "C15", "from": "T07", "to": "T10" },
-        { "contract": "C16", "from": "T10", "to": "T11" },
-        { "contract": "C17", "from": "T09", "to": "T11" },
-        { "contract": "C18", "from": "T08", "to": "T11" },
-        { "contract": "C19", "from": "T07", "to": "T11" },
-        { "contract": "C20", "from": "T06", "to": "T11" },
-        { "contract": "C21", "from": "T11", "to": "T12" }
+        {
+          "contract": "C01",
+          "from": "T01",
+          "to": "T02"
+        },
+        {
+          "contract": "C02",
+          "from": "T02",
+          "to": "T03"
+        },
+        {
+          "contract": "C03",
+          "from": "T02",
+          "to": "T04"
+        },
+        {
+          "contract": "C04",
+          "from": "T04",
+          "to": "T05"
+        },
+        {
+          "contract": "C05",
+          "from": "T05",
+          "to": "T06"
+        },
+        {
+          "contract": "C06",
+          "from": "T03",
+          "to": "T06"
+        },
+        {
+          "contract": "C07",
+          "from": "T06",
+          "to": "T07"
+        },
+        {
+          "contract": "C08",
+          "from": "T01",
+          "to": "T07"
+        },
+        {
+          "contract": "C09",
+          "from": "T07",
+          "to": "T08"
+        },
+        {
+          "contract": "C10",
+          "from": "T03",
+          "to": "T08"
+        },
+        {
+          "contract": "C11",
+          "from": "T01",
+          "to": "T08"
+        },
+        {
+          "contract": "C12",
+          "from": "T08",
+          "to": "T09"
+        },
+        {
+          "contract": "C13",
+          "from": "T01",
+          "to": "T09"
+        },
+        {
+          "contract": "C14",
+          "from": "T09",
+          "to": "T10"
+        },
+        {
+          "contract": "C15",
+          "from": "T07",
+          "to": "T10"
+        },
+        {
+          "contract": "C16",
+          "from": "T10",
+          "to": "T11"
+        },
+        {
+          "contract": "C17",
+          "from": "T09",
+          "to": "T11"
+        },
+        {
+          "contract": "C18",
+          "from": "T08",
+          "to": "T11"
+        },
+        {
+          "contract": "C19",
+          "from": "T07",
+          "to": "T11"
+        },
+        {
+          "contract": "C20",
+          "from": "T06",
+          "to": "T11"
+        },
+        {
+          "contract": "C21",
+          "from": "T11",
+          "to": "T12"
+        }
       ]
     },
     "mvp_gates": [
@@ -351,6 +616,45 @@
         "acceptance": "Only simple/medium/complex tier routing exists and no forbidden model dimensions are introduced."
       }
     ],
+    "documentation_alignment": {
+      "status": "completed",
+      "audiences": {
+        "README.md": "human",
+        "AGENTS.md": "agent"
+      },
+      "artifacts_changed_this_round": [
+        {
+          "file": "README.md",
+          "summary": [
+            "Human-facing plugin positioning, current verification boundaries, installation paths, configuration example, development commands, constraints, and related documents were added or aligned.",
+            "Claims were kept aligned with current implementation and did not overstate GitHub install verification."
+          ]
+        },
+        {
+          "file": "AGENTS.md",
+          "summary": [
+            "Agent-facing project guidance was added covering project purpose, key invariants, repository layout, working commands, documentation boundaries, behavior-change workflow, and safety reminders.",
+            "Content was aligned to current implementation and repository conventions."
+          ]
+        }
+      ],
+      "implementation_aligned_claims": [
+        "Routing notice mechanism is ACP-like client.session.prompt(...) with noReply: true, an ignored text part, and English-only decision information.",
+        "Model priority remains OpenCode agent.model > plugin complexity_models[tier] > current selected model.",
+        "GitHub install is not claimed as end-to-end verified.",
+        "Forbidden routing/config dimensions remain absent: no role_models, no agent_complexity_models, no per-agent override, no provider-side router, and no hardcoded concrete model IDs.",
+        "Project command naming uses compile rather than build for the primary build script."
+      ],
+      "review_outcome": {
+        "status": "passed_no_blocking_findings",
+        "warning": "AGENTS.md generated-artifacts wording does not explicitly mention the root-level agents/generated/ directory; this is a minor completeness gap, not a correctness issue."
+      },
+      "verification_boundary": [
+        "README/AGENTS updates document the current verified behavior and pending boundaries rather than expanding product claims.",
+        "GitHub source syntax may be format-observed, but this repository still does not claim end-to-end GitHub install/load verification.",
+        "Documentation changes are recorded in planning context only for this round; source files and docs content are not modified further here."
+      ]
+    },
     "facts": [
       {
         "statement": "Baseline commit is ee708a8f9046b46054776345f05bf62b37b188d7.",
@@ -413,7 +717,7 @@
         "category": "routing"
       },
       {
-        "statement": "T03 role slugs are tier hints only; reasoning-critical roles can raise minimum tier but cannot map to models or introduce role_models/per-agent model dimensions.",
+        "statement": "T03 role slugs are tier hints only; current critical-role policy uses limited classification boost/hint behavior and cannot map roles to models or introduce role_models/per-agent model dimensions.",
         "category": "routing"
       },
       {
@@ -555,6 +859,218 @@
       {
         "statement": "Follow-up validation passed npm test (42 passed), npm run typecheck, npm run compile, npm run lint, npm run validate:no-model-ids, and npm run validate:dist.",
         "category": "validation"
+      },
+      {
+        "statement": "Superseded by later user decision: the earlier default toast notification direction is no longer the active model-selection notification transport.",
+        "category": "ux"
+      },
+      {
+        "statement": "Current user decision: default model-selection notification should use a session-based path instead of TUI toast, should remain enabled by default, and does not require debug_model_routing.",
+        "category": "ux"
+      },
+      {
+        "statement": "Current preferred transport is ACP-like client.session.prompt(...) with noReply: true and a text part marked ignored: true; compatibility fallback may use SDK path/body prompt shapes when host support differs.",
+        "category": "sdk"
+      },
+      {
+        "statement": "Current implementation summary: default-enabled session notification, in-session memory deduplication, anti-spam behavior for repeated routing decisions, and silent failure when the session notification path is unavailable or rejected.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Current validation passed npm test (43 passed), npm run typecheck, npm run compile, npm run lint, npm run validate:no-model-ids, and npm run validate:dist.",
+        "category": "validation"
+      },
+      {
+        "statement": "User explicitly asked to compare the implementation against opencode-acp and try the ACP-style difference in practice.",
+        "category": "ux"
+      },
+      {
+        "statement": "New follow-up conclusion: the visibility gap was not only ignored: true; ACP-style session notifications also carry agent, variant, model.providerID, and model.modelID metadata, and the current implementation now best-effort forwards those fields when truly available.",
+        "category": "sdk"
+      },
+      {
+        "statement": "The active notification transport remains session-first with direct-shape first plus path/body fallback, and it does not fall back to toast.",
+        "category": "implementation"
+      },
+      {
+        "statement": "The active behavior still keeps default-enabled notifications, in-session deduplication, and silent failure when the host rejects or lacks the session prompt transport.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Latest follow-up validation passed npm test (44 passed), npm run typecheck, npm run compile, npm run lint, npm run validate:no-model-ids, and npm run validate:dist.",
+        "category": "validation"
+      },
+      {
+        "statement": "Remaining risk: providerID and the finally resolved model string may not match exactly, variant is forwarded only when truly available, and real host-session visibility is still not confirmed; the change is documented as closer to ACP and worth trying, not runtime-proven visible.",
+        "category": "risk"
+      },
+      {
+        "statement": "Latest follow-up fix removed guessed ACP-style model metadata from session notices whenever the routing result did not come directly from current_selected_model with an exact model id match to input.model.id; otherwise the entire model metadata block is omitted.",
+        "category": "implementation"
+      },
+      {
+        "statement": "The root cause was mixed provenance in ACP-style metadata assembly: model.modelID used the finally resolved model while model.providerID used input.model.providerID, which became a guess on agent.model and complexity_models[tier] paths.",
+        "category": "risk"
+      },
+      {
+        "statement": "Reviewer-approved fix kept the session-first transport, did not introduce debug_model_routing, did not change routing priority, and did not fall back to toast or chat.message.",
+        "category": "review"
+      },
+      {
+        "statement": "Post-fix validation passed npm test (45 passed), npm run typecheck, npm run compile, npm run validate:no-model-ids, npm run validate:dist, and npm run lint.",
+        "category": "validation"
+      },
+      {
+        "statement": "The current follow-up target is only to verify whether the host shows a minimal canonical session notice shape, not to finalize the product notification contract.",
+        "category": "ux"
+      },
+      {
+        "statement": "Superseded historical probe: the session notice transport briefly used the minimal canonical path/query/body shape and sent only path.id, query.directory, and body.parts[{type:'text',text}] to test host visibility.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Superseded historical probe: the minimal session notice payload omitted noReply, ignored, agent, variant, and model fields and was intentionally probe-only, not the final production notification contract.",
+        "category": "implementation"
+      },
+      {
+        "statement": "The routing priority and output.options.model behavior remain unchanged: OpenCode agent.model > plugin complexity_models[tier] > current selected model.",
+        "category": "routing"
+      },
+      {
+        "statement": "Minimal canonical session.prompt probe validation passed npm test (46 passed), npm run typecheck, npm run compile, npm run lint, npm run validate:dist, and npm run validate:no-model-ids.",
+        "category": "validation"
+      },
+      {
+        "statement": "Reviewer residual risk: the probe proves the transport shape and local mock behavior only, not guaranteed real host UI visibility; query.directory currently comes from process.cwd(), and a fresh session is recommended for host verification to avoid dedupe interference.",
+        "category": "risk"
+      },
+      {
+        "statement": "User confirmed in a real OpenCode host that the minimal canonical session.prompt probe was visible, but the old copy `gem-orchestrator · tier route · gpt-5.4` was hard to read and too incomplete for practical UX.",
+        "category": "ux"
+      },
+      {
+        "statement": "Superseded intermediate follow-up: the terse probe notice text was replaced with a more readable single-sentence Chinese notice including a friendly agent name, trigger reason, source/tier label, and final resolved model name before the final production transport decision changed again.",
+        "category": "ux"
+      },
+      {
+        "statement": "Superseded follow-up: an intermediate iteration expanded the critical-role set for fixed complex-floor behavior; this is not active after the later limited boost/hint correction.",
+        "category": "routing"
+      },
+      {
+        "statement": "Current active critical-role behavior is limited boost/hint only: simple classifications boost to medium; medium stays medium with a critical role hint; complex requires strong complexity/risk signals. It does not introduce per-agent model override and keeps the routing priority OpenCode agent.model > plugin complexity_models[tier] > current selected model.",
+        "category": "routing"
+      },
+      {
+        "statement": "Superseded intermediate follow-up: that session-notice iteration did not fall back to toast or chat.message and did not introduce debug_model_routing.",
+        "category": "implementation"
+      },
+      {
+        "statement": "The notice-copy and tier-escalation follow-up changed code/tests in src/hooks/model-routing.ts, src/routing/complexity.ts, src/types.ts, test/model-routing-hook.test.ts, and test/routing.test.ts.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Implementer reported npm test, npm run typecheck, npm run compile, npm run lint, npm run validate:dist, and npm run validate:no-model-ids passed for the notice-copy and tier-escalation follow-up; reviewer rechecked the change and reran npm test only, reporting 48 passed tests.",
+        "category": "validation"
+      },
+      {
+        "statement": "User feedback overrode the prior direction: the production routing notice must not be Chinese, and the message must not be visible to the LLM/transcript path.",
+        "category": "ux"
+      },
+      {
+        "statement": "Superseded follow-up: production routing notice briefly used client.tui.showToast(...) only before the user replaced toast-only delivery with an ACP-like session.prompt hidden-context approach.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Current production routing notice transport uses client.session.prompt(...) with payload { path: { id }, query: { directory }, body: { noReply: true, parts: [{ type: 'text', text, ignored: true }] } }.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Current production routing notice has no toast or chat fallback; if session.prompt is unavailable or fails, the notice is silently skipped.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Production notice copy is now compact English-only.",
+        "category": "ux"
+      },
+      {
+        "statement": "Critical-agent fixed complex-floor behavior is superseded. Active policy for gem-orchestrator, gem-planner, gem-debugger, gem-critic, and gem-reviewer is limited boost/hint: simple->medium boost, medium hint only, complex only from strong signals.",
+        "category": "routing"
+      },
+      {
+        "statement": "Forbidden routing dimensions remain absent after the latest notice transport change: no role_models, no agent_complexity_models, no per-agent model IDs, and no debug_model_routing.",
+        "category": "validation"
+      },
+      {
+        "statement": "Latest follow-up modified src/hooks/model-routing.ts, test/model-routing-hook.test.ts, and generated dist outputs from compile.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Implementer reported passing npm test (50 passed), npm run typecheck, npm run compile, npm run lint, npm run validate:dist, and npm run validate:no-model-ids for the current session.prompt hidden-context follow-up; reviewer reran npm run typecheck && npm test and reported 50 passed, 0 failed.",
+        "category": "validation"
+      },
+      {
+        "statement": "Reviewer approved the current session.prompt hidden-context transport and warned that plan/context docs still needed stale toast-only narrative cleanup to avoid contradicting the implementation.",
+        "category": "review"
+      },
+      {
+        "statement": "Residual risk remains host-semantic: this repository can prove only the session.prompt payload shape including ignored:true, not that the OpenCode host will absolutely exclude that notice from LLM context end to end.",
+        "category": "risk"
+      },
+      {
+        "statement": "Reviewer residual risk for the latest follow-up: notice completeness is still somewhat subjective, the complex-agent set needs future maintenance, and the reviewer did not rerun all auxiliary validation scripts in the review pass.",
+        "category": "risk"
+      },
+      {
+        "statement": "Latest user requirement: routing notices should include decision-useful information in the message, not just a terse selected-model line.",
+        "category": "ux"
+      },
+      {
+        "statement": "Production routing notice remains ACP-like client.session.prompt(...) with payload path.id=sessionID, query.directory=process.cwd(), and body { noReply: true, parts: [{ type: text, text, ignored: true }] }.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Latest notice copy is English-only multiline decision information including Agent, Tier, Source, Model, and Signals when available from reliable routing payload fields.",
+        "category": "ux"
+      },
+      {
+        "statement": "Routing notice information sources are limited to reliable routing payload fields: agent, tier, source, resolved model, classification reasons, and resolution reason; provider, environment, and user message content are not guessed.",
+        "category": "security"
+      },
+      {
+        "statement": "Latest implementation changed src/hooks/model-routing.ts, test/model-routing-hook.test.ts, and refreshed compiled dist/src/hooks/model-routing.js plus dist/src/hooks/model-routing.js.map.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Implementer validation passed npm test with 50/50 tests, npm run typecheck, npm run compile, npm run lint, npm run validate:no-model-ids, and npm run validate:dist for the multiline decision notice follow-up.",
+        "category": "validation"
+      },
+      {
+        "statement": "Reviewer validation passed npm test, npm run typecheck, npm run validate:no-model-ids, and npm run validate:dist for the multiline decision notice follow-up.",
+        "category": "review"
+      },
+      {
+        "statement": "Reviewer passed the multiline decision notice follow-up; the only low-risk warning was that npm test -- test/model-routing-hook.test.ts is not compatible with the current test script, while standard npm test passed.",
+        "category": "review"
+      },
+      {
+        "statement": "Residual risk: Model displays the final resolved model string; if a user-configured model string itself is sensitive, the plugin does not redact it because it is part of the user-approved decision information range.",
+        "category": "risk"
+      },
+      {
+        "statement": "README.md is now aligned for human readers around plugin positioning, verified/pending boundaries, installation/config examples, development commands, constraints, and related documents.",
+        "category": "documentation"
+      },
+      {
+        "statement": "AGENTS.md is now aligned for agent readers around project purpose, invariants, repository layout, working commands, documentation boundaries, behavior-change workflow, and safety reminders.",
+        "category": "documentation"
+      },
+      {
+        "statement": "Reviewer approved the README/AGENTS documentation pass with no blocking findings; the only low-risk warning was that AGENTS.md does not explicitly mention the root-level agents/generated/ path in its generated-artifacts note.",
+        "category": "review"
+      },
+      {
+        "statement": "Documentation claims remain aligned with implementation: ACP-like hidden-context session prompt notice, model priority OpenCode agent.model > complexity_models[tier] > current selected model, compile command naming, and no end-to-end GitHub install verification claim.",
+        "category": "documentation"
       }
     ],
     "patterns": [
@@ -609,9 +1125,69 @@
         "confidence": 1.0
       },
       {
-        "name": "Default toast with session dedup",
-        "description": "Model-selection notification should default to toast via a minimal compatibility wrapper and deduplicate in memory for the active plugin session so repeated routing decisions do not spam the UI.",
-        "confidence": 0.98
+        "name": "Superseded toast-only production notice",
+        "description": "Toast-only production notice is historical context only and must be marked superseded wherever it still appears in plan artifacts.",
+        "confidence": 1.0
+      },
+      {
+        "name": "ACP-like hidden-context session prompt",
+        "description": "The active notification path uses client.session.prompt(...) with payload { path: { id }, query: { directory }, body: { noReply: true, parts: [{ type: 'text', text, ignored: true }] } } so the message stays visible while aiming to remain outside LLM context.",
+        "confidence": 1.0
+      },
+      {
+        "name": "ACP-style session metadata best-effort parity",
+        "description": "When session notification context exposes them, forward ACP-like agent, variant, model.providerID, and model.modelID metadata to make the notification closer to ACP behavior without overclaiming runtime visibility.",
+        "confidence": 0.97
+      },
+      {
+        "name": "Reliable metadata or omission",
+        "description": "For session notice model metadata, keep the entire model block only when providerID and modelID are both directly reliable from current_selected_model with an exact selected-model id match; otherwise omit the block instead of mixing proven and guessed fields.",
+        "confidence": 1.0
+      },
+      {
+        "name": "Minimal canonical session.prompt probe",
+        "description": "For host-visibility probing, use the smallest canonical session.prompt payload shape path/query/body and remove optional metadata fields so the experiment isolates transport-shape behavior from richer notice payload concerns.",
+        "confidence": 1.0
+      },
+      {
+        "name": "Real-host probe visibility before copy refinement",
+        "description": "When the minimal session.prompt probe is confirmed visible in a real OpenCode host, treat wording quality as a separate UX problem: improve the copy for readability/completeness without changing the transport, priority chain, or adding debug-only routing surfaces.",
+        "confidence": 0.94
+      },
+      {
+        "name": "Readable routing notice with structured essentials",
+        "description": "When showing the model-routing notice, prefer a single-sentence human-readable message that names the friendly agent, explains the trigger reason, labels the source/tier, and includes the final resolved model instead of terse internal fragments.",
+        "confidence": 0.96
+      },
+      {
+        "name": "Critical roles use limited boost/hint, not fixed complex floor",
+        "description": "Active policy is intentionally more aggressive without always forcing the highest tier: orchestration-critical and reasoning-critical roles boost simple classifications to medium, keep medium as hint-only, and still require strong complexity/risk signals before routing reaches complex, while preserving the existing priority chain and avoiding per-agent model mappings.",
+        "confidence": 1.0
+      },
+      {
+        "name": "Session prompt only with silent skip",
+        "description": "For production model-routing notices, use client.session.prompt(...) only, keep no toast/chat fallback, and silently skip when session.prompt is unavailable or rejected.",
+        "confidence": 1.0
+      },
+      {
+        "name": "Compact English-only production routing copy",
+        "description": "Production routing notices should use compact English-only wording after user feedback rejected Chinese copy for this path.",
+        "confidence": 0.96
+      },
+      {
+        "name": "Multiline routing notice with decision-useful fields",
+        "description": "Production model-routing notices should use English-only multiline copy that shows the agent, tier and complexity signal, source, final resolved model, and classification signals when those values come from the trusted routing payload.",
+        "confidence": 1.0
+      },
+      {
+        "name": "Reliable routing payload only",
+        "description": "Decision information in notices must come only from routing payload fields that the hook actually resolved or classified; never infer provider, environment, or user message content for notice enrichment.",
+        "confidence": 1.0
+      },
+      {
+        "name": "Audience-split documentation alignment",
+        "description": "Keep README.md human-facing and AGENTS.md agent-facing, while making both documents explicitly reflect verified implementation boundaries, forbidden model-routing dimensions, and the compile-not-build command convention.",
+        "confidence": 0.97
       }
     ],
     "gotchas": [
@@ -621,6 +1197,7 @@
       "Do not implement plugin code during planning-only tasks.",
       "Do not replace upstream orchestration content with summarized semantics.",
       "Do not claim chat.params can replace the actual request model until a no-provider runtime/mock proves a supported model override path.",
+      "When describing generated artifacts for agents, remember both src/agents/generated.* and the root-level agents/generated/ sync outputs, or reviewers will throw a tiny yellow card at your shins.",
       "Do not publish a final GitHub install command until the observed OpenCode GitHub source syntax is verified end-to-end for this repository.",
       "T03 resolver model values are opaque strings; tests should keep using non-provider-shaped strings such as model-a or tier-model.",
       "Do not add role_models, per-agent model maps, agent_complexity_models, provider router, or fallback chains in later routing work.",
@@ -631,161 +1208,534 @@
       "Do not copy manifest audit metadata into OpenCode agent config; unsupported metadata belongs in agents/generated/manifest.json only.",
       "Keep T03 priority chain intact in any later model-routing hook work: native agent.model before complexity_models[tier] before selected model.",
       "@opencode-ai/plugin@1.15.13 chat.params output exposes output.options but no direct output model field; keep AC-20 Partial/Pending until runtime request mutation evidence exists.",
-      "When previewModelRouting upgrades tiers from reasoning-critical or risk signals, keep the tier space to simple, medium, and complex only and do not add per-agent/role model mappings.",
+      "When previewModelRouting upgrades tiers from reasoning-critical or risk signals, keep the tier space to simple, medium, and complex only; active critical-role behavior is limited boost/hint rather than a fixed complex floor, and it must not add per-agent/role model mappings.",
       "validate:dist now scans dist/src for broad forbidden capability strings, but defensive validation/rejection code is intentionally allowlisted only in scoped validation modules.",
       "Package exports pointing to dist/src create a freshness risk if dist is committed or regenerated outside validate:dist; rerun build and validate:dist and inspect git diff before any commit.",
       "Final hardening left GitHub source install syntax Pending; follow-up redacted global config evidence moved syntax to format observed while GitHub package-manager/lifecycle behavior, remote GitHub dist necessity, repo end-to-end install/load, and AC-20 runtime request model mutation remain honest Pending or Partial/Pending risks.",
-      "A session.prompt marked ignored: true cannot be described as a true non-context toast equivalent; document that limitation explicitly.",
-      "Default notifications need in-session deduplication to avoid toast spam when the same routing decision repeats.",
-      "If client.tui.showToast is unavailable, compatibility behavior must silently skip notification rather than backfill with chat.message or session.prompt."
+      "A session.prompt marked ignored: true is not equivalent to a truly non-context toast; document that limitation explicitly.",
+      "Plugin instance reconstruction clears in-memory dedup state, so the same model-selection notification can reappear after reload/recreation.",
+      "The current production payload contract is fixed to { path: { id }, query: { directory }, body: { noReply: true, parts: [{ type: 'text', text, ignored: true }] } }; plan artifacts should not describe older direct-shape or toast-only production behavior as current.",
+      "Default notifications need in-session deduplication to avoid session-prompt spam when the same routing decision repeats.",
+      "If the session notification transport is unavailable or rejected, behavior must fail silently rather than fall back to chat.message or reintroduce toast.",
+      "providerID may not exactly match the finally resolved model string representation, so do not document those fields as guaranteed identical.",
+      "Do not assemble model.providerID from input.model.providerID when the resolved model came from agent.model or complexity_models[tier]; that is a guess and must be omitted instead.",
+      "variant should be forwarded only when the runtime context truly provides it; do not synthesize placeholder values.",
+      "Current session metadata enrichment is closer to ACP and worth trying, but real host-session notification visibility is still unverified and must not be documented as confirmed.",
+      "If model metadata is not reliably known, omit the entire model metadata block rather than forwarding a partially guessed providerID/modelID pair.",
+      "The minimal canonical session.prompt probe is an experiment for host notice visibility, not the final product notification contract.",
+      "The active minimal probe must send only path.id, query.directory, and body.parts text; do not re-add noReply, ignored, agent, variant, model, or direct-shape-first fallback during this probe iteration.",
+      "query.directory currently comes from process.cwd(), so host-side meaning may differ from any eventual session/workspace-specific directory semantics.",
+      "When manually validating host visibility, start a fresh session if possible so in-memory dedupe does not hide the probe result.",
+      "A real-host-visible probe can still have poor UX if the sentence is too terse or omits routing context; treat visibility proof and wording quality as separate acceptance dimensions.",
+      "Readable notice copy is still a UX judgment call; document it as reviewer-approved wording improvement, not an objectively final perfect sentence.",
+      "Earlier minimal session.prompt probe variants and the later toast-only production variant are historical context only and must be marked superseded where referenced.",
+      "Production routing notices must not fall back to toast or chat.message; the active transport is session.prompt with ignored:true payload semantics.",
+      "Absolute exclusion from LLM context still depends on host semantics of session.prompt plus ignored:true; document that as a host-side residual risk, not a repo-side fallback gap.",
+      "If session.prompt is unavailable, silently skip the routing notice instead of inventing a toast or in-band fallback.",
+      "Production notice copy for this path is compact English-only by user override; do not reintroduce Chinese copy unless the user changes direction again.",
+      "Keep the critical-role policy set centralized and reviewed over time because gem-orchestrator, gem-planner, gem-debugger, gem-critic, and gem-reviewer are a maintained policy set, not a mechanically derived list.",
+      "More aggressive critical-role routing must remain limited boost/hint only: simple may boost to medium, medium stays hint-only, and complex still requires strong signals; do not add per-agent model override even if a specific agent seems to want the top model.",
+      "Do not enrich routing notices by guessing provider, environment, or user message content; use only reliable routing payload fields such as agent, tier, source, resolved model, classification reasons, and resolution reason.",
+      "The Model line intentionally displays the final resolved model string; do not add redaction unless a new requirement changes the approved decision-information scope.",
+      "Use standard npm test for focused routing-hook verification in this repository; npm test -- test/model-routing-hook.test.ts is not compatible with the current test script."
     ],
     "failure_modes": [
       {
+        "scenario": "The minimal session.prompt probe is visible in the real host, but the notice text is too terse to explain what happened.",
+        "symptoms": [
+          "User can see the probe",
+          "Displayed text looks like `gem-orchestrator · tier route · gpt-5.4`",
+          "User still cannot easily tell why this model was chosen"
+        ],
+        "mitigation": "Keep the proven session transport, replace the copy with a clearer single-sentence Chinese notice naming the agent, trigger reason, source/tier label, and final model, and avoid expanding scope into toast/chat.message/debug-only routing features."
+      },
+      {
         "scenario": "PoC cannot verify GitHub load locally.",
-        "symptoms": ["docs/installation-poc.md marks GitHub syntax Blocked", "README lacks final install command"],
+        "symptoms": [
+          "docs/installation-poc.md marks GitHub syntax Blocked",
+          "README lacks final install command"
+        ],
         "mitigation": "Keep docs in Pending/Blocked state and do not run optional dist/release claim path."
       },
       {
         "scenario": "Sync conversion changes upstream body content.",
-        "symptoms": ["validate:sync reports non-metadata body diff", "hash mismatch without allowlist"],
+        "symptoms": [
+          "validate:sync reports non-metadata body diff",
+          "hash mismatch without allowlist"
+        ],
         "mitigation": "Preserve body verbatim or add explicit allowlist reason and evidence only for required compatibility metadata/header changes."
       },
       {
         "scenario": "Model-routing hook cannot prove actual mutation without provider call.",
-        "symptoms": ["Only mock/dry-run evidence available", "no verified runtime mutation evidence"],
+        "symptoms": [
+          "Only mock/dry-run evidence available",
+          "no verified runtime mutation evidence"
+        ],
         "mitigation": "Mark routing capability limited/experimental and do not claim AC-20 as verified."
       },
       {
         "scenario": "Security review finds forbidden capability or secret exposure.",
-        "symptoms": ["provider router/telemetry/slash command appears", "env token printed", "concrete model ID appears"],
+        "symptoms": [
+          "provider router/telemetry/slash command appears",
+          "env token printed",
+          "concrete model ID appears"
+        ],
         "mitigation": "Remove feature/string, rerun validators, repeat T11 before T12."
       },
       {
         "scenario": "Later hook work bypasses the T03 resolver priority chain.",
-        "symptoms": ["agent.model is overwritten", "complexity model wins over native agent.model", "selected model is ignored when tier model is missing"],
+        "symptoms": [
+          "agent.model is overwritten",
+          "complexity model wins over native agent.model",
+          "selected model is ignored when tier model is missing"
+        ],
         "mitigation": "Use resolveModel as the single pure routing contract and keep tests proving native_agent_model priority."
       },
       {
         "scenario": "Unauthenticated public GitHub commit lookup is unavailable during sync.",
-        "symptoms": ["manifest upstreamCommit is unknown-public-github-commit-unavailable", "reviewer flags reduced reproducibility"],
+        "symptoms": [
+          "manifest upstreamCommit is unknown-public-github-commit-unavailable",
+          "reviewer flags reduced reproducibility"
+        ],
         "mitigation": "Keep the fallback explicit in manifest/review evidence, rerun sync when public commit metadata is available, and never use tokens or env secrets to force resolution."
       },
       {
         "scenario": "Package exports target dist before GitHub install/dist behavior is proven.",
-        "symptoms": ["package exports point to dist", "dist is absent or uncommitted", "GitHub install/load path cannot resolve package entry"],
+        "symptoms": [
+          "package exports point to dist",
+          "dist is absent or uncommitted",
+          "GitHub install/load path cannot resolve package entry"
+        ],
         "mitigation": "Keep GitHub install, package-manager behavior, and dist necessity Pending until verified; only produce or validate dist if the PoC proves it necessary."
       },
       {
         "scenario": "validate:dist allowlist grows beyond defensive validation modules.",
-        "symptoms": ["forbidden strings pass in capability implementation modules", "dist scanner no longer reports deterministic path:line reason failures for forbidden config names"],
+        "symptoms": [
+          "forbidden strings pass in capability implementation modules",
+          "dist scanner no longer reports deterministic path:line reason failures for forbidden config names"
+        ],
         "mitigation": "Keep allowlisting limited to dist/src/routing/resolve-model.js(.d.ts) and dist/src/sync/validation.js(.d.ts); add failing validator tests before changing allowlist scope."
       },
       {
         "scenario": "Plugin instance is rebuilt during the same user workflow.",
-        "symptoms": ["in-memory dedup state is lost", "the same default model-selection toast can appear again after reload/reconstruction"],
+        "symptoms": [
+          "in-memory dedup state is lost",
+          "the same default model-selection session notice can appear again after reload/reconstruction"
+        ],
         "mitigation": "Document the behavior as low-risk follow-up compatibility debt; keep dedup scoped to session memory unless a stronger persistence requirement is explicitly approved."
+      },
+      {
+        "scenario": "Host runtime accepts the payload shape but still routes ignored:true prompt content into LLM context.",
+        "symptoms": [
+          "Local tests prove only payload shape",
+          "host displays the notice but transcript/context behavior remains uncertain",
+          "repository cannot end-to-end prove ignored:true semantics"
+        ],
+        "mitigation": "Keep the payload aligned with the current ACP-like contract, document the boundary honestly as host-semantic residual risk, and avoid claiming absolute non-context guarantees from repository tests alone."
+      },
+      {
+        "scenario": "ACP-style metadata is partially unavailable or diverges from the resolved model string.",
+        "symptoms": [
+          "providerID is absent or differs from the displayed resolved model string",
+          "variant is missing",
+          "notification payload is less informative than ACP on some hosts"
+        ],
+        "mitigation": "Forward agent, variant, model.providerID, and model.modelID only on a best-effort basis, keep defaults/dedup/silent-failure boundaries, and document the behavior as parity-seeking rather than visibility-proven."
+      },
+      {
+        "scenario": "Session notice metadata mixes a resolved model from one source with provider metadata from another source.",
+        "symptoms": [
+          "model.modelID reflects resolved agent.model or complexity_models[tier]",
+          "model.providerID is copied from input.model.providerID",
+          "notification payload implies a provider choice that was never actually resolved"
+        ],
+        "mitigation": "Only retain the model metadata block when resolved source is current_selected_model and resolved model exactly matches input.model.id; otherwise omit the entire model block and keep the session-first notification unchanged."
+      },
+      {
+        "scenario": "The minimal canonical session.prompt probe passes local tests but still does not display in the real host UI.",
+        "symptoms": [
+          "Local mock assertions pass",
+          "transport shape is canonical path/query/body",
+          "real host still shows no visible session notice"
+        ],
+        "mitigation": "Document the result as transport-shape and local-mock proof only, keep product claims unfinalized, and verify again in a fresh host session to reduce dedupe interference."
+      },
+      {
+        "scenario": "Probe visibility is misread because dedupe suppresses a repeated notice.",
+        "symptoms": [
+          "Expected notice does not reappear during the same session",
+          "Routing decision repeats with identical notice key",
+          "Local implementation appears unchanged but host test seems inconsistent"
+        ],
+        "mitigation": "Run host verification in a new session or otherwise reset the probe context before concluding the canonical payload shape is invisible."
+      },
+      {
+        "scenario": "Critical-role routing grows inconsistent because the aggressive-upgrade role set drifts over time.",
+        "symptoms": [
+          "One complex coordination/reasoning agent upgrades less aggressively than peers",
+          "Reviewer questions why a role is missing from the special set",
+          "Behavior changes silently after agent roster evolution"
+        ],
+        "mitigation": "Keep the key-role set explicit in routing policy, review it when agent responsibilities change, and preserve the limited boost/hint strategy instead of fixed complex-floor behavior or ad hoc per-agent model overrides."
+      },
+      {
+        "scenario": "Notice wording regresses into terse or non-English-incompatible copy.",
+        "symptoms": [
+          "English notice text is replaced with terse internal fragments",
+          "Trigger reason or final model is omitted",
+          "Reviewer notes the notice is technically correct but hard to read"
+        ],
+        "mitigation": "Preserve the compact English notice contract and cover the copy boundary in routing-hook tests without reintroducing older Chinese production wording as current behavior."
+      },
+      {
+        "scenario": "Production routing notices regress back to toast or chat fallback.",
+        "symptoms": [
+          "client.tui.showToast is reintroduced as active production transport",
+          "chat.message is added as a fallback",
+          "plan artifacts again describe toast-only as current behavior"
+        ],
+        "mitigation": "Keep production transport limited to the ACP-like session.prompt payload, silently skip when unavailable, and treat any toast/chat fallback or stale toast-only documentation as a regression."
+      },
+      {
+        "scenario": "Host session.prompt ignored semantics are not fully non-context even though repo-side payload uses ignored:true.",
+        "symptoms": [
+          "Repo code sends noReply:true plus ignored:true text part",
+          "host behavior still determines whether the notice is excluded from LLM context",
+          "reviewer can confirm payload shape but not absolute host semantics from code alone"
+        ],
+        "mitigation": "Document the remaining risk precisely as host-semantic uncertainty around session.prompt ignored semantics while keeping repo-side behavior free of toast/chat fallbacks."
+      },
+      {
+        "scenario": "Routing notice copy expands beyond reliable decision information and starts guessing context.",
+        "symptoms": [
+          "Notice mentions provider or environment not present in routing payload",
+          "Notice summarizes user message content",
+          "Reviewer flags inferred metadata"
+        ],
+        "mitigation": "Limit notice fields to agent, tier, source, resolved model, classification reasons, and resolution reason; omit anything unavailable instead of guessing."
+      },
+      {
+        "scenario": "Focused npm test invocation is misused as a failure signal.",
+        "symptoms": [
+          "npm test -- test/model-routing-hook.test.ts fails or behaves unexpectedly",
+          "Standard npm test still passes"
+        ],
+        "mitigation": "Use the repository standard npm test script for validation unless the test script is changed to support file filtering."
       }
     ],
     "decisions": [
       {
         "decision": "Use 12 waves with one task per wave.",
-        "rationale": ["Eliminates same-wave dependency edges", "Improves reviewability and gate ordering"]
+        "rationale": [
+          "Eliminates same-wave dependency edges",
+          "Improves reviewability and gate ordering"
+        ]
       },
       {
         "decision": "Make T01 early feasibility PoC mandatory before scaffold-dependent implementation claims.",
-        "rationale": ["OpenCode plugin API was not confirmed at initial planning time; GitHub source syntax is now format-observed only", "Docs/dist/release path must not overclaim"]
+        "rationale": [
+          "OpenCode plugin API was not confirmed at initial planning time; GitHub source syntax is now format-observed only",
+          "Docs/dist/release path must not overclaim"
+        ]
       },
       {
         "decision": "Keep dist optional and PoC-dependent.",
-        "rationale": ["Reviewer/critic rejected default dist submission", "GitHub install evidence must determine necessity"]
+        "rationale": [
+          "Reviewer/critic rejected default dist submission",
+          "GitHub install evidence must determine necessity"
+        ]
       },
       {
         "decision": "Forbid real provider calls in default PoC and tests.",
-        "rationale": ["Avoid cost/side effects", "Avoid exposing API keys/tokens", "Plan can use dry-run/mock/local OpenCode load evidence"]
+        "rationale": [
+          "Avoid cost/side effects",
+          "Avoid exposing API keys/tokens",
+          "Plan can use dry-run/mock/local OpenCode load evidence"
+        ]
       },
       {
         "decision": "Use PluginModule default export as the primary scaffold shape after T01.",
-        "rationale": ["Installed SDK exposes PluginModule", "Fixture typecheck passed", "Shape matches PRD section 5.7"]
+        "rationale": [
+          "Installed SDK exposes PluginModule",
+          "Fixture typecheck passed",
+          "Shape matches PRD section 5.7"
+        ]
       },
       {
         "decision": "Keep GitHub install/load and dist necessity Pending after syntax-only follow-up evidence.",
-        "rationale": ["Official docs found in T01 document local and npm plugin paths", "Follow-up evidence observed only redacted github:<owner>/<repo>#<ref> config syntax", "Package export behavior depends on unverified GitHub install mechanics"]
+        "rationale": [
+          "Official docs found in T01 document local and npm plugin paths",
+          "Follow-up evidence observed only redacted github:<owner>/<repo>#<ref> config syntax",
+          "Package export behavior depends on unverified GitHub install mechanics"
+        ]
       },
       {
         "decision": "Use node:test plus built TypeScript output for the scaffold test gate.",
-        "rationale": ["Meets minimal dependency goal", "Validates exported plugin shape without provider calls", "Avoids introducing an extra test runner before feature work"]
+        "rationale": [
+          "Meets minimal dependency goal",
+          "Validates exported plugin shape without provider calls",
+          "Avoids introducing an extra test runner before feature work"
+        ]
       },
       {
         "decision": "Keep sync and validation scripts as placeholders until later waves.",
-        "rationale": ["T02 scope is scaffold only", "Later waves own sync and generated-asset behavior", "Keeps the initial package buildable and typecheckable"]
+        "rationale": [
+          "T02 scope is scaffold only",
+          "Later waves own sync and generated-asset behavior",
+          "Keeps the initial package buildable and typecheckable"
+        ]
       },
       {
         "decision": "Missing or unknown complexity tiers fallback to medium in T03 pure routing.",
-        "rationale": ["Medium is the safest neutral tier across simple/complex uncertainty", "Fallback is deterministic and reason-tagged for tests and later hook metadata"]
+        "rationale": [
+          "Medium is the safest neutral tier across simple/complex uncertainty",
+          "Fallback is deterministic and reason-tagged for tests and later hook metadata"
+        ]
       },
       {
         "decision": "Keep T03 model values opaque strings and avoid model ID validation inside resolveModel.",
-        "rationale": ["PRD forbids hardcoded concrete model IDs but user-provided model values are OpenCode-owned opaque strings", "Security validation belongs at repository artifact scanning boundaries"]
+        "rationale": [
+          "PRD forbids hardcoded concrete model IDs but user-provided model values are OpenCode-owned opaque strings",
+          "Security validation belongs at repository artifact scanning boundaries"
+        ]
       },
       {
         "decision": "Reasoning-critical roles affect tier classification only, not model selection dimensions.",
-        "rationale": ["PRD AC-11/AC-12 forbid role_models and per-agent overrides", "This preserves three-tier global routing while allowing safe tier hints"]
+        "rationale": [
+          "PRD AC-11/AC-12 forbid role_models and per-agent overrides",
+          "This preserves three-tier global routing while allowing safe tier hints"
+        ]
       },
       {
         "decision": "Store synchronized upstream bodies in agents/generated and manifest metadata in agents/generated/manifest.json for T04.",
-        "rationale": ["Keeps generated artifacts stable and inspectable", "Later T07 config injection can import or read one stable manifest path", "Avoids rewriting upstream behavior while still recording audit metadata"]
+        "rationale": [
+          "Keeps generated artifacts stable and inspectable",
+          "Later T07 config injection can import or read one stable manifest path",
+          "Avoids rewriting upstream behavior while still recording audit metadata"
+        ]
       },
       {
         "decision": "Use unauthenticated GitHub commits API only for best-effort commit metadata and raw.githubusercontent.com GET requests for agent bodies.",
-        "rationale": ["Satisfies read-only/no-token sync guard", "Allows validation to proceed with explicit unknown value if public commit lookup is unavailable", "Avoids reading or printing environment secrets"]
+        "rationale": [
+          "Satisfies read-only/no-token sync guard",
+          "Allows validation to proceed with explicit unknown value if public commit lookup is unavailable",
+          "Avoids reading or printing environment secrets"
+        ]
       },
       {
         "decision": "Treat Wave 4/T04 as complete and continue to Wave 5.",
-        "rationale": ["Generated 16 upstream agent bodies and schemaVersion 1 manifest", "Required sync/typecheck/build/test/model-id validations passed", "Reviewer found no blocking issues"]
+        "rationale": [
+          "Generated 16 upstream agent bodies and schemaVersion 1 manifest",
+          "Required sync/typecheck/build/test/model-id validations passed",
+          "Reviewer found no blocking issues"
+        ]
       },
       {
         "decision": "Use a runtime filesystem loader instead of importing JSON/Markdown directly.",
-        "rationale": ["Current tsconfig does not include JSON or Markdown module imports", "Filesystem loading works from source and dist paths", "Hash parity checks keep generated prompt bodies preserved"]
+        "rationale": [
+          "Current tsconfig does not include JSON or Markdown module imports",
+          "Filesystem loading works from source and dist paths",
+          "Hash parity checks keep generated prompt bodies preserved"
+        ]
       },
       {
         "decision": "For existing OpenCode agent config, user fields override generated defaults.",
-        "rationale": ["Preserves user model, prompt, permission, mode, and unknown fields", "Avoids destructive prompt overwrite while still filling missing generated fields"]
+        "rationale": [
+          "Preserves user model, prompt, permission, mode, and unknown fields",
+          "Avoids destructive prompt overwrite while still filling missing generated fields"
+        ]
       },
       {
         "decision": "Complete config hook injection in Wave 5/T05 while leaving Wave 6 and later validation/routing/docs gates pending.",
-        "rationale": ["Runtime loader and injection were implemented together using the generated manifest and bodies", "Plan naming drift is recorded without inventing new tasks", "GitHub install, dist/package-manager behavior, and actual request model mutation remain pending"]
+        "rationale": [
+          "Runtime loader and injection were implemented together using the generated manifest and bodies",
+          "Plan naming drift is recorded without inventing new tasks",
+          "GitHub install, dist/package-manager behavior, and actual request model mutation remain pending"
+        ]
       },
       {
         "decision": "Keep manifest metadata separate from OpenCode agent config.",
-        "rationale": ["OpenCode agent config should receive only supported fields", "Manifest remains the audit source for hashes, routingTargets, source URLs, commits, and sync metadata"]
+        "rationale": [
+          "OpenCode agent config should receive only supported fields",
+          "Manifest remains the audit source for hashes, routingTargets, source URLs, commits, and sync metadata"
+        ]
       },
       {
         "decision": "Treat Wave 6/T06 as complete and continue to Wave 7 while keeping AC-20 partial.",
-        "rationale": ["previewModelRouting and chat.params mock/type evidence passed all local guards", "Reviewer found no blocking issues", "Actual OpenCode request model mutation remains unverified without provider/API calls"]
+        "rationale": [
+          "previewModelRouting and chat.params mock/type evidence passed all local guards",
+          "Reviewer found no blocking issues",
+          "Actual OpenCode request model mutation remains unverified without provider/API calls"
+        ]
       },
       {
         "decision": "Expose package main and exports[./server] to dist/src/index.js and gate it with validate:dist.",
-        "rationale": ["OpenCode package target inspection expects exports[./server] or package main for server plugins", "The first local package-path install failed without a server target", "The second local package-path install passed after adding server entrypoints and built dist"]
+        "rationale": [
+          "OpenCode package target inspection expects exports[./server] or package main for server plugins",
+          "The first local package-path install failed without a server target",
+          "The second local package-path install passed after adding server entrypoints and built dist"
+        ]
       },
       {
         "decision": "Document GitHub source install syntax as format observed / end-to-end Pending and provide only local/path development install guidance.",
-        "rationale": ["Official OpenCode plugin docs verified local and npm paths but not a final GitHub source syntax", "Follow-up read-only global config inspection observed only a redacted plugin array format", "No external publication or global config writes were used", "Avoids overclaiming PRD AC-16"]
+        "rationale": [
+          "Official OpenCode plugin docs verified local and npm paths but not a final GitHub source syntax",
+          "Follow-up read-only global config inspection observed only a redacted plugin array format",
+          "No external publication or global config writes were used",
+          "Avoids overclaiming PRD AC-16"
+        ]
       },
       {
         "decision": "Treat Wave 7/T07 as complete and continue to the final waves with pending remote-source risks preserved.",
-        "rationale": ["Local package-path install and 16-agent visibility were verified in a temp fixture", "Reviewer found no blocking issues", "GitHub source syntax format is observed only; GitHub package-manager behavior, remote dist necessity, AC-20 runtime mutation, and package exports-to-dist risk remain explicitly pending"]
+        "rationale": [
+          "Local package-path install and 16-agent visibility were verified in a temp fixture",
+          "Reviewer found no blocking issues",
+          "GitHub source syntax format is observed only; GitHub package-manager behavior, remote dist necessity, AC-20 runtime mutation, and package exports-to-dist risk remain explicitly pending"
+        ]
       },
       {
         "decision": "Treat final validation hardening as complete and ready for final review, not commit-ready without reviewer/orchestrator git inspection.",
-        "rationale": ["Full validation chain passed after broad dist forbidden-surface scanning was added", "Pending GitHub/runtime risks remain accurately labeled", "All implementation artifacts remain uncommitted and require final status/diff/log review before any commit"]
+        "rationale": [
+          "Full validation chain passed after broad dist forbidden-surface scanning was added",
+          "Pending GitHub/runtime risks remain accurately labeled",
+          "All implementation artifacts remain uncommitted and require final status/diff/log review before any commit"
+        ]
       },
       {
         "decision": "Default model-selection notification should use toast and be enabled by default without debug_model_routing.",
-        "rationale": ["User explicitly chose default-visible notification behavior", "OpenCode SDK exposes client.tui.showToast() and opencode-acp provides the reference direction", "chat.message and session.prompt are intentionally excluded to avoid claiming a non-context notification path they do not faithfully provide"]
+        "rationale": [
+          "User explicitly chose default-visible notification behavior",
+          "OpenCode SDK exposes client.tui.showToast() and opencode-acp provides the reference direction",
+          "chat.message and session.prompt are intentionally excluded to avoid claiming a non-context notification path they do not faithfully provide"
+        ]
       },
       {
         "decision": "Fallback behavior when toast is unavailable is silent skip only.",
-        "rationale": ["Maintains low-risk compatibility across SDK surfaces", "Avoids misrepresenting ignored session prompts or chat messages as equivalent to a real toast", "Keeps the wrapper minimal and non-invasive"]
+        "rationale": [
+          "Maintains low-risk compatibility across SDK surfaces",
+          "Avoids misrepresenting ignored session prompts or chat messages as equivalent to a real toast",
+          "Keeps the wrapper minimal and non-invasive"
+        ]
+      },
+      {
+        "decision": "Supersede the earlier toast-first notification direction with a session-first notification direction.",
+        "rationale": [
+          "User explicitly replaced the earlier TUI toast decision with a session-based approach",
+          "The active behavior must still show model selection by default while removing any dependency on debug_model_routing",
+          "Historical toast conclusions should remain documented but clearly marked as superseded rather than deleted"
+        ]
+      },
+      {
+        "decision": "Prefer ACP-like client.session.prompt(...) with noReply: true and an ignored text part, with compatibility fallback across prompt call shapes.",
+        "rationale": [
+          "Matches the new user-selected session transport direction",
+          "Host support may vary between direct-shape and SDK path/body-shape prompt invocation",
+          "Compatibility fallback preserves behavior without overclaiming universal host support"
+        ]
+      },
+      {
+        "decision": "Keep model-selection notification default-enabled with in-session deduplication and silent failure boundaries.",
+        "rationale": [
+          "Default visibility remains a user requirement",
+          "Memory-only dedup reduces repeated-session spam without adding persistence complexity",
+          "Silent failure avoids breaking chat flow when the host rejects or lacks the session prompt transport"
+        ]
+      },
+      {
+        "decision": "Align the session notification payload more closely with opencode-acp by forwarding ACP-style metadata when available, without changing the session-first transport strategy.",
+        "rationale": [
+          "User explicitly requested an opencode-acp comparison and trial implementation",
+          "Follow-up analysis showed the gap was not only ignored: true but also missing agent, variant, model.providerID, and model.modelID metadata",
+          "Best-effort forwarding improves parity while keeping honest boundaries around unverified real-host visibility"
+        ]
+      },
+      {
+        "decision": "Do not guess provider metadata for session notices; if model provenance is not fully reliable, omit the entire model metadata block.",
+        "rationale": [
+          "Reviewer identified that pairing resolved model.modelID with input.model.providerID mixes sources and guesses provider identity on agent.model and complexity_models[tier] paths",
+          "Reliable metadata exists only when the resolved source is current_selected_model and the resolved model exactly matches input.model.id",
+          "Omission preserves honest ACP-style parity boundaries without changing routing, transport, or notification defaults"
+        ]
+      },
+      {
+        "decision": "Switch the active notice transport experiment to the minimal canonical session.prompt path/query/body shape.",
+        "rationale": [
+          "The current goal is to test whether the host will display the smallest canonical session notice shape, not to finalize the richer product payload",
+          "Reducing the payload to path.id, query.directory, and body.parts text isolates transport-shape behavior from optional metadata and flags",
+          "Reviewer approved the change as a probe-only iteration"
+        ]
+      },
+      {
+        "decision": "Do not send noReply, ignored, agent, variant, model, or direct-shape-first fallback in the minimal canonical probe.",
+        "rationale": [
+          "These fields and fallback behaviors are intentionally removed to keep the probe narrowly focused on the canonical path/query/body transport shape",
+          "The probe should not mix host-visibility testing with ACP-style metadata parity concerns",
+          "Reviewer-approved scope explicitly excludes reverting to toast/chat.message and excludes debug_model_routing"
+        ]
+      },
+      {
+        "decision": "Keep routing priority and output.options.model logic unchanged while probing notice visibility.",
+        "rationale": [
+          "The probe is about notice transport shape, not model routing semantics",
+          "Preserving OpenCode agent.model > plugin complexity_models[tier] > current selected model avoids accidental product-scope drift",
+          "Reviewer explicitly approved no routing-priority change"
+        ]
+      },
+      {
+        "decision": "Superseded: an intermediate iteration made key complex agents more aggressive by raising their minimum tier to complex instead of overriding their models directly.",
+        "rationale": [
+          "Satisfies the user request for higher-end model preference on complex agents while preserving the routing contract",
+          "Avoids adding per-agent model override, which would violate the constrained routing design",
+          "Superseded by the later user clarification that more aggressive should not mean always using the highest tier"
+        ]
+      },
+      {
+        "decision": "Use a readable Chinese single-sentence routing notice instead of terse internal fragments.",
+        "rationale": [
+          "The minimal probe was visible but the old text was hard to read and incomplete",
+          "The user needs the notice to explain who triggered routing, why it happened, what tier/source label applied, and which final model won"
+        ]
+      },
+      {
+        "decision": "Supersede the toast-only production routing notice with an ACP-like client.session.prompt(...) payload that uses noReply: true and ignored:true text parts.",
+        "rationale": [
+          "User explicitly replaced the toast-only direction and asked not to use client.tui.showToast",
+          "The implementation now matches the current reviewer-approved payload shape",
+          "This keeps the notice visible while relying on host ignored semantics rather than toast transport"
+        ]
+      },
+      {
+        "decision": "Use payload { path: { id }, query: { directory }, body: { noReply: true, parts: [{ type: 'text', text, ignored: true }] } } with no toast/chat fallback.",
+        "rationale": [
+          "The user requested an ACP-like session prompt that should remain out of LLM context",
+          "The repository implementation and tests validate this exact payload shape",
+          "Silent skip preserves UX constraints better than reintroducing toast or chat fallback"
+        ]
+      },
+      {
+        "decision": "Keep compact English notice copy, session-memory dedup, limited critical-role boost/hint behavior, and the existing routing priority while forbidding new routing dimensions.",
+        "rationale": [
+          "The English notice copy was explicitly preserved",
+          "The user confirmed dedupe and routing invariants should remain",
+          "Reviewer-approved scope excludes debug_model_routing, role_models, agent_complexity_models, and per-agent model IDs",
+          "Later correction replaced the fixed complex-floor wording with simple->medium boost, medium hint-only, and complex-only-from-strong-signals behavior"
+        ]
+      },
+      {
+        "decision": "Expand production routing notice copy to English-only multiline decision information.",
+        "rationale": [
+          "User requested messages to include decision-useful information",
+          "Multiline structure improves readability over terse routing fragments",
+          "The change preserves the ACP-like hidden-context session.prompt transport and existing routing priority"
+        ]
+      },
+      {
+        "decision": "Use only reliable routing payload fields for notice decision information.",
+        "rationale": [
+          "Avoids guessing provider, environment, or user message content",
+          "Keeps the notice auditable and reviewer-approved",
+          "Preserves security and privacy boundaries while still explaining the routing decision"
+        ]
       }
     ],
     "conventions": [
@@ -798,11 +1748,483 @@
       "Manifest entries use schemaVersion 1 fields slug, localSlug, name, sourceUrl, rawUrl, upstreamCommit, sourceBodySha256, bodyPath, bodyBytes, syncBatchId, syncedAt, and metadata.",
       "Config hook injection must be non-destructive: generated defaults first, existing user config wins.",
       "Newly injected generated agents omit model; only pre-existing OpenCode user config may carry model.",
-      "Model-routing documentation and review notes must label chat.params request mutation as Partial/Pending unless runtime evidence proves AC-20 without provider/API calls."
-      ,"Before any commit, inspect git status, git diff, and git log --oneline -10; if dist is committed, ensure clean regeneration and validate:dist green.",
+      "Model-routing documentation and review notes must label chat.params request mutation as Partial/Pending unless runtime evidence proves AC-20 without provider/API calls.",
+      "Before any commit, inspect git status, git diff, and git log --oneline -10; if dist is committed, ensure clean regeneration and validate:dist green.",
       "validate:dist allowlists defensive validation/rejection strings only in dist/src/routing/resolve-model.js(.d.ts) and dist/src/sync/validation.js(.d.ts).",
-      "Default model-selection notification documentation must describe toast-first behavior, minimal compatibility wrapping, in-session memory deduplication, and silent skip when client.tui.showToast is unavailable."
+      "Superseded historical notification decisions should stay documented, but the currently effective model-selection notification path must be identified explicitly.",
+      "Current model-selection notification documentation must describe the exact ACP-like payload { path: { id }, query: { directory }, body: { noReply: true, parts: [{ type: 'text', text, ignored: true }] } }, in-session memory deduplication, and silent failure when the host does not support or rejects session.prompt.",
+      "ACP-style session metadata fields agent, variant, model.providerID, and model.modelID should be documented as best-effort passthrough only when truly available, not as guaranteed or runtime-visibility-proven fields.",
+      "Do not guess providerID for session notices; if the full model metadata cannot be proven, omit the entire model block.",
+      "Current probe documentation must distinguish probe-only transport experiments from final product decisions.",
+      "Minimal-probe and toast-only notice narratives must be marked superseded when referenced from current plan context.",
+      "Document that query.directory currently comes from process.cwd() and that real host visibility remains unverified even when local mock validation passes.",
+      "Current production notice documentation must identify client.session.prompt(...) with ignored:true payload semantics as the only active transport and must explicitly state that toast/chat production fallbacks are absent.",
+      "When documenting transcript-safety, distinguish repo-side guarantees from host-semantic guarantees: the repo sends only the session.prompt hidden-context payload, but absolute exclusion from LLM context still depends on host ignored semantics.",
+      "Production routing notice copy is compact English-only; older Chinese/session-notice guidance and toast-only guidance are historical context, not the current production contract.",
+      "Production routing notices should present decision-useful information as English-only multiline text using reliable routing payload fields only: agent, tier, source, resolved model, classification reasons, and resolution reason.",
+      "Do not document provider/env/user-message details in routing notices unless those fields are explicitly and reliably supplied by the routing payload."
     ],
+    "model_selection_session_followup": {
+      "status": "historical_probe_superseded",
+      "supersedes": "model_selection_toast_followup",
+      "historical_status_of_toast_conclusion": "superseded_by_user_decision",
+      "current_effective_transport": {
+        "primary": "client.session.prompt(...)",
+        "transport_style": "historical minimal canonical path/query/body session prompt",
+        "path": {
+          "id": "session.prompt"
+        },
+        "query": {
+          "directory": "process.cwd()"
+        },
+        "body": {
+          "parts": [
+            {
+              "type": "text",
+              "text": "model-selection notice text"
+            }
+          ]
+        }
+      },
+      "current_user_requirements": [
+        "Model-selection notification remains enabled by default.",
+        "debug_model_routing is not required.",
+        "Do not delete the prior toast history; mark it superseded instead.",
+        "This session-based path is no longer the production notice transport."
+      ],
+      "implementation_summary": [
+        "Default-enabled session notification probe path.",
+        "In-session memory-level deduplication.",
+        "Repeated routing decisions are deduplicated to reduce spam.",
+        "Failures to send the session notification are silent and non-blocking.",
+        "Transport now sends the minimal canonical path/query/body shape only; direct-shape-first probing is removed.",
+        "Only path.id, query.directory, and body.parts text are sent.",
+        "noReply, ignored, agent, variant, and model fields are no longer sent.",
+        "toast and chat.message are not reintroduced as fallbacks.",
+        "Routing priority and output.options.model behavior remain unchanged during the probe.",
+        "This probe history is retained for context only and is superseded by the current session.prompt hidden-context production transport."
+      ],
+      "validation_summary": [
+        "npm test: 46 passed",
+        "npm run typecheck: passed",
+        "npm run compile: passed",
+        "npm run lint: passed",
+        "npm run validate:no-model-ids: passed",
+        "npm run validate:dist: passed"
+      ],
+      "risks_and_gotchas": [
+        "This probe proves the transport shape and local mock behavior only, not guaranteed real host UI visibility.",
+        "Plugin instance reconstruction drops in-memory dedup state.",
+        "query.directory currently comes from process.cwd().",
+        "Real host-session notification visibility is still unverified.",
+        "Use a fresh session for host validation when possible so dedupe does not hide the notice.",
+        "This path is historical context, not the current production notice contract."
+      ]
+    },
+    "production_routing_notice_toast_followup": {
+      "status": "superseded",
+      "completed_at": "2026-06-04",
+      "superseded_by": "session_prompt_hidden_notice_followup",
+      "supersedes": [
+        "model_selection_session_followup",
+        "minimal_canonical_session_prompt_probe_review"
+      ],
+      "user_override": {
+        "replaced_direction": "Chinese/session-style production notice",
+        "current_direction": "compact English-only out-of-band production notice",
+        "transcript_requirement": "Superseded later by a user requirement to stop using toast and use an ACP-like session prompt with ignored semantics instead."
+      },
+      "transport": {
+        "active": "client.tui.showToast(...) only",
+        "fallbacks_removed": [
+          "session.prompt",
+          "chat.message"
+        ],
+        "if_unavailable": "silently skip"
+      },
+      "routing_invariants": {
+        "critical_agent_complex_floor": [
+          "gem-orchestrator",
+          "gem-planner",
+          "gem-debugger",
+          "gem-critic",
+          "gem-reviewer"
+        ],
+        "priority": "OpenCode agent.model > plugin complexity_models[tier] > current selected model",
+        "forbidden_dimensions_absent": [
+          "role_models",
+          "agent_complexity_models",
+          "per-agent model IDs",
+          "debug_model_routing"
+        ]
+      },
+      "copy_contract": {
+        "language": "English only",
+        "style": "compact",
+        "transcript_visibility_goal": "out-of-band/non-chat"
+      },
+      "files_changed": [
+        "src/hooks/model-routing.ts",
+        "test/model-routing-hook.test.ts",
+        "dist/** compiled outputs synced"
+      ],
+      "validation": {
+        "implementer_reported": [
+          "npm test: passed",
+          "npm run typecheck: passed",
+          "npm run compile: passed",
+          "npm run lint: passed",
+          "npm run validate:dist: passed",
+          "npm run validate:no-model-ids: passed"
+        ],
+        "reviewer_reran": [
+          "npm test -- --runInBand: 49 passed, 0 failed"
+        ]
+      },
+      "review_conclusion": "Approved at the time, but later superseded by the current session.prompt hidden-context production transport.",
+      "residual_risk": [
+        "Repo-side code no longer injects routing notices into transcript/chat paths.",
+        "Absolute non-transcript behavior still depends on host semantics of the /tui/show-toast endpoint."
+      ]
+    },
+    "minimal_canonical_session_prompt_probe_review": {
+      "status": "superseded_probe",
+      "completed_at": "2026-06-04",
+      "goal": "Verify whether the host will display a session notice when the plugin sends only the smallest canonical session.prompt payload shape.",
+      "non_goal": "This is not the final product notification contract or final UX decision.",
+      "transport_change": {
+        "shape": "canonical path/query/body",
+        "fields_sent": [
+          "path.id",
+          "query.directory",
+          "body.parts[{type:'text',text}]"
+        ],
+        "fields_removed": [
+          "noReply",
+          "ignored",
+          "agent",
+          "variant",
+          "model"
+        ],
+        "fallback_removed": [
+          "direct-shape first"
+        ],
+        "non_changes": [
+          "Do not change back to toast.",
+          "Do not change to chat.message.",
+          "Do not introduce debug_model_routing.",
+          "Do not change routing priority or output.options.model logic."
+        ]
+      },
+      "routing_invariant": "OpenCode agent.model > plugin complexity_models[tier] > current selected model",
+      "files_changed": [
+        "src/hooks/model-routing.ts",
+        "test/model-routing-hook.test.ts",
+        "dist/** compiled outputs synced"
+      ],
+      "validation": [
+        "npm test: 46 passed",
+        "npm run typecheck: passed",
+        "npm run compile: passed",
+        "npm run lint: passed",
+        "npm run validate:dist: passed",
+        "npm run validate:no-model-ids: passed"
+      ],
+      "review_conclusion": "Approved as a probe-only change.",
+      "residual_risks": [
+        "This proves transport shape and local mock behavior only, not guaranteed real host UI visibility.",
+        "query.directory currently comes from process.cwd().",
+        "Real host verification should use a fresh session when possible to avoid dedupe interference."
+      ]
+    },
+    "session_notice_provider_metadata_fix": {
+      "status": "historical_fix_retained",
+      "completed_at": "2026-06-04",
+      "problem_summary": "ACP-style session notice metadata previously mixed a resolved model string with provider metadata copied from input.model, producing guessed provider identity on non-current-selected routing paths.",
+      "root_cause": [
+        "model.modelID used the final resolved model string.",
+        "model.providerID used input.model.providerID regardless of how the model was resolved.",
+        "When routing resolved through OpenCode agent.model or plugin complexity_models[tier], input.model.providerID did not reliably describe the resolved model and became a guess."
+      ],
+      "fix_decision": [
+        "Retain the entire model metadata block only when resolved source is current_selected_model.",
+        "Require an exact match between resolved model and input.model.id before forwarding the model block.",
+        "Otherwise omit the entire model metadata block.",
+        "Do not guess providerID."
+      ],
+      "non_changes": [
+        "No debug_model_routing was introduced.",
+        "Routing priority remains OpenCode agent.model > plugin complexity_models[tier] > current selected model.",
+        "Notification transport remains session-first.",
+        "No fallback to toast or chat.message was reintroduced."
+      ],
+      "files_changed": [
+        "src/hooks/model-routing.ts",
+        "test/model-routing-hook.test.ts",
+        "dist/src/hooks/model-routing.js"
+      ],
+      "validation": [
+        "npm test: 45 passed",
+        "npm run typecheck: passed",
+        "npm run compile: passed",
+        "npm run validate:no-model-ids: passed",
+        "npm run validate:dist: passed",
+        "npm run lint: passed"
+      ],
+      "residual_risks": [
+        "Real host-session visibility of session.prompt metadata remains unverified.",
+        "variant remains best-effort only when runtime context truly provides it.",
+        "The notification can carry less metadata than ACP on agent.model and complexity_models[tier] paths because omission is preferred over guessing."
+      ],
+      "standing_convention": "Do not guess providerID; if model metadata is not reliably known, omit the entire model metadata block."
+    },
+    "session_prompt_hidden_notice_followup": {
+      "status": "active_reviewer_passed_multiline_decision_notice",
+      "completed_at": "2026-06-04",
+      "supersedes": [
+        "production_routing_notice_toast_followup",
+        "minimal_canonical_session_prompt_probe_review"
+      ],
+      "source_evidence": [
+        "User replacement request: do not use client.tui.showToast.",
+        "opencode-acp reference direction for a visible but hidden-context ACP-like session prompt.",
+        "Implemented payload and reviewer-approved verification summary."
+      ],
+      "user_requirements": {
+        "transport": "client.session.prompt(...) only",
+        "toast_forbidden": true,
+        "visible_notice": true,
+        "should_not_enter_llm_context": true,
+        "english_notice_copy_preserved": true,
+        "dedupe_preserved": true,
+        "debug_model_routing_required": false,
+        "decision_useful_information": true,
+        "reliable_payload_only": true,
+        "no_provider_env_or_user_message_guessing": true
+      },
+      "payload_contract": {
+        "path": {
+          "id": "session.prompt"
+        },
+        "query": {
+          "directory": "process.cwd()"
+        },
+        "body": {
+          "noReply": true,
+          "parts": [
+            {
+              "type": "text",
+              "text": "english routing notice text",
+              "ignored": true
+            }
+          ]
+        }
+      },
+      "implementation_summary": [
+        "Production notice transport changed from toast-only to client.session.prompt(...).",
+        "Payload shape is fixed to path.id, query.directory, and body containing noReply: true plus one ignored text part.",
+        "No toast or chat fallback remains; session.prompt failure or absence is silently ignored.",
+        "English notice copy remains unchanged.",
+        "In-session deduplication remains active.",
+        "Routing priority remains OpenCode agent.model > plugin complexity_models[tier] > current selected model.",
+        "Critical-role fixed complex-floor is superseded; active behavior is simple->medium boost for gem-orchestrator, gem-planner, gem-debugger, gem-critic, and gem-reviewer, medium hint-only, and complex only from strong signals.",
+        "No debug_model_routing, role_models, agent_complexity_models, or per-agent model IDs were introduced.",
+        "Notice text now uses English-only multiline decision information instead of compact one-line copy.",
+        "Decision fields are built only from reliable routing payload data: agent, tier, source, resolved model, classification reasons, and resolution reason.",
+        "The implementation does not guess provider, environment, or user message content."
+      ],
+      "files_changed": [
+        "src/hooks/model-routing.ts",
+        "test/model-routing-hook.test.ts",
+        "dist/src/hooks/model-routing.js",
+        "dist/src/hooks/model-routing.js.map"
+      ],
+      "validation": {
+        "implementer_reported": [
+          "Earlier multiline notice validation: npm test 50/50 passed",
+          "npm run typecheck: passed",
+          "npm run compile: passed",
+          "npm run lint: passed",
+          "npm run validate:no-model-ids: passed",
+          "npm run validate:dist: passed"
+        ],
+        "reviewer_reran": [
+          "npm test: passed",
+          "npm run typecheck: passed",
+          "npm run validate:no-model-ids: passed",
+          "npm run validate:dist: passed"
+        ],
+        "review_status": "passed_no_blocking_findings"
+      },
+      "review_warning": "Low risk: npm test -- test/model-routing-hook.test.ts is not compatible with the current test script; standard npm test passed.",
+      "reviewer_warning_cleanup": {
+        "status": "addressed",
+        "warning": "Context envelope still contained stale active-looking critical-role fixed complex-floor / minimum-tier-to-complex narrative after the policy changed.",
+        "cleanup_summary": "Active text now says limited boost/hint: simple->medium boost, medium hint-only, complex only from strong signals. Superseded complex-floor/minimum-tier-to-complex entries are marked historical or rewritten.",
+        "hint_boost_copy_fix_recorded": true,
+        "latest_validation_reported": [
+          "Policy adjustment validation: npm test 53/53, typecheck, compile, lint, validate:no-model-ids, validate:dist passed.",
+          "Hint/boost notice copy validation: npm test 54/54, typecheck, validate:no-model-ids, compile passed."
+        ],
+        "residual_risk": [
+          "Future agents could still misread historical superseded entries if they ignore status markers.",
+          "No README/PRD/source files were changed in this cleanup by request."
+        ]
+      },
+      "residual_risk": [
+        "Repository tests can verify only payload shape and text construction, not end-to-end host semantics.",
+        "Whether ignored:true absolutely prevents inclusion in LLM context depends on OpenCode host semantics for session.prompt.",
+        "Plugin instance reconstruction can still clear in-memory dedup state and allow a repeated notice later in the workflow.",
+        "Model displays the final resolved model string; if a user-configured model string itself is sensitive, the plugin does not redact it under the current approved decision-information scope."
+      ],
+      "copy_contract": {
+        "language": "English only",
+        "style": "multiline decision information",
+        "example": "Model routing\nAgent: Implementer (gem-implementer)\nTier: medium (complexity signal)\nSource: plugin complexity_models.medium\nModel: medium-tier-model\nSignals: complexity",
+        "allowed_information_sources": [
+          "agent",
+          "tier",
+          "source",
+          "resolved model",
+          "classification reasons",
+          "resolution reason"
+        ],
+        "forbidden_inferences": [
+          "provider",
+          "environment",
+          "user message content"
+        ]
+      }
+    },
+    "critical_role_limited_boost_policy": {
+      "status": "active",
+      "completed_at": "2026-06-04",
+      "source": [
+        "User clarification: more aggressive does not mean always use the highest level",
+        "Implemented policy adjustment already verified in code/tests",
+        "Reviewer warning requesting stale plan/context narrative cleanup",
+        "User final clarification: all five critical roles share the same more aggressive ladder",
+        "Implementer verification pass for the shared critical-role strategy adjustment",
+        "Reviewer pass for the shared critical-role strategy adjustment with extra-files warning"
+      ],
+      "active_rule": {
+        "critical_roles": [
+          "gem-orchestrator",
+          "gem-planner",
+          "gem-debugger",
+          "gem-critic",
+          "gem-reviewer"
+        ],
+        "simple": "boost_to_medium",
+        "medium": "upgrade_to_complex_earlier_on_any_strong_signal_or_two_or_more_medium_signals",
+        "complex": "keep_complex",
+        "strong_signals": [
+          "high_or_critical_risk",
+          "productionImpact",
+          "securitySensitive",
+          "requiresApproval",
+          "requiresDesignValidation",
+          "reviewDepth_deep",
+          "original_high_or_complex_signal"
+        ],
+        "medium_signals": [
+          "critical_role",
+          "reasoning_or_coordination_heavy_scope",
+          "multiple_reliable_upgrade_hints_without_single_high_risk_trigger"
+        ],
+        "thresholds": {
+          "simple_to_medium": "default for the five critical roles",
+          "medium_to_complex": "earlier than before: any one strong signal or any two medium signals",
+          "complex_to_complex": "preserve complex"
+        },
+        "non_changes": [
+          "Priority remains OpenCode agent.model > plugin complexity_models[tier] > current selected model.",
+          "No role_models, agent_complexity_models, per-agent model override, or hardcoded model IDs.",
+          "Routing notice transport remains ACP-like client.session.prompt(...) with noReply:true and ignored:true.",
+          "Notification decision information remains English-only."
+        ]
+      },
+      "supersedes": [
+        "critical-role fixed complex-floor wording",
+        "minimum-tier promotion to complex wording",
+        "raising minimum routing tier to complex as active behavior"
+      ],
+      "validation": [
+        "npm test: passed",
+        "npm run typecheck: passed",
+        "npm run compile: passed",
+        "npm run lint: passed",
+        "npm run validate:no-model-ids: passed",
+        "npm run validate:dist: passed"
+      ],
+      "residual_risk": [
+        "Historical context still mentions superseded policy variants in retained audit history, so status markers must stay explicit.",
+        "The critical-role list is still a maintained policy set and may need future review if agent responsibilities change.",
+        "The ladder still depends on current heuristic signal quality; if upstream semantics or signal quality changes, the thresholds may need further tuning."
+      ]
+    },
+    "critical_role_shared_aggressive_policy_finalization": {
+      "status": "finalized",
+      "completed_at": "2026-06-04",
+      "summary": "All five critical roles now share the same more aggressive ladder without becoming fixed highest-tier roles.",
+      "critical_roles": [
+        "gem-orchestrator",
+        "gem-planner",
+        "gem-debugger",
+        "gem-critic",
+        "gem-reviewer"
+      ],
+      "final_ladder": {
+        "simple": "default boost to medium",
+        "medium": "earlier upgrade to complex on any strong signal or on two or more medium signals",
+        "complex": "remains complex",
+        "not_allowed": [
+          "fixed always-highest-tier routing",
+          "role_models",
+          "agent_complexity_models",
+          "per-agent model overrides",
+          "hardcoded model IDs"
+        ]
+      },
+      "routing_and_notice_invariants": [
+        "Priority chain remains OpenCode agent.model > plugin complexity_models[tier] > current selected model.",
+        "Notification remains English-only ACP-like client.session.prompt(...).",
+        "Notice contract retains path.id + query.directory + body.noReply:true + ignored:true text part payload."
+      ],
+      "implementation_files": [
+        "src/routing/complexity.ts",
+        "src/hooks/model-routing.ts",
+        "test/routing.test.ts",
+        "test/model-routing-hook.test.ts",
+        "dist/src/hooks/model-routing.js",
+        "dist/src/hooks/model-routing.js.map"
+      ]
+    },
+    "latest_review_validation_summary": {
+      "status": "recorded",
+      "completed_at": "2026-06-04",
+      "implementer_validation": {
+        "commands_passed": [
+          "npm test",
+          "npm run typecheck",
+          "npm run compile",
+          "npm run lint",
+          "npm run validate:no-model-ids",
+          "npm run validate:dist"
+        ]
+      },
+      "reviewer_conclusions": [
+        "The five critical roles share one strategy.",
+        "The routing priority remains unchanged.",
+        "The ACP-like English-only notification contract remains unchanged.",
+        "No forbidden routing dimensions were introduced."
+      ],
+      "reviewer_warning": "Low risk: actual changed files extend beyond the implementer summary and also include src/types.ts plus corresponding dist artifacts.",
+      "residual_risk": [
+        "The policy still uses heuristic signals from the current implementation.",
+        "If upstream semantics or signal quality shifts, the medium-to-complex threshold may need retuning."
+      ]
+    },
     "t04_sync_results": {
       "completed_at": "2026-06-03",
       "status": "completed",
@@ -819,7 +2241,20 @@
         "generated_agent_bodies": "agents/generated/*.agent.md",
         "generated_agent_count": 16,
         "manifest_schema_version": 1,
-        "manifest_fields": ["slug", "localSlug", "name", "sourceUrl", "rawUrl", "upstreamCommit", "sourceBodySha256", "bodyPath", "bodyBytes", "syncBatchId", "syncedAt", "metadata"]
+        "manifest_fields": [
+          "slug",
+          "localSlug",
+          "name",
+          "sourceUrl",
+          "rawUrl",
+          "upstreamCommit",
+          "sourceBodySha256",
+          "bodyPath",
+          "bodyBytes",
+          "syncBatchId",
+          "syncedAt",
+          "metadata"
+        ]
       },
       "guards_verified": [
         "gem-orchestrator metadata.routingTargets excludes gem-orchestrator",
@@ -863,7 +2298,10 @@
         "installation_poc": "docs/installation-poc.md",
         "example_config": "examples/opencode.json.example",
         "dist_validator": "scripts/validate-dist.mjs",
-        "package_entrypoints": ["package.json main", "package.json exports[./server]"]
+        "package_entrypoints": [
+          "package.json main",
+          "package.json exports[./server]"
+        ]
       },
       "install_poc_findings": {
         "local_load": "Verified local package-path plugin install and 16-agent visibility in temp fixture only.",
@@ -1091,6 +2529,7 @@
       "context_version_after_final_hardening": 13,
       "context_version_after_github_syntax_followup": 14,
       "context_version_after_model_selection_toast_followup": 15,
+      "context_version_after_session_prompt_hidden_notice_followup": 23,
       "wave_4_status": "completed",
       "wave_5_status": "completed",
       "wave_6_status": "completed",
@@ -1108,7 +2547,12 @@
       "dependency_graph_expected_valid": true,
       "same_wave_dependency_edges_expected": 0,
       "same_wave_conflicts_expected": 0,
-      "all_dependency_edges_have_contracts": true
+      "all_dependency_edges_have_contracts": true,
+      "context_version_after_multiline_decision_notice_followup": 24,
+      "context_version_after_critical_role_limited_boost_cleanup": 25,
+      "context_version_after_shared_critical_role_strategy_finalization": 27,
+      "reviewer_warning_stale_complex_floor_context": "addressed",
+      "active_critical_role_policy": "shared aggressive ladder: simple->medium by default, medium->complex earlier on any strong signal or two medium signals, complex stays complex"
     },
     "model_selection_toast_followup": {
       "completed_at": "2026-06-03",

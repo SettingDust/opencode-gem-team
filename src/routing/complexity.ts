@@ -14,7 +14,8 @@ const tierRank: Record<ComplexityTier, number> = {
 
 const rankTier = ["simple", "medium", "complex"] as const
 
-const reasoningCriticalRoles = new Set([
+const criticalRoles = new Set([
+  "gem-orchestrator",
   "gem-planner",
   "gem-debugger",
   "gem-critic",
@@ -54,10 +55,16 @@ export function classifyComplexityTier(input: ComplexityClassificationInput = {}
     reasons.push("missing_complexity_signal_default_medium")
   }
 
-  if (input.roleSlug !== undefined && reasoningCriticalRoles.has(input.roleSlug)) {
-    if (rank < tierRank.medium) reasons.push("reasoning_critical_role_minimum_medium")
-    else reasons.push("reasoning_critical_role_hint")
-    rank = Math.max(rank, tierRank.medium)
+  if (input.roleSlug !== undefined && criticalRoles.has(input.roleSlug)) {
+    if (rank === tierRank.simple) {
+      rank = tierRank.medium
+      reasons.push("critical_role_boost_simple_to_medium")
+    } else if (rank === tierRank.medium) {
+      rank = tierRank.complex
+      reasons.push("critical_role_escalate_medium_to_complex")
+    } else {
+      reasons.push("critical_role_hint")
+    }
   }
 
   const riskTier = riskUpgradeTier(input)
@@ -87,11 +94,7 @@ function mapPlannerComplexity(value: unknown): ComplexityTier | undefined {
 }
 
 function riskUpgradeTier(input: ComplexityClassificationInput): ComplexityTier | undefined {
-  const riskText = [input.riskLevel, input.riskScore, input.overallRiskLevel]
-    .filter((value): value is string | number => value !== undefined)
-    .map(String)
-    .join(" ")
-    .toLowerCase()
+  const riskText = normalizedRiskText(input)
 
   if (riskText.includes("critical") || riskText.includes("high")) return "complex"
   if (riskText.includes("medium") || riskText.includes("moderate")) return "medium"
@@ -116,6 +119,14 @@ function riskUpgradeTier(input: ComplexityClassificationInput): ComplexityTier |
   }
 
   return undefined
+}
+
+function normalizedRiskText(input: ComplexityClassificationInput): string {
+  return [input.riskLevel, input.riskScore, input.overallRiskLevel]
+    .filter((value): value is string | number => value !== undefined)
+    .map(String)
+    .join(" ")
+    .toLowerCase()
 }
 
 function atLeast(value: number | undefined, threshold: number): boolean {

@@ -4,7 +4,7 @@ import { describe, it } from "node:test"
 import plugin, {
   applyChatParamsModelRouting,
   createModelRoutingHooks,
-  createRoutingToastNotifier,
+  createRoutingSessionNotifier,
   previewModelRouting,
   validateGemTeamConfig,
 } from "../src/index.js"
@@ -55,7 +55,7 @@ describe("model routing dry-run preview", () => {
     assert.equal(preview.resolution.source, "current_selected_model")
   })
 
-  it("uses reasoning-critical and risk signals to upgrade tier without role model mapping", () => {
+  it("uses critical role and risk signals to upgrade tier without role model mapping", () => {
     const preview = previewModelRouting({
       signals: {
         roleSlug: "gem-reviewer",
@@ -69,6 +69,143 @@ describe("model routing dry-run preview", () => {
     assert.equal(preview.classification.tier, "complex")
     assert.equal(preview.resolution.model, "complex-tier-model")
     assert.equal(Object.hasOwn(preview, "roleModels"), false)
+  })
+
+  it("keeps the five critical roles on the same boost/escalation ladder", () => {
+    const criticalRoles = ["gem-orchestrator", "gem-planner", "gem-debugger", "gem-critic", "gem-reviewer"]
+
+    for (const roleSlug of criticalRoles) {
+      const boostPreview = previewModelRouting({
+        signals: { roleSlug, plannerComplexity: "simple" },
+        complexityModels: {
+          medium: "medium-tier-model",
+          complex: "complex-tier-model",
+        },
+        currentSelectedModel: "selected-model",
+      })
+
+      const hintPreview = previewModelRouting({
+        signals: { roleSlug, plannerComplexity: "medium" },
+        complexityModels: {
+          medium: "medium-tier-model",
+          complex: "complex-tier-model",
+        },
+        currentSelectedModel: "selected-model",
+      })
+
+      const escalatePreview = previewModelRouting({
+        signals: {
+          roleSlug,
+          plannerComplexity: "medium",
+          productionImpact: true,
+        },
+        complexityModels: {
+          medium: "medium-tier-model",
+          complex: "complex-tier-model",
+        },
+        currentSelectedModel: "selected-model",
+      })
+
+      assert.equal(boostPreview.classification.tier, "medium")
+      assert.ok(boostPreview.classification.reasons.includes("critical_role_boost_simple_to_medium"))
+      assert.equal(hintPreview.classification.tier, "complex")
+      assert.ok(hintPreview.classification.reasons.includes("critical_role_escalate_medium_to_complex"))
+      assert.equal(escalatePreview.classification.tier, "complex")
+      assert.ok(escalatePreview.classification.reasons.includes("critical_role_escalate_medium_to_complex"))
+    }
+  })
+
+  it("keeps simple critical roles on medium even when risk upgrades the final tier", () => {
+    const preview = previewModelRouting({
+      signals: {
+        roleSlug: "gem-debugger",
+        plannerComplexity: "simple",
+        productionImpact: true,
+      },
+      complexityModels: {
+        medium: "medium-tier-model",
+        complex: "complex-tier-model",
+      },
+      currentSelectedModel: "selected-model",
+    })
+
+    assert.equal(preview.classification.tier, "complex")
+    assert.ok(preview.classification.reasons.includes("critical_role_boost_simple_to_medium"))
+    assert.ok(preview.classification.reasons.includes("risk_upgrade_complex"))
+    assert.equal(preview.resolution.model, "complex-tier-model")
+  })
+
+  it("boosts gem-orchestrator to medium on simple work without forcing complex", () => {
+    const preview = previewModelRouting({
+      signals: {
+        roleSlug: "gem-orchestrator",
+        plannerComplexity: "simple",
+      },
+      complexityModels: {
+        medium: "medium-tier-model",
+        complex: "complex-tier-model",
+      },
+      currentSelectedModel: "selected-model",
+    })
+
+    assert.equal(preview.classification.tier, "medium")
+    assert.equal(preview.resolution.source, "complexity_model")
+    assert.equal(preview.resolution.model, "medium-tier-model")
+    assert.ok(preview.classification.reasons.includes("critical_role_boost_simple_to_medium"))
+  })
+
+  it("keeps critical roles on complex once direct complexity reaches complex", () => {
+    const preview = previewModelRouting({
+      signals: {
+        roleSlug: "gem-orchestrator",
+        plannerComplexity: "complex",
+      },
+      complexityModels: {
+        medium: "medium-tier-model",
+        complex: "complex-tier-model",
+      },
+      currentSelectedModel: "selected-model",
+    })
+
+    assert.equal(preview.classification.tier, "complex")
+    assert.equal(preview.resolution.model, "complex-tier-model")
+    assert.ok(preview.classification.reasons.includes("critical_role_hint"))
+  })
+
+  it("escalates medium critical roles without extra signals", () => {
+    const preview = previewModelRouting({
+      signals: {
+        roleSlug: "gem-reviewer",
+        plannerComplexity: "medium",
+      },
+      complexityModels: {
+        medium: "medium-tier-model",
+        complex: "complex-tier-model",
+      },
+      currentSelectedModel: "selected-model",
+    })
+
+    assert.equal(preview.classification.tier, "complex")
+    assert.equal(preview.resolution.model, "complex-tier-model")
+    assert.ok(preview.classification.reasons.includes("critical_role_escalate_medium_to_complex"))
+  })
+
+  it("does not drift non-critical medium roles upward", () => {
+    const preview = previewModelRouting({
+      signals: {
+        roleSlug: "gem-implementer",
+        plannerComplexity: "medium",
+      },
+      complexityModels: {
+        medium: "medium-tier-model",
+        complex: "complex-tier-model",
+      },
+      currentSelectedModel: "selected-model",
+    })
+
+    assert.equal(preview.classification.tier, "medium")
+    assert.equal(preview.resolution.model, "medium-tier-model")
+    assert.deepEqual(preview.classification.reasons, ["complexity_signal_highest_tier"])
   })
 
   it("rejects forbidden model routing config dimensions", () => {
@@ -199,20 +336,22 @@ describe("chat.params hook dry-run integration", () => {
   })
 
   it("plugin server wires config and chat.params hooks without provider calls", async () => {
-    const hooks = await plugin.server({ client: { tui: { showToast: async () => undefined } } } as never, { complexity_models: { medium: "medium-tier-model" } })
+    const hooks = await plugin.server({ client: { session: { prompt: async () => ({}) } } } as never, { complexity_models: { medium: "medium-tier-model" } })
     assert.equal(typeof hooks.config, "function")
     assert.equal(typeof hooks["chat.params"], "function")
   })
 
-  it("shows a visible routing toast without injecting chat context", async () => {
-    const toasts: Array<Record<string, unknown>> = []
+  it("uses an ignored no-reply session prompt with compact English decision notice text", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+    let toastCalled = false
+    let chatMessageCalled = false
 
     await applyChatParamsModelRouting({
       sessionID: "session-one",
       agent: "gem-implementer",
       model: mockModel("selected-model"),
       provider: mockProvider(),
-      message: mockMessage("gem-implementer", "selected-model", { tierHint: "medium" }),
+      message: mockMessage("gem-implementer", "selected-model", { tierHint: "medium" }, "info"),
     }, {
       temperature: 0,
       topP: 0,
@@ -223,30 +362,104 @@ describe("chat.params hook dry-run integration", () => {
       complexity_models: { medium: "medium-tier-model" },
     }, {
       agent: {},
-    }, createRoutingToastNotifier({
+    }, createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
       tui: {
-        showToast: async (toast: Record<string, unknown>) => {
-          toasts.push(toast)
+        showToast: async () => {
+          toastCalled = true
+        },
+      },
+      chat: {
+        message: async () => {
+          chatMessageCalled = true
         },
       },
     } as never))
 
-    assert.deepEqual(toasts, [{
+    const expectedText = [
+      "Model routing",
+      "Agent: Implementer (gem-implementer)",
+      "Tier: medium (complexity signal)",
+      "Source: plugin complexity_models.medium",
+      "Model: medium-tier-model",
+      "Reasons: complexity",
+    ].join("\n")
+
+    assert.deepEqual(prompts, [{
+      path: { id: "session-one" },
+      query: { directory: process.cwd() },
       body: {
-        title: "Gem Team model",
-        message: "gem-implementer · tier route · medium-tier-model",
-        variant: "success",
-        duration: 2500,
+        noReply: true,
+        parts: [{ type: "text", text: expectedText, ignored: true }],
       },
     }])
+    assert.match(expectedText, /^Model routing\nAgent: Implementer \(gem-implementer\)\nTier: medium \(complexity signal\)\nSource: plugin complexity_models\.medium\nModel: medium-tier-model\nReasons: complexity$/)
+    assert.doesNotMatch(expectedText, /[^\x00-\x7F]/)
+    assert.equal((prompts[0] as { body: { noReply: boolean } }).body.noReply, true)
+    assert.equal((prompts[0] as { body: { parts: Array<{ ignored: boolean }> } }).body.parts[0]?.ignored, true)
+    assert.equal(toastCalled, false)
+    assert.equal(chatMessageCalled, false)
   })
 
-  it("deduplicates repeated routing toasts for the same session result", async () => {
-    const toasts: Array<Record<string, unknown>> = []
-    const notify = createRoutingToastNotifier({
+  it("does not call toast or chat.message when session prompt succeeds", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+    let toastCalled = false
+    let chatMessageCalled = false
+    const notify = createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
       tui: {
-        showToast: async (toast: Record<string, unknown>) => {
-          toasts.push(toast)
+        showToast: async () => {
+          toastCalled = true
+        },
+      },
+      chat: {
+        message: async () => {
+          chatMessageCalled = true
+        },
+      },
+    } as never)
+
+    await notify({
+      sessionID: "session-one",
+      agent: "gem-implementer",
+      tier: "medium",
+      source: "complexity_model",
+      model: "medium-tier-model",
+    })
+
+    assert.deepEqual(prompts, [{
+      path: { id: "session-one" },
+      query: { directory: process.cwd() },
+      body: {
+        noReply: true,
+        parts: [{ type: "text", text: [
+          "Model routing",
+          "Agent: Implementer (gem-implementer)",
+          "Tier: medium (resolved)",
+          "Source: plugin complexity_models.medium",
+          "Model: medium-tier-model",
+          "Reasons: plugin tier model",
+        ].join("\n"), ignored: true }],
+      },
+    }])
+    assert.equal(toastCalled, false)
+    assert.equal(chatMessageCalled, false)
+  })
+
+  it("deduplicates repeated ignored no-reply session prompts for the same session result", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+    const notify = createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
         },
       },
     } as never)
@@ -266,8 +479,452 @@ describe("chat.params hook dry-run integration", () => {
       model: "review-model",
     })
 
-    assert.equal(toasts.length, 1)
-    assert.equal((toasts[0] as { body?: { message?: string } })?.body?.message, "gem-reviewer · agent model · review-model")
+    assert.equal(prompts.length, 1)
+    assert.equal((prompts[0] as { body?: { parts?: Array<{ text?: string }> } })?.body?.parts?.[0]?.text, [
+      "Model routing",
+      "Agent: Reviewer (gem-reviewer)",
+      "Tier: complex (resolved)",
+      "Source: agent model",
+      "Model: review-model",
+      "Reasons: agent model",
+    ].join("\n"))
+  })
+
+  it("silently skips the notice when session prompt transport is unavailable", async () => {
+    const notify = createRoutingSessionNotifier({
+      tui: {
+        showToast: async () => {
+          throw new Error("toast should not be used")
+        },
+      },
+      chat: {
+        message: async () => {
+          throw new Error("chat.message should not be used")
+        },
+      },
+    } as never)
+
+    await notify({
+      sessionID: "session-two",
+      agent: "gem-critic",
+      tier: "simple",
+      source: "current_selected_model",
+      model: "selected-model",
+    })
+  })
+
+  it("sends only the ACP-like ignored no-reply payload shape", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+    const notify = createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
+    } as never)
+
+    await notify({
+      sessionID: "session-two",
+      agent: "gem-critic",
+      tier: "simple",
+      source: "current_selected_model",
+      model: "selected-model",
+    })
+
+    assert.deepEqual(prompts, [{
+      path: { id: "session-two" },
+      query: { directory: process.cwd() },
+      body: {
+        noReply: true,
+        parts: [{ type: "text", text: [
+          "Model routing",
+          "Agent: Critic (gem-critic)",
+          "Tier: simple (resolved)",
+          "Source: current selected model",
+          "Model: selected-model",
+          "Reasons: current model",
+        ].join("\n"), ignored: true }],
+      },
+    }])
+    assert.equal(Object.hasOwn(prompts[0] as object, "url"), false)
+    assert.equal(Object.hasOwn((prompts[0] as { body: object }).body, "variant"), false)
+  })
+
+  it("uses session prompt even when selected model metadata is available", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+
+    await applyChatParamsModelRouting({
+      sessionID: "session-three",
+      agent: "gem-critic",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: mockMessage("gem-critic", "selected-model", { tierHint: "simple" }, "info"),
+    }, {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: {},
+    }, {
+      complexity_models: {},
+    }, {
+      agent: {},
+    }, createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
+    } as never))
+
+    assert.deepEqual(prompts, [{
+      path: { id: "session-three" },
+      query: { directory: process.cwd() },
+      body: {
+        noReply: true,
+        parts: [{ type: "text", text: [
+          "Model routing",
+          "Agent: Critic (gem-critic)",
+          "Tier: medium (critical role boost)",
+          "Source: current selected model",
+          "Model: selected-model",
+          "Reasons: critical role boost; complexity; fallback",
+        ].join("\n"), ignored: true }],
+      },
+    }])
+    assert.equal(Object.hasOwn(prompts[0] as object, "model"), false)
+  })
+
+  it("labels critical-role escalation notices for medium inputs without claiming a boost", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+
+    await applyChatParamsModelRouting({
+      sessionID: "session-hint",
+      agent: "gem-reviewer",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: mockMessage("gem-reviewer", "selected-model", { plannerComplexity: "medium" }, "info"),
+    }, {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: {},
+    }, {
+      complexity_models: { complex: "complex-tier-model" },
+    }, {
+      agent: {},
+    }, createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
+    } as never))
+
+    const text = (prompts[0] as { body: { parts: Array<{ text: string; ignored: boolean }> } }).body.parts[0].text
+    assert.equal(text, [
+      "Model routing",
+      "Agent: Reviewer (gem-reviewer)",
+      "Tier: complex (critical role escalation)",
+      "Source: plugin complexity_models.complex",
+      "Model: complex-tier-model",
+      "Reasons: critical role escalation; complexity",
+    ].join("\n"))
+    assert.doesNotMatch(text, /critical role boost/)
+    assert.equal((prompts[0] as { body: { noReply: boolean; parts: Array<{ ignored: boolean }> } }).body.noReply, true)
+    assert.equal((prompts[0] as { body: { parts: Array<{ ignored: boolean }> } }).body.parts[0].ignored, true)
+    assert.doesNotMatch(text, /[^\x00-\x7F]/)
+  })
+
+  it("labels critical-role medium escalation notices without claiming boost", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+
+    await applyChatParamsModelRouting({
+      sessionID: "session-critical-escalate",
+      agent: "gem-debugger",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: mockMessage("gem-debugger", "selected-model", { plannerComplexity: "medium", reviewDepth: "normal" }, "info"),
+    }, {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: {},
+    }, {
+      complexity_models: { complex: "complex-tier-model" },
+    }, {
+      agent: {},
+    }, createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
+    } as never))
+
+    const text = (prompts[0] as { body: { parts: Array<{ text: string; ignored: boolean }> } }).body.parts[0].text
+    assert.equal(text, [
+      "Model routing",
+      "Agent: Debugger (gem-debugger)",
+      "Tier: complex (critical role escalation)",
+      "Source: plugin complexity_models.complex",
+      "Model: complex-tier-model",
+      "Reasons: critical role escalation; complexity",
+    ].join("\n"))
+    assert.doesNotMatch(text, /critical role complex/)
+    assert.equal((prompts[0] as { body: { noReply: boolean; parts: Array<{ ignored: boolean }> } }).body.noReply, true)
+    assert.equal((prompts[0] as { body: { parts: Array<{ ignored: boolean }> } }).body.parts[0].ignored, true)
+  })
+
+  it("uses the same escalation notice for planner and reviewer on the same input", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+    const notify = createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
+    } as never)
+
+    for (const agent of ["gem-planner", "gem-reviewer"]) {
+      await applyChatParamsModelRouting({
+        sessionID: `session-${agent}`,
+        agent,
+        model: mockModel("selected-model"),
+        provider: mockProvider(),
+        message: mockMessage(agent, "selected-model", { plannerComplexity: "medium", reviewDepth: "normal" }, "info"),
+      }, {
+        temperature: 0,
+        topP: 0,
+        topK: 0,
+        maxOutputTokens: undefined,
+        options: {},
+      }, {
+        complexity_models: { complex: "complex-tier-model" },
+      }, {
+        agent: {},
+      }, notify)
+    }
+
+    const texts = prompts.map((prompt) => (prompt as { body: { parts: Array<{ text: string }> } }).body.parts[0].text)
+    assert.match(texts[0]!, /Tier: complex \(critical role escalation\)/)
+    assert.match(texts[1]!, /Tier: complex \(critical role escalation\)/)
+    assert.match(texts[0]!, /Reasons: critical role escalation; complexity/)
+    assert.match(texts[1]!, /Reasons: critical role escalation; complexity/)
+  })
+
+  it("labels orchestrator escalation notices with the shared critical-role wording", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+
+    await applyChatParamsModelRouting({
+      sessionID: "session-escalate",
+      agent: "gem-orchestrator",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: mockMessage("gem-orchestrator", "selected-model", { plannerComplexity: "medium", reviewDepth: "normal" }, "info"),
+    }, {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: {},
+    }, {
+      complexity_models: { medium: "medium-tier-model", complex: "complex-tier-model" },
+    }, {
+      agent: {},
+    }, createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
+    } as never))
+
+    const text = (prompts[0] as { body: { parts: Array<{ text: string; ignored: boolean }> } }).body.parts[0].text
+    assert.equal(text, [
+      "Model routing",
+      "Agent: Orchestrator (gem-orchestrator)",
+      "Tier: complex (critical role escalation)",
+      "Source: plugin complexity_models.complex",
+      "Model: complex-tier-model",
+      "Reasons: critical role escalation; complexity",
+    ].join("\n"))
+    assert.doesNotMatch(text, /critical role complex\)$/)
+    assert.equal((prompts[0] as { body: { noReply: boolean; parts: Array<{ ignored: boolean }> } }).body.noReply, true)
+    assert.equal((prompts[0] as { body: { parts: Array<{ ignored: boolean }> } }).body.parts[0].ignored, true)
+    assert.doesNotMatch(text, /[^\x00-\x7F]/)
+  })
+
+  it("labels direct simple-to-medium boost with the shared critical-role wording", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+
+    await applyChatParamsModelRouting({
+      sessionID: "session-simple-escalate",
+      agent: "gem-debugger",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: mockMessage("gem-debugger", "selected-model", { plannerComplexity: "simple" }, "info"),
+    }, {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: {},
+    }, {
+      complexity_models: { medium: "medium-tier-model" },
+    }, {
+      agent: {},
+    }, createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
+    } as never))
+
+    const text = (prompts[0] as { body: { parts: Array<{ text: string; ignored: boolean }> } }).body.parts[0].text
+    assert.equal(text, [
+      "Model routing",
+      "Agent: Debugger (gem-debugger)",
+      "Tier: medium (critical role boost)",
+      "Source: plugin complexity_models.medium",
+      "Model: medium-tier-model",
+      "Reasons: critical role boost; complexity",
+    ].join("\n"))
+  })
+
+  it("keeps routing output unchanged while using ignored no-reply session prompt notice", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+    const output = {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: {} as Record<string, unknown>,
+    }
+
+    const preview = await applyChatParamsModelRouting({
+      sessionID: "session-four",
+      agent: "gem-reviewer",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: mockMessage("gem-reviewer", "selected-model", { tierHint: "complex" }, "info"),
+    }, output, {
+      complexity_models: { complex: "complex-tier-model" },
+    }, {
+      agent: {},
+    }, createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
+    } as never))
+
+    assert.deepEqual(prompts, [{
+      path: { id: "session-four" },
+      query: { directory: process.cwd() },
+      body: {
+        noReply: true,
+        parts: [{ type: "text", text: [
+          "Model routing",
+          "Agent: Reviewer (gem-reviewer)",
+          "Tier: complex (critical role complex)",
+          "Source: plugin complexity_models.complex",
+          "Model: complex-tier-model",
+          "Reasons: critical role complex; complexity",
+        ].join("\n"), ignored: true }],
+      },
+    }])
+    assert.equal(preview.resolution.model, "complex-tier-model")
+    assert.equal(preview.resolution.source, "complexity_model")
+    assert.equal(output.options.model, "complex-tier-model")
+    assert.deepEqual(output.options.gemTeamModelRouting, {
+      status: "dry_run_output_options_only",
+      tier: "complex",
+      source: "complexity_model",
+      reason: "complexity_model_for_tier",
+    })
+  })
+
+  it("renders orchestration-focused ignored no-reply session prompts in English", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+
+    await applyChatParamsModelRouting({
+      sessionID: "session-five",
+      agent: "gem-orchestrator",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: mockMessage("gem-orchestrator", "selected-model", { plannerComplexity: "simple" }, "info"),
+    }, {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: {},
+    }, {
+      complexity_models: { complex: "complex-tier-model" },
+    }, {
+      agent: {},
+    }, createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
+    } as never))
+
+    assert.deepEqual(prompts, [{
+      path: { id: "session-five" },
+      query: { directory: process.cwd() },
+      body: {
+        noReply: true,
+        parts: [{ type: "text", text: [
+          "Model routing",
+          "Agent: Orchestrator (gem-orchestrator)",
+          "Tier: medium (critical role boost)",
+          "Source: current selected model",
+          "Model: selected-model",
+          "Reasons: critical role boost; complexity; fallback",
+        ].join("\n"), ignored: true }],
+      },
+    }])
+    assert.doesNotMatch((prompts[0] as { body: { parts: Array<{ text: string }> } }).body.parts[0].text, /[^\x00-\x7F]/)
+  })
+
+  it("silently skips when session prompt throws and does not fall back", async () => {
+    let toastCalled = false
+    let chatMessageCalled = false
+    const notify = createRoutingSessionNotifier({
+      session: {
+        prompt: async () => {
+          throw new Error("prompt failed")
+        },
+      },
+      tui: {
+        showToast: async () => {
+          toastCalled = true
+        },
+      },
+      chat: {
+        message: async () => {
+          chatMessageCalled = true
+        },
+      },
+    } as never)
+
+    await notify({
+      sessionID: "session-six",
+      agent: "gem-implementer",
+      tier: "medium",
+      source: "complexity_model",
+      model: "medium-tier-model",
+    })
+
+    assert.equal(toastCalled, false)
+    assert.equal(chatMessageCalled, false)
   })
 })
 
@@ -308,12 +965,13 @@ function mockProvider() {
   } as never
 }
 
-function mockMessage(agent: string, modelID: string, routing?: Record<string, unknown>) {
+function mockMessage(agent: string, modelID: string, routing?: Record<string, unknown>, variant?: string) {
   return {
     id: "message-one",
     sessionID: "session-one",
     role: "user",
     time: { created: 0 },
+    variant,
     agent,
     model: { providerID: "opaque-provider", modelID },
     gemTeam: routing,
