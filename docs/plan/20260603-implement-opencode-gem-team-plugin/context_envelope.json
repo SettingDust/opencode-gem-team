@@ -2,9 +2,9 @@
   "context_envelope": {
     "meta": {
       "plan_id": "20260603-implement-opencode-gem-team-plugin",
-      "version": 27,
+      "version": 28,
       "updated_at": "2026-06-04",
-      "last_updated": "2026-06-04T20:30:00+08:00",
+      "last_updated": "2026-06-04T21:10:00+08:00",
       "previous_version_fields_changed": [
         "meta",
         "facts",
@@ -19,7 +19,8 @@
         "documentation_alignment",
         "documentation_review_followup",
         "critical_role_shared_aggressive_policy_finalization",
-        "latest_review_validation_summary"
+        "latest_review_validation_summary",
+        "scoped_model_routing_followup"
       ],
       "created_at": "2026-06-03T00:00:00+08:00",
       "baseline_commit_sha": "ee708a8f9046b46054776345f05bf62b37b188d7",
@@ -54,7 +55,10 @@
         "reviewer warning cleanup for superseded critical-role complex-floor narrative",
         "user clarification: more aggressive does not mean always highest tier",
         "README and AGENTS documentation alignment follow-up",
-        "reviewer-approved documentation pass with generated-artifacts warning"
+        "reviewer-approved documentation pass with generated-artifacts warning",
+        "user requirement: only route plugin-added agents and do not affect other agents",
+        "implementer scoped-routing completion",
+        "reviewer-approved scoped-routing validation summary"
       ]
     },
     "scope": {
@@ -1071,6 +1075,38 @@
       {
         "statement": "Documentation claims remain aligned with implementation: ACP-like hidden-context session prompt notice, model priority OpenCode agent.model > complexity_models[tier] > current selected model, compile command naming, and no end-to-end GitHub install verification claim.",
         "category": "documentation"
+      },
+      {
+        "statement": "Latest scoped-routing requirement: model routing must apply only to this plugin's managed canonical 16 gem-* agents and must not affect OpenCode built-in agents, user-defined agents, other plugin agents, or non-canonical gem-like agents.",
+        "category": "routing"
+      },
+      {
+        "statement": "applyChatParamsModelRouting now checks isCanonicalGemTeamAgent(input.agent) before reading active config, computing routing preview, mutating output.options.model, writing output.options.gemTeamModelRouting, or sending a session notice.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Scoped routing uses CANONICAL_GEM_TEAM_SLUGS for exact canonical 16-slug matching; non-canonical gem agent names are skipped the same way as non-gem agents.",
+        "category": "implementation"
+      },
+      {
+        "statement": "For skipped non-canonical agents, the hook preserves existing output options and model values, writes no gemTeamModelRouting metadata, and sends no ACP-like session.prompt notice.",
+        "category": "routing"
+      },
+      {
+        "statement": "Canonical gem agents keep the existing routing priority OpenCode agent.model > plugin complexity_models[tier] > current selected model and the existing English-only ACP-like session.prompt notice contract.",
+        "category": "routing"
+      },
+      {
+        "statement": "Scoped-routing implementation touched src/hooks/model-routing.ts, src/index.ts, test/model-routing-hook.test.ts, and compiled dist artifacts; README, AGENTS.md, PRD, and source behavior outside routing scope were not changed for this context update.",
+        "category": "implementation"
+      },
+      {
+        "statement": "Reviewer passed the scoped-routing follow-up and reported routing/complexity/notice/scope related tests green at 73/73.",
+        "category": "review"
+      },
+      {
+        "statement": "Reviewer residual risks for scoped routing: workspace has modified files outside the implementer summary, dist and source are both modified, exact input.agent slug matching is the intended contract, activeConfig remains an existing module-scope risk, and canonical slugs may later be moved from validation to constants.",
+        "category": "risk"
       }
     ],
     "patterns": [
@@ -1188,6 +1224,11 @@
         "name": "Audience-split documentation alignment",
         "description": "Keep README.md human-facing and AGENTS.md agent-facing, while making both documents explicitly reflect verified implementation boundaries, forbidden model-routing dimensions, and the compile-not-build command convention.",
         "confidence": 0.97
+      },
+      {
+        "name": "Scope routing before side effects",
+        "description": "Model-routing hooks should check exact canonical Gem Team ownership before reading routing config, calculating preview metadata, mutating output options, or sending session notices, so unrelated OpenCode/user/plugin agents are not affected.",
+        "confidence": 1.0
       }
     ],
     "gotchas": [
@@ -1237,7 +1278,9 @@
       "More aggressive critical-role routing must remain limited boost/hint only: simple may boost to medium, medium stays hint-only, and complex still requires strong signals; do not add per-agent model override even if a specific agent seems to want the top model.",
       "Do not enrich routing notices by guessing provider, environment, or user message content; use only reliable routing payload fields such as agent, tier, source, resolved model, classification reasons, and resolution reason.",
       "The Model line intentionally displays the final resolved model string; do not add redaction unless a new requirement changes the approved decision-information scope.",
-      "Use standard npm test for focused routing-hook verification in this repository; npm test -- test/model-routing-hook.test.ts is not compatible with the current test script."
+      "Use standard npm test for focused routing-hook verification in this repository; npm test -- test/model-routing-hook.test.ts is not compatible with the current test script.",
+      "Always scope model-routing hooks to exact canonical Gem Team slugs before any side effect; non-canonical gem-like names, OpenCode built-ins, user agents, and other plugin agents must be skipped without metadata mutation or notices.",
+      "If scoped routing imports canonical slugs from a validation module, treat it as currently acceptable but keep future constant extraction as low-risk cleanup rather than a behavior blocker."
     ],
     "failure_modes": [
       {
@@ -1421,6 +1464,15 @@
           "Standard npm test still passes"
         ],
         "mitigation": "Use the repository standard npm test script for validation unless the test script is changed to support file filtering."
+      },
+      {
+        "scenario": "Model-routing hook affects non-plugin agents because ownership scoping happens after preview/config/notice side effects.",
+        "symptoms": [
+          "OpenCode built-in or user-defined agents receive gemTeamModelRouting metadata",
+          "Other plugin agents unexpectedly get output.options.model rewritten",
+          "Session routing notices appear for agents not managed by this plugin"
+        ],
+        "mitigation": "Call isCanonicalGemTeamAgent(input.agent) as the earliest gate and return before config reads, preview calculation, output mutation, metadata writes, or session.prompt notice creation."
       }
     ],
     "decisions": [
@@ -1736,6 +1788,14 @@
           "Keeps the notice auditable and reviewer-approved",
           "Preserves security and privacy boundaries while still explaining the routing decision"
         ]
+      },
+      {
+        "decision": "Scope model routing to this plugin's exact canonical 16 Gem Team agent slugs only.",
+        "rationale": [
+          "User explicitly required the plugin to route only agents it adds and not affect other agents",
+          "Exact canonical slug matching prevents accidental mutation of OpenCode built-ins, user agents, other plugin agents, and non-canonical gem-like agents",
+          "Early return before config/preview/output/notice side effects preserves unrelated agent behavior while leaving canonical gem routing unchanged"
+        ]
       }
     ],
     "conventions": [
@@ -1762,8 +1822,59 @@
       "When documenting transcript-safety, distinguish repo-side guarantees from host-semantic guarantees: the repo sends only the session.prompt hidden-context payload, but absolute exclusion from LLM context still depends on host ignored semantics.",
       "Production routing notice copy is compact English-only; older Chinese/session-notice guidance and toast-only guidance are historical context, not the current production contract.",
       "Production routing notices should present decision-useful information as English-only multiline text using reliable routing payload fields only: agent, tier, source, resolved model, classification reasons, and resolution reason.",
-      "Do not document provider/env/user-message details in routing notices unless those fields are explicitly and reliably supplied by the routing payload."
+      "Do not document provider/env/user-message details in routing notices unless those fields are explicitly and reliably supplied by the routing payload.",
+      "Model-routing side effects must be owned-scope first: exact canonical Gem Team slug match before config reads, preview computation, output mutation, metadata writes, or session notice emission."
     ],
+    "scoped_model_routing_followup": {
+      "status": "active_reviewer_passed",
+      "completed_at": "2026-06-04",
+      "user_requirement": "Only route agents added/managed by this plugin; do not affect other intelligent agents.",
+      "scope_contract": {
+        "included_agents": "Exact canonical 16 gem-* slugs from CANONICAL_GEM_TEAM_SLUGS.",
+        "excluded_agents": [
+          "OpenCode built-in agents",
+          "user-defined agents",
+          "agents from other plugins",
+          "non-canonical gem-like agent names"
+        ],
+        "matching_rule": "input.agent must exactly match a canonical Gem Team slug."
+      },
+      "implementation_summary": [
+        "applyChatParamsModelRouting gates on isCanonicalGemTeamAgent(input.agent) before reading activeConfig or computing previewModelRouting.",
+        "Skipped agents return before output.options.model mutation, output.options.gemTeamModelRouting metadata writes, and session notice emission.",
+        "Canonical gem agents continue through the existing routing path unchanged.",
+        "Routing priority for canonical gem agents remains OpenCode agent.model > plugin complexity_models[tier] > current selected model.",
+        "The ACP-like notice contract remains English-only client.session.prompt(...) with path.id, query.directory, body.noReply:true, and parts[0].ignored:true.",
+        "Critical-role aggressive ladder and low/high alias normalization were not changed."
+      ],
+      "files_changed_by_implementation": [
+        "src/hooks/model-routing.ts",
+        "src/index.ts",
+        "test/model-routing-hook.test.ts",
+        "dist/** compiled outputs"
+      ],
+      "tests_and_review": {
+        "review_status": "passed_no_blocking_findings",
+        "reviewer_validation": "Routing/complexity/notice/scope related tests passed: 73/73.",
+        "coverage_notes": [
+          "Non-gem tests cover no mutation, no notice, and preservation of existing output options/model.",
+          "Gem routing priority and notice shape coverage remains green.",
+          "Scope source is CANONICAL_GEM_TEAM_SLUGS with exact canonical 16-slug matching."
+        ]
+      },
+      "residual_risks": [
+        "Workspace contains modified files outside the implementer summary, including src/routing/complexity.ts, test/routing.test.ts, dist/**, and .codenomad/worktreeMap.json; final commit scope must be checked with git status/diff/log.",
+        "dist and source are both modified; decide whether dist belongs in the final submission before commit.",
+        "Scoped routing depends on exact input.agent slug equality; this is the intended current contract.",
+        "activeConfig remains a pre-existing module-level state risk, not worsened by this change.",
+        "Canonical slugs are currently imported from the validation module; future cleanup can move them to a constants module."
+      ],
+      "non_changes": [
+        "No README, AGENTS.md, PRD, or source changes are made by this context update.",
+        "No role_models, agent_complexity_models, per-agent model overrides, provider routing, toast fallback, or chat.message fallback were introduced.",
+        "Gem routing priority and notice transport remain unchanged."
+      ]
+    },
     "model_selection_session_followup": {
       "status": "historical_probe_superseded",
       "supersedes": "model_selection_toast_followup",
@@ -2551,8 +2662,10 @@
       "context_version_after_multiline_decision_notice_followup": 24,
       "context_version_after_critical_role_limited_boost_cleanup": 25,
       "context_version_after_shared_critical_role_strategy_finalization": 27,
+      "context_version_after_scoped_model_routing_followup": 28,
       "reviewer_warning_stale_complex_floor_context": "addressed",
-      "active_critical_role_policy": "shared aggressive ladder: simple->medium by default, medium->complex earlier on any strong signal or two medium signals, complex stays complex"
+      "active_critical_role_policy": "shared aggressive ladder: simple->medium by default, medium->complex earlier on any strong signal or two medium signals, complex stays complex",
+      "active_model_routing_scope": "canonical 16 Gem Team slugs only; non-canonical agents are skipped before config/preview/output/notice side effects"
     },
     "model_selection_toast_followup": {
       "completed_at": "2026-06-03",

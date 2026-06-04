@@ -3,6 +3,7 @@ import type { PluginInput, Hooks } from "@opencode-ai/plugin"
 import type { OpenCodeAgentConfig, OpenCodeConfigWithAgents } from "./config.js"
 import { classifyComplexityTier } from "../routing/complexity.js"
 import { resolveModel } from "../routing/resolve-model.js"
+import { CANONICAL_GEM_TEAM_SLUGS } from "../sync/validation.js"
 import type {
   ComplexityClassificationInput,
   GemTeamPluginOptions,
@@ -17,6 +18,7 @@ type ChatParamsHook = NonNullable<Hooks["chat.params"]>
 type ChatParamsInput = Parameters<ChatParamsHook>[0]
 type ChatParamsOutput = Parameters<ChatParamsHook>[1]
 type ConfigProvider = () => OpenCodeConfigWithAgents | undefined
+const CANONICAL_GEM_TEAM_AGENT_SET = new Set<string>(CANONICAL_GEM_TEAM_SLUGS)
 type SessionPromptRequest = {
   path: { id: string }
   query: { directory: string }
@@ -61,7 +63,11 @@ export async function applyChatParamsModelRouting(
   options: GemTeamPluginOptions = {},
   config?: OpenCodeConfigWithAgents,
   notifyRoutingSession?: RoutingSessionNotifier,
-): Promise<PreviewModelRoutingResult> {
+): Promise<PreviewModelRoutingResult | undefined> {
+  if (!isCanonicalGemTeamAgent(input.agent)) {
+    return undefined
+  }
+
   const agentConfig = config?.agent?.[input.agent]
   const preview = previewModelRouting({
     signals: signalsFromChatParams(input),
@@ -94,6 +100,10 @@ export async function applyChatParamsModelRouting(
   }
 
   return preview
+}
+
+export function isCanonicalGemTeamAgent(agent: string): boolean {
+  return CANONICAL_GEM_TEAM_AGENT_SET.has(agent)
 }
 
 export function createRoutingSessionNotifier(client: PluginInput["client"] | undefined): RoutingSessionNotifier {

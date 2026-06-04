@@ -1,5 +1,7 @@
 import { classifyComplexityTier } from "../routing/complexity.js";
 import { resolveModel } from "../routing/resolve-model.js";
+import { CANONICAL_GEM_TEAM_SLUGS } from "../sync/validation.js";
+const CANONICAL_GEM_TEAM_AGENT_SET = new Set(CANONICAL_GEM_TEAM_SLUGS);
 export function previewModelRouting(input) {
     const classification = classifyComplexityTier(input.signals);
     const resolution = resolveModel({
@@ -22,6 +24,9 @@ export function createModelRoutingHooks(options = {}, getConfig = () => undefine
     };
 }
 export async function applyChatParamsModelRouting(input, output, options = {}, config, notifyRoutingSession) {
+    if (!isCanonicalGemTeamAgent(input.agent)) {
+        return undefined;
+    }
     const agentConfig = config?.agent?.[input.agent];
     const preview = previewModelRouting({
         signals: signalsFromChatParams(input),
@@ -50,6 +55,9 @@ export async function applyChatParamsModelRouting(input, output, options = {}, c
         });
     }
     return preview;
+}
+export function isCanonicalGemTeamAgent(agent) {
+    return CANONICAL_GEM_TEAM_AGENT_SET.has(agent);
 }
 export function createRoutingSessionNotifier(client) {
     const shown = new Set();
