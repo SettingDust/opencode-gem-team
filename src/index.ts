@@ -28,7 +28,7 @@ export default {
 export { PLUGIN_ID, COMPLEXITY_TIERS } from "./constants.js"
 export { classifyComplexityTier, isComplexityTier, normalizeComplexityTier } from "./routing/complexity.js"
 export { resolveModel, validateGemTeamConfig } from "./routing/resolve-model.js"
-export { applyChatParamsModelRouting, createModelRoutingHooks, createRoutingSessionNotifier, previewModelRouting } from "./hooks/model-routing.js"
+export { applyChatParamsModelRouting, createModelRoutingHooks, createRoutingSessionNotifier, isCanonicalGemTeamAgent, previewModelRouting } from "./hooks/model-routing.js"
 export { GENERATED_GEM_TEAM_AGENT_COUNT, GENERATED_GEM_TEAM_AGENT_SLUGS } from "./agents/generated.js"
 export { getGeneratedGemTeamAgents, getGemOrchestratorRoutingTargets } from "./agents/generated-loader.js"
 export { GEM_TEAM_AGENT_COUNT, injectGemTeamAgents } from "./hooks/config.js"

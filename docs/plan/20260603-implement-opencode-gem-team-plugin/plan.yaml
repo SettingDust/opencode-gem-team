@@ -1,7 +1,7 @@
 plan_id: 20260603-implement-opencode-gem-team-plugin
 objective: "Implement OpenCode Gem Team plugin from clean baseline using PoC-gated, reviewer-approved executable DAG."
 created_at: "2026-06-03T00:00:00+08:00"
-updated_at: "2026-06-04T20:30:00+08:00"
+updated_at: "2026-06-04T21:10:00+08:00"
 created_by: gem-planner
 status: ready_for_final_review
 baseline:
@@ -645,6 +645,9 @@ tasks:
       - "Never overrides OpenCode agent.model and never emits concrete model IDs or provider model names."
     verification: ["npm test", "npm run validate:no-model-ids"]
     findings:
+      scoped_routing_requirement: "Latest user requirement: only agents added/managed by this plugin should be routed; OpenCode built-ins, user agents, other plugin agents, and non-canonical gem-like agents must not be affected."
+      scoped_routing_implementation: "applyChatParamsModelRouting now checks exact canonical Gem Team slug ownership before activeConfig access, preview calculation, output.options.model mutation, gemTeamModelRouting metadata writes, or ACP-like session notice emission."
+      scoped_routing_non_gem_behavior: "Skipped non-canonical agents preserve existing output options/model, receive no gemTeamModelRouting metadata, and send no session.prompt notice."
       notification_decision: "Latest user requirement keeps the ACP-like client.session.prompt hidden-context transport and expands the English notice into multiline decision-useful information."
       probe_goal: "Historical minimal and toast-only follow-ups are retained for context, but the current production follow-up uses client.session.prompt(...) with an ACP-like hidden-context payload instead of toast."
       transport_shape: "Production notice transport remains client.session.prompt(...) with path.id=sessionID, query.directory=process.cwd(), and body containing noReply: true plus a single ignored text part; there is no toast or chat fallback."
@@ -661,6 +664,7 @@ tasks:
       lint: "Implementer reported npm run lint passed; policy adjustment lint also passed."
       validate_no_model_ids: "Implementer and reviewer reported npm run validate:no-model-ids passed; hint/boost copy fix validation also passed."
       validate_dist: "Implementer and reviewer reported npm run validate:dist passed."
+      scoped_routing_review: "Reviewer passed scoped-routing follow-up; routing/complexity/notice/scope related tests passed 73/73."
     review_results:
       status: passed_no_blocking_findings
       continue_to_wave_9: true
@@ -678,6 +682,7 @@ tasks:
         - 'Keep routing notice decision information limited to reliable routing payload fields: agent, tier, source, resolved model, classification reasons, and resolution reason.'
         - Do not guess provider, environment, or user message content in routing notices.
         - "Keep active critical-role routing as limited boost/hint only; do not restore fixed complex floor or minimum-tier-to-complex behavior."
+        - "Keep model routing scoped to exact canonical 16 Gem Team slugs before config/preview/output/notice side effects; non-canonical agents must be skipped silently."
   - id: T09
     title: "README, examples, installation docs"
     wave: 9
@@ -749,6 +754,7 @@ tasks:
       - "Plan and PRD compliance confirmed."
     verification: ["npm run validate:no-model-ids", "npm run validate:sync", "manual review report"]
     findings:
+      scoped_routing_strategy: "Reviewer confirmed model routing now applies only to this plugin's canonical 16 Gem Team slugs; non-canonical agents are skipped before mutation, metadata, or notice side effects."
       critical_role_strategy: "Reviewer confirmed the five critical roles now share the same more aggressive ladder: simple defaults to medium, medium upgrades to complex earlier on any strong signal or on two or more medium signals, and complex remains complex without becoming fixed highest-tier routing."
       invariants_preserved: "Routing priority stayed OpenCode agent.model > complexity_models[tier] > current selected model; ACP-like English-only session.prompt notice contract stayed unchanged; forbidden routing dimensions were not introduced."
       file_scope_note: "Reviewer noted the real touched file set is slightly broader than the implementer summary and also includes src/types.ts plus matching dist artifacts."
@@ -758,6 +764,7 @@ tasks:
       continue_to_wave_12: true
       warnings:
         - "Low risk: actual changes include src/types.ts and corresponding dist artifacts in addition to the main routing/hook/test files."
+        - "Scoped-routing follow-up residuals: workspace contains modified files outside the implementer summary, dist/source scope must be confirmed before commit, exact input.agent slug matching is the current contract, activeConfig remains an existing module-level risk, and canonical slugs may later move from validation to constants."
   - id: T12
     title: "Verification and commit"
     wave: 12

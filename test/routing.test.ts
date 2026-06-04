@@ -112,7 +112,10 @@ describe("pure model resolver", () => {
 describe("complexity classification", () => {
   it("maps orchestrator and planner signals to simple, medium, and complex", () => {
     assert.equal(classifyComplexityTier({ orchestratorComplexity: "LOW" }).tier, "simple")
+    assert.equal(classifyComplexityTier({ plannerComplexity: "low" }).tier, "simple")
+    assert.equal(classifyComplexityTier({ tierHint: "low" }).tier, "simple")
     assert.equal(classifyComplexityTier({ plannerComplexity: "medium" }).tier, "medium")
+    assert.equal(classifyComplexityTier({ plannerComplexity: "high" }).tier, "complex")
     assert.equal(classifyComplexityTier({ orchestratorComplexity: "HIGH", plannerComplexity: "simple" }).tier, "complex")
   })
 
@@ -131,6 +134,14 @@ describe("complexity classification", () => {
     const orchestrator = classifyComplexityTier({ roleSlug: "gem-orchestrator", plannerComplexity: "simple" })
     assert.equal(orchestrator.tier, "medium")
     assert.ok(orchestrator.reasons.includes("critical_role_boost_simple_to_medium"))
+
+    const lowPlanner = classifyComplexityTier({ roleSlug: "gem-planner", plannerComplexity: "low" })
+    assert.equal(lowPlanner.tier, "medium")
+    assert.ok(lowPlanner.reasons.includes("critical_role_boost_simple_to_medium"))
+
+    const lowTierHint = classifyComplexityTier({ roleSlug: "gem-planner", tierHint: "low" })
+    assert.equal(lowTierHint.tier, "medium")
+    assert.ok(lowTierHint.reasons.includes("critical_role_boost_simple_to_medium"))
   })
 
   it("keeps all five critical roles on the same medium escalation policy", () => {
@@ -178,6 +189,8 @@ describe("complexity classification", () => {
 
   it("does not drift non-critical role classification", () => {
     assert.equal(classifyComplexityTier({ roleSlug: "gem-implementer", plannerComplexity: "simple" }).tier, "simple")
+    assert.equal(classifyComplexityTier({ roleSlug: "gem-implementer", plannerComplexity: "low" }).tier, "simple")
+    assert.equal(classifyComplexityTier({ roleSlug: "gem-implementer", tierHint: "low" }).tier, "simple")
     assert.equal(classifyComplexityTier({ roleSlug: "gem-implementer", plannerComplexity: "medium" }).tier, "medium")
     assert.equal(classifyComplexityTier({ roleSlug: "gem-implementer", plannerComplexity: "medium", estimatedEffort: 5 }).tier, "medium")
   })

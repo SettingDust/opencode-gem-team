@@ -43,9 +43,9 @@ export function classifyComplexityTier(input: ComplexityClassificationInput = {}
   const reasons: string[] = []
 
   const signalTiers = [
-    mapOrchestratorComplexity(input.orchestratorComplexity),
-    mapPlannerComplexity(input.plannerComplexity),
-    normalizeKnownTier(input.tierHint),
+    normalizeExternalComplexitySignal(input.orchestratorComplexity),
+    normalizeExternalComplexitySignal(input.plannerComplexity),
+    normalizeExternalComplexitySignal(input.tierHint),
   ].filter((tier): tier is ComplexityTier => tier !== undefined)
 
   if (signalTiers.length > 0) {
@@ -76,21 +76,14 @@ export function classifyComplexityTier(input: ComplexityClassificationInput = {}
   return { tier: rankTier[rank], reasons }
 }
 
-function normalizeKnownTier(value: unknown): ComplexityTier | undefined {
-  return isComplexityTier(value) ? value : undefined
-}
-
-function mapOrchestratorComplexity(value: unknown): ComplexityTier | undefined {
+function normalizeExternalComplexitySignal(value: unknown): ComplexityTier | undefined {
   if (typeof value !== "string") return undefined
-  const normalized = value.toLowerCase()
+  const normalized = value.trim().toLowerCase()
+  if (isComplexityTier(normalized)) return normalized
   if (normalized === "low") return "simple"
   if (normalized === "medium") return "medium"
   if (normalized === "high") return "complex"
   return undefined
-}
-
-function mapPlannerComplexity(value: unknown): ComplexityTier | undefined {
-  return normalizeKnownTier(value)
 }
 
 function riskUpgradeTier(input: ComplexityClassificationInput): ComplexityTier | undefined {

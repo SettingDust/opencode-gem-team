@@ -7,6 +7,7 @@ type ChatParamsOutput = Parameters<ChatParamsHook>[1];
 type ConfigProvider = () => OpenCodeConfigWithAgents | undefined;
 export declare function previewModelRouting(input: PreviewModelRoutingInput): PreviewModelRoutingResult;
 export declare function createModelRoutingHooks(options?: GemTeamPluginOptions, getConfig?: ConfigProvider, notifyRoutingSession?: RoutingSessionNotifier): Pick<Hooks, "chat.params">;
-export declare function applyChatParamsModelRouting(input: ChatParamsInput, output: ChatParamsOutput, options?: GemTeamPluginOptions, config?: OpenCodeConfigWithAgents, notifyRoutingSession?: RoutingSessionNotifier): Promise<PreviewModelRoutingResult>;
+export declare function applyChatParamsModelRouting(input: ChatParamsInput, output: ChatParamsOutput, options?: GemTeamPluginOptions, config?: OpenCodeConfigWithAgents, notifyRoutingSession?: RoutingSessionNotifier): Promise<PreviewModelRoutingResult | undefined>;
+export declare function isCanonicalGemTeamAgent(agent: string): boolean;
 export declare function createRoutingSessionNotifier(client: PluginInput["client"] | undefined): RoutingSessionNotifier;
 export type { ChatParamsInput, ChatParamsOutput, OpenCodeAgentConfig };

@@ -5,6 +5,7 @@ import plugin, {
   applyChatParamsModelRouting,
   createModelRoutingHooks,
   createRoutingSessionNotifier,
+  isCanonicalGemTeamAgent,
   previewModelRouting,
   validateGemTeamConfig,
 } from "../src/index.js"
@@ -115,6 +116,56 @@ describe("model routing dry-run preview", () => {
     }
   })
 
+  it("normalizes low external signals before critical-role escalation", () => {
+    const plannerComplexityPreview = previewModelRouting({
+      signals: { roleSlug: "gem-planner", plannerComplexity: "low" },
+      complexityModels: {
+        medium: "medium-tier-model",
+        complex: "complex-tier-model",
+      },
+      currentSelectedModel: "selected-model",
+    })
+
+    const tierHintPreview = previewModelRouting({
+      signals: { roleSlug: "gem-planner", tierHint: "low" },
+      complexityModels: {
+        medium: "medium-tier-model",
+        complex: "complex-tier-model",
+      },
+      currentSelectedModel: "selected-model",
+    })
+
+    assert.equal(plannerComplexityPreview.classification.tier, "medium")
+    assert.equal(plannerComplexityPreview.resolution.model, "medium-tier-model")
+    assert.ok(plannerComplexityPreview.classification.reasons.includes("critical_role_boost_simple_to_medium"))
+    assert.ok(!plannerComplexityPreview.classification.reasons.includes("critical_role_escalate_medium_to_complex"))
+    assert.equal(tierHintPreview.classification.tier, "medium")
+    assert.equal(tierHintPreview.resolution.model, "medium-tier-model")
+    assert.ok(tierHintPreview.classification.reasons.includes("critical_role_boost_simple_to_medium"))
+    assert.ok(!tierHintPreview.classification.reasons.includes("critical_role_escalate_medium_to_complex"))
+  })
+
+  it("keeps medium and high external planner signals on the critical-role ladder", () => {
+    const mediumPreview = previewModelRouting({
+      signals: { roleSlug: "gem-planner", plannerComplexity: "medium" },
+      complexityModels: { complex: "complex-tier-model" },
+      currentSelectedModel: "selected-model",
+    })
+
+    const highPreview = previewModelRouting({
+      signals: { roleSlug: "gem-planner", plannerComplexity: "high" },
+      complexityModels: { complex: "complex-tier-model" },
+      currentSelectedModel: "selected-model",
+    })
+
+    assert.equal(mediumPreview.classification.tier, "complex")
+    assert.equal(mediumPreview.resolution.model, "complex-tier-model")
+    assert.ok(mediumPreview.classification.reasons.includes("critical_role_escalate_medium_to_complex"))
+    assert.equal(highPreview.classification.tier, "complex")
+    assert.equal(highPreview.resolution.model, "complex-tier-model")
+    assert.ok(highPreview.classification.reasons.includes("critical_role_hint"))
+  })
+
   it("keeps simple critical roles on medium even when risk upgrades the final tier", () => {
     const preview = previewModelRouting({
       signals: {
@@ -208,6 +259,24 @@ describe("model routing dry-run preview", () => {
     assert.deepEqual(preview.classification.reasons, ["complexity_signal_highest_tier"])
   })
 
+  it("does not drift non-critical low aliases upward", () => {
+    const preview = previewModelRouting({
+      signals: {
+        roleSlug: "gem-implementer",
+        plannerComplexity: "low",
+      },
+      complexityModels: {
+        simple: "simple-tier-model",
+        medium: "medium-tier-model",
+      },
+      currentSelectedModel: "selected-model",
+    })
+
+    assert.equal(preview.classification.tier, "simple")
+    assert.equal(preview.resolution.model, "simple-tier-model")
+    assert.deepEqual(preview.classification.reasons, ["complexity_signal_highest_tier"])
+  })
+
   it("rejects forbidden model routing config dimensions", () => {
     assert.deepEqual(validateGemTeamConfig({
       complexity_models: {
@@ -232,6 +301,12 @@ describe("model routing dry-run preview", () => {
 })
 
 describe("chat.params hook dry-run integration", () => {
+  it("recognizes only canonical gem agents as routable", () => {
+    assert.equal(isCanonicalGemTeamAgent("gem-reviewer"), true)
+    assert.equal(isCanonicalGemTeamAgent("assistant"), false)
+    assert.equal(isCanonicalGemTeamAgent("custom-gem-reviewer"), false)
+  })
+
   it("exposes chat.params and mutates only output.options in mock invocation", async () => {
     const config = {
       agent: {
@@ -304,6 +379,42 @@ describe("chat.params hook dry-run integration", () => {
     assert.equal(output.options.model, "simple-tier-model")
   })
 
+  it("normalizes hook message routing.tier low for critical roles", async () => {
+    const hooks = createModelRoutingHooks({
+      complexity_models: {
+        medium: "medium-tier-model",
+        complex: "complex-tier-model",
+      },
+    }, () => ({ agent: {} }))
+    const output = {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: {} as Record<string, unknown>,
+    }
+
+    await hooks["chat.params"]?.({
+      sessionID: "session-routing-tier-low",
+      agent: "gem-planner",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: {
+        ...(mockMessage("gem-planner", "selected-model") as Record<string, unknown>),
+        gemTeam: undefined,
+        routing: { tier: "low" },
+      } as never,
+    }, output)
+
+    assert.equal(output.options.model, "medium-tier-model")
+    assert.deepEqual(output.options.gemTeamModelRouting, {
+      status: "dry_run_output_options_only",
+      tier: "medium",
+      source: "complexity_model",
+      reason: "complexity_model_for_tier",
+    })
+  })
+
   it("keeps native agent model by not writing output.options.model", async () => {
     const hooks = createModelRoutingHooks({ complexity_models: { complex: "complex-tier-model" } }, () => ({
       agent: {
@@ -333,6 +444,67 @@ describe("chat.params hook dry-run integration", () => {
       source: "native_agent_model",
       reason: "native_agent_model_preserved",
     })
+  })
+
+  it("skips non-gem agents entirely without mutating output or notifying", async () => {
+    const prompts: Array<Record<string, unknown>> = []
+    const output = {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: { existing: "kept" } as Record<string, unknown>,
+    }
+
+    const result = await applyChatParamsModelRouting({
+      sessionID: "session-non-gem",
+      agent: "assistant",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: mockMessage("assistant", "selected-model", { tierHint: "complex" }, "info"),
+    }, output, {
+      complexity_models: { complex: "complex-tier-model" },
+    }, {
+      agent: {
+        assistant: { model: "native-existing-model" },
+      },
+    }, createRoutingSessionNotifier({
+      session: {
+        prompt: async (prompt: Record<string, unknown>) => {
+          prompts.push(prompt)
+        },
+      },
+    } as never))
+
+    assert.equal(result, undefined)
+    assert.deepEqual(output.options, { existing: "kept" })
+    assert.equal(prompts.length, 0)
+  })
+
+  it("does not mutate selected or existing model for non-gem agents", async () => {
+    const output = {
+      temperature: 0,
+      topP: 0,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: { model: "existing-selected-model" } as Record<string, unknown>,
+    }
+
+    await applyChatParamsModelRouting({
+      sessionID: "session-non-gem-2",
+      agent: "custom-agent",
+      model: mockModel("selected-model"),
+      provider: mockProvider(),
+      message: mockMessage("custom-agent", "selected-model", { tierHint: "simple" }, "info"),
+    }, output, {
+      complexity_models: { simple: "simple-tier-model" },
+    }, {
+      agent: {
+        "custom-agent": { model: "native-existing-model" },
+      },
+    })
+
+    assert.deepEqual(output.options, { model: "existing-selected-model" })
   })
 
   it("plugin server wires config and chat.params hooks without provider calls", async () => {
@@ -823,6 +995,7 @@ describe("chat.params hook dry-run integration", () => {
       },
     } as never))
 
+    assert.ok(preview)
     assert.deepEqual(prompts, [{
       path: { id: "session-four" },
       query: { directory: process.cwd() },
