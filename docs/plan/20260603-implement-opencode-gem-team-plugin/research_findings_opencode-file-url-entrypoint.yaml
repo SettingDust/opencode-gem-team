@@ -1,0 +1,298 @@
+plan_id: 20260603-implement-opencode-gem-team-plugin
+objective: "补足 bug-fix 诊断中关于 OpenCode 本地 file:///.../src/index.ts 插件入口可加载性的缺失证据"
+focus_area: "OpenCode 对本地 file:///.../src/index.ts 插件入口的可加载性/约束/与 package entrypoint 的关系"
+created_at: "2026-06-04T00:00:00+08:00"
+created_by: gem-researcher
+status: completed
+tldr: |
+  - OpenCode 将 `file://`、绝对路径、相对路径都归类为 path/file plugin，而不是 npm/package plugin。
+  - 对 path/file plugin，若 spec 指向单个文件，则 loader 直接把该文件作为 import target，不走 package `main`/`exports`。
+  - 若 spec 指向目录且目录含 `package.json`，OpenCode 会先读取 `exports["./server"]` 或 `main`；只有在目录无 package.json 时才回退到 `index.ts|js`。
+  - 本仓库已验证的成功路径是“仓库根目录 path install + package entrypoints → dist/src/index.js”，不是 `src/index.ts` file URL 直载。
+  - 对 `file:///E:/Projects/opencode-gem-team/src/index.ts`，OpenCode loader 本身大概率会尝试直接 import，但该入口未在本仓库 PoC 中验证，且运行时还依赖 TypeScript 直载能力与相对 `.js` 导入在源码态是否可解析，风险高于已验证的 dist/package 路径。
+research_metadata:
+  methodology: "仓库文档/计划证据 + OpenCode 官方文档 + OpenCode public source loader/shared/config 阅读"
+  scope: "仅研究本地 file URL 指向 src/index.ts 的插件入口是否可加载，以及与 package/dist 入口的关系"
+  confidence: high
+  coverage: 90
+  decision_blockers: 0
+  research_blockers: 1
+files_analyzed:
+  - file: plan.yaml
+    path: docs/plan/20260603-implement-opencode-gem-team-plugin/plan.yaml
+    purpose: 读取既有 PoC 结论与当前 Pending 边界
+    key_elements:
+      - element: T07.findings.local_load
+        type: variable
+        location: plan.yaml:568
+        description: 已验证本地 package-path install 成功并显示 16 个 gem agents
+        language: yaml
+      - element: T07.findings.dist_need
+        type: variable
+        location: plan.yaml:571
+        description: package-style entrypoints 指向 dist/src
+        language: yaml
+    lines: 777
+  - file: installation-poc.md
+    path: docs/installation-poc.md
+    purpose: 提取本地安装证据与 package/path 行为结论
+    key_elements:
+      - element: Local package-path install
+        type: pattern
+        location: installation-poc.md:14
+        description: 根目录 path install 成功，依赖 `main` 和 `exports["./server"]`
+        language: markdown
+      - element: Package manager behavior
+        type: pattern
+        location: installation-poc.md:19
+        description: path specs 被视为 file plugins，非 path specs 走 package resolution
+        language: markdown
+    lines: 62
+  - file: package.json
+    path: package.json
+    purpose: 确认 package entrypoints 指向 dist
+    key_elements:
+      - element: main
+        type: variable
+        location: package.json:7
+        description: server 主入口为 ./dist/src/index.js
+        language: json
+      - element: exports[./server]
+        type: variable
+        location: package.json:13
+        description: OpenCode package-style server entrypoint 为 ./dist/src/index.js
+        language: json
+    lines: 36
+  - file: src/index.ts
+    path: src/index.ts
+    purpose: 评估源码 file URL 入口的直接 import 约束
+    key_elements:
+      - element: default export PluginModule
+        type: pattern
+        location: src/index.ts:23
+        description: 默认导出满足 PluginModule
+        language: typescript
+      - element: relative .js imports
+        type: pattern
+        location: src/index.ts:3
+        description: 源码态使用 `./constants.js` 等 ESM `.js` 扩展导入
+        language: typescript
+    lines: 58
+  - file: generated-loader.ts
+    path: src/agents/generated-loader.ts
+    purpose: 评估源码/构建态加载 generated assets 的路径鲁棒性
+    key_elements:
+      - element: resolveGeneratedPath
+        type: function
+        location: generated-loader.ts:65
+        description: 同时尝试 cwd、dist 相对路径、src 相对路径加载 agents/generated
+        language: typescript
+    lines: 95
+  - file: plugin docs
+    path: https://opencode.ai/docs/plugins
+    purpose: 确认官方文档支持的插件加载方式
+    key_elements:
+      - element: local files
+        type: pattern
+        location: docs/plugins section 'From local files'
+        description: 官方文档允许本地 JS/TS 文件插件
+        language: markdown
+      - element: npm packages
+        type: pattern
+        location: docs/plugins section 'From npm'
+        description: config 中记录 npm package names
+        language: markdown
+    lines: 0
+  - file: shared.ts
+    path: https://raw.githubusercontent.com/anomalyco/opencode/dev/packages/opencode/src/plugin/shared.ts
+    purpose: 确认 loader 对 path/file spec 与 package spec 的分流逻辑
+    key_elements:
+      - element: isPathPluginSpec
+        type: function
+        location: shared.ts:isPathPluginSpec
+        description: `file://`、相对路径、绝对路径均归为 file source
+        language: typescript
+      - element: resolvePathPluginTarget
+        type: function
+        location: shared.ts:resolvePathPluginTarget
+        description: 文件 spec 直接返回 file URL；目录 spec 先看 package.json，再回退 index files
+        language: typescript
+      - element: resolvePluginEntrypoint
+        type: function
+        location: shared.ts:resolvePluginEntrypoint
+        description: 目录 + package.json 时优先 package exports/main；文件 spec 不走 package entrypoints
+        language: typescript
+      - element: resolvePluginId
+        type: function
+        location: shared.ts:resolvePluginId
+        description: path plugin 必须显式导出 id
+        language: typescript
+    lines: 0
+  - file: loader.ts
+    path: https://raw.githubusercontent.com/anomalyco/opencode/dev/packages/opencode/src/plugin/loader.ts
+    purpose: 确认 external plugin resolve/load 流程
+    key_elements:
+      - element: resolve
+        type: function
+        location: loader.ts:resolve
+        description: 先 resolve target，再 createPluginEntry，再 dynamic import entry
+        language: typescript
+    lines: 0
+  - file: plugin index.ts
+    path: https://raw.githubusercontent.com/anomalyco/opencode/dev/packages/opencode/src/plugin/index.ts
+    purpose: 确认 v1 plugin 识别与 apply 逻辑
+    key_elements:
+      - element: applyPlugin
+        type: function
+        location: plugin/index.ts:applyPlugin
+        description: `readV1Plugin(..., "server", "detect")` 成功后调用 `server(...)`
+        language: typescript
+    lines: 0
+patterns_found:
+  - category: architecture
+    pattern: "path-like plugin specs are treated as file plugins"
+    description: OpenCode 对 `file://`、绝对路径、相对路径统一归入 file source，而不是 npm source。
+    examples:
+      - file: shared.ts
+        location: isPathPluginSpec
+        snippet: "return spec.startsWith(\"file://\") || spec.startsWith(\".\") || isAbsolutePath(spec)"
+    prevalence: common
+  - category: structure
+    pattern: "single-file path plugin bypasses package exports/main"
+    description: 当 path spec 指向单文件时，loader 直接保留该文件作为 import target；不会再经 package `exports[\"./server\"]` 或 `main` 做 server entrypoint 解析。
+    examples:
+      - file: shared.ts
+        location: resolvePathPluginTarget + resolvePluginEntrypoint
+        snippet: "非目录 file spec 直接返回 spec/file URL；无 pkg 时 entry=target"
+    prevalence: common
+  - category: structure
+    pattern: "directory path plugin with package.json prefers package server entry"
+    description: 若 path spec 指向目录且目录含 package.json，OpenCode 会先读取 `exports[\"./server\"]`，其次 `main`，再决定 import target。
+    examples:
+      - file: shared.ts
+        location: resolvePackageEntrypoint
+        snippet: "exports['./server'] -> main"
+      - file: installation-poc.md
+        location: 14,27
+        snippet: "本仓库 local package-path install 需 main + exports['./server']，并指向 dist/src/index.js"
+    prevalence: common
+  - category: naming
+    pattern: "path plugin must export id"
+    description: file/path plugin 无 package name 可回退，因此必须显式导出 plugin id。
+    examples:
+      - file: shared.ts
+        location: resolvePluginId
+        snippet: "if (source === 'file') { if (id) return id; throw new TypeError(...) }"
+      - file: src/index.ts
+        location: 23-26
+        snippet: "export default { id: PLUGIN_ID, server } satisfies PluginModule"
+    prevalence: common
+  - category: architecture
+    pattern: "local TS file support is documented, but package installs are a separate path"
+    description: 官方文档明确本地插件目录可放 JS/TS 文件，配置中的 plugin 数组则文档化为 npm package names；两条链路不同。
+    examples:
+      - file: plugin docs
+        location: From local files / From npm
+        snippet: "Place JavaScript or TypeScript files in the plugin directory";
+    prevalence: common
+related_architecture:
+  components_relevant_to_domain:
+    - component: ConfigPlugin.resolvePluginSpec
+      responsibility: 将配置文件里的 path-like plugin spec 归一化为绝对 file URL
+      location: packages/opencode/src/config/plugin.ts
+      relationship_to_domain: 决定 `file:///.../src/index.ts` 会作为 file plugin 传给 loader
+    - component: plugin/shared.ts
+      responsibility: 判断 plugin source、解析 target、选择 server entrypoint
+      location: packages/opencode/src/plugin/shared.ts
+      relationship_to_domain: 决定 file URL 直载还是 package exports/main
+    - component: PluginLoader
+      responsibility: resolve target → inspect entrypoint → dynamic import module
+      location: packages/opencode/src/plugin/loader.ts
+      relationship_to_domain: 决定最终实际 import 的文件
+    - component: 本仓库 package.json
+      responsibility: 为目录/package-style 安装声明 server entrypoint
+      location: package.json
+      relationship_to_domain: 已验证路径依赖该声明并指向 dist/src/index.js
+  interfaces_used_by_domain:
+    - interface: PluginModule
+      location: @opencode-ai/plugin / packages/plugin/src/index.ts
+      usage_pattern: default export object with id and server
+  data_flow_involving_domain: "config plugin spec -> resolvePluginSpec -> pluginSource(file|npm) -> resolvePluginTarget -> createPluginEntry -> resolvePluginEntrypoint -> dynamic import(entry) -> readV1Plugin/applyPlugin"
+  key_relationships_to_domain:
+    - from: ConfigPlugin.resolvePluginSpec
+      to: plugin/shared.isPathPluginSpec
+      relationship: calls
+    - from: plugin/shared.resolvePluginTarget
+      to: plugin/shared.resolvePathPluginTarget
+      relationship: calls
+    - from: PluginLoader.resolve
+      to: plugin/shared.createPluginEntry
+      relationship: calls
+    - from: package.json exports/main
+      to: dist/src/index.js
+      relationship: imports
+related_technology_stack:
+  languages_used_in_domain: [TypeScript, JavaScript, JSON, Markdown, YAML]
+  frameworks_used_in_domain:
+    - name: OpenCode plugin runtime
+      usage_in_domain: 负责插件解析、安装、动态导入与 hook 执行
+  libraries_used_in_domain:
+    - name: @opencode-ai/plugin
+      purpose_in_domain: PluginModule / Hooks 类型契约
+    - name: npm-package-arg
+      purpose_in_domain: 解析 npm-like plugin spec，区分 path 与 package
+    - name: Bun / Npm layer
+      purpose_in_domain: 非 path plugin 的安装/缓存
+  external_apis_used_in_domain:
+    - name: OpenCode docs
+      integration_point: 作为公开行为说明来源
+    - name: anomalyco/opencode source
+      integration_point: 作为 loader 实现证据来源
+related_conventions:
+  naming_patterns_in_domain: "源码使用 TypeScript ESM，内部相对导入统一写成 `.js` 扩展名以匹配编译后产物"
+  structure_of_domain: "package-style 入口由 package.json main/exports 指向 dist/src；源码入口位于 src/index.ts"
+  error_handling_in_domain: "loader 在 install/entry/compatibility/load 各阶段分开报错；path plugin 缺少 id 会直接抛错"
+  testing_in_domain: "当前测试主要覆盖 package/dist 路径与导出形状，未覆盖 file URL 指向 src/index.ts 的真实加载"
+  documentation_in_domain: "README 与 installation-poc 明确把已验证路径写为 local package-path install，并将 GitHub/path 边界标注为 Partial/Pending"
+related_dependencies:
+  internal:
+    - component: package.json entrypoints
+      relationship_to_domain: 目录/path package install 时决定 server 入口
+      direction: outbound
+    - component: src/index.ts
+      relationship_to_domain: file URL 直载候选入口；导出 PluginModule 并显式 id
+      direction: outbound
+    - component: dist/src/index.js
+      relationship_to_domain: 已验证 package-style server 入口
+      direction: outbound
+    - component: agents/generated/**
+      relationship_to_domain: 运行时 prompt/manifest 资产，由 generated-loader 同时兼容 src 与 dist 相对路径
+      direction: outbound
+  external:
+    - name: OpenCode plugin loader
+      purpose_for_domain: 决定 file plugin 与 npm/package plugin 的分流与导入行为
+    - name: Bun/npm resolution
+      purpose_for_domain: 非 path plugin 安装与 package resolution
+domain_security_considerations:
+  sensitive_areas:
+    - area: plugin install source semantics
+      location: OpenCode config plugin array
+      concern: 错把未验证的 file URL / GitHub spec 当作稳定入口会导致插件根本未加载，从而误诊 session 缺失提示消息
+  authentication_patterns_in_domain: "本研究范围内无鉴权要求；公开 docs/source 只说明 npm plugins 通过 Bun 安装缓存"
+  authorization_patterns_in_domain: "无"
+  data_validation_in_domain: "path plugin 必须导出 id；目录 package plugin 必须暴露 exports['./server'] 或 main 才能稳定作为 server plugin 被识别"
+testing_patterns:
+  framework: "node:test + 本地 OpenCode CLI PoC"
+  coverage_areas: ["PluginModule 导出形状", "dist 导出合法性", "package scripts guard", "本地 package-path install"]
+  test_organization: "test/*.test.ts + docs/installation-poc.md 手工证据"
+  mock_patterns: ["typed/mock hook mutation", "fixture-based local install"]
+open_questions:
+  - question: "OpenCode 运行时是否在所有发行形态下都能直接 `import()` TypeScript `file:///.../src/index.ts`？"
+    context: "公开 docs 支持本地 TS 文件插件，但本仓库当前证据未覆盖 config plugin array 指向单个 TS file URL 的真实运行"
+    type: research
+    affects: ["src/index.ts file URL 入口稳定性判断"]
+gaps:
+  - area: "single-file src/index.ts file URL end-to-end PoC"
+    description: "没有针对 `file:///E:/Projects/opencode-gem-team/src/index.ts` 的本地 OpenCode end-to-end load 证据；现有成功证据仅覆盖仓库根目录 package-path install"
+    impact: research_blocker
+    affects: ["对源码 file URL 入口的最终确定性判断"]

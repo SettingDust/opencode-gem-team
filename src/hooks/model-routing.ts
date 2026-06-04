@@ -18,11 +18,14 @@ type ChatParamsInput = Parameters<ChatParamsHook>[0]
 type ChatParamsOutput = Parameters<ChatParamsHook>[1]
 type ConfigProvider = () => OpenCodeConfigWithAgents | undefined
 type SessionPromptRequest = {
-  sessionID: string
-  noReply: true
-  parts: [{ type: "text"; text: string; ignored: true }]
+  path: { id: string }
+  query: { directory: string }
+  body: {
+    noReply: true
+    parts: [{ type: "text"; text: string; ignored: true }]
+  }
 }
-type SessionPromptMethod = (request: SessionPromptRequest) => Promise<unknown>
+type SessionPromptMethod = (request: SessionPromptRequest) => Promise<unknown> | unknown
 
 export function previewModelRouting(input: PreviewModelRoutingInput): PreviewModelRoutingResult {
   const classification = classifyComplexityTier(input.signals)
@@ -85,6 +88,8 @@ export async function applyChatParamsModelRouting(
       tier: preview.resolution.tier,
       source: preview.resolution.source,
       model: preview.resolution.model,
+      classificationReasons: preview.classification.reasons,
+      resolutionReason: preview.resolution.reason,
     })
   }
 
@@ -93,62 +98,30 @@ export async function applyChatParamsModelRouting(
 
 export function createRoutingSessionNotifier(client: PluginInput["client"] | undefined): RoutingSessionNotifier {
   const shown = new Set<string>()
-  const prompt = resolveSessionPrompt(client)
+  const sessionPrompt = resolveSessionPrompt(client)
 
   return async (payload) => {
-    if (prompt === undefined) return
+    if (sessionPrompt === undefined) return
 
     const dedupeKey = routingSessionKey(payload)
     if (shown.has(dedupeKey)) return
 
     const text = formatRoutingSessionMessage(payload)
-    const parts: SessionPromptRequest["parts"] = [{ type: "text", text, ignored: true }]
+    const request = buildSessionPromptRequest(payload.sessionID, text)
 
     try {
-      await prompt({
-        sessionID: payload.sessionID,
-        noReply: true,
-        parts,
-      })
+      await sessionPrompt(request)
       shown.add(dedupeKey)
     } catch {
-      // Silent skip: session notifications are best-effort only.
+      // Silent skip: routing notices are best-effort only.
     }
   }
 }
 
 function resolveSessionPrompt(client: PluginInput["client"] | undefined): SessionPromptMethod | undefined {
-  const session = client?.session
-  if (session === undefined) return undefined
-  if (typeof session.promptAsync === "function") {
-    return async (request) => {
-      try {
-        return await session.promptAsync(request as never)
-      } catch {
-        return await session.promptAsync({
-          path: { id: request.sessionID },
-          body: {
-            noReply: request.noReply,
-            parts: request.parts,
-          },
-        } as never)
-      }
-    }
-  }
-  if (typeof session.prompt === "function") {
-    return async (request) => {
-      try {
-        return await session.prompt(request as never)
-      } catch {
-        return await session.prompt({
-          path: { id: request.sessionID },
-          body: {
-            noReply: request.noReply,
-            parts: request.parts,
-          },
-        } as never)
-      }
-    }
+  const session = client?.session as { prompt?: (request: SessionPromptRequest) => Promise<unknown> | unknown } | undefined
+  if (typeof session?.prompt === "function") {
+    return (request) => session.prompt?.(request)
   }
   return undefined
 }
@@ -191,21 +164,134 @@ function routingSessionKey(payload: RoutingSessionPayload): string {
   return [payload.sessionID, payload.agent, payload.tier, payload.source, payload.model].join("|")
 }
 
-function formatRoutingSessionMessage(payload: RoutingSessionPayload): string {
-  return `${payload.agent} · ${routingSessionSourceLabel(payload.source)} · ${payload.model}`
+function buildSessionPromptRequest(sessionID: string, text: string): SessionPromptRequest {
+  return {
+    path: { id: sessionID },
+    query: { directory: process.cwd() },
+    body: {
+      noReply: true,
+      parts: [{ type: "text", text, ignored: true }],
+    },
+  }
 }
 
-function routingSessionSourceLabel(source: RoutingSessionPayload["source"]): string {
-  switch (source) {
+function formatRoutingSessionMessage(payload: RoutingSessionPayload): string {
+  const agentName = routingAgentDisplayName(payload.agent)
+  const sourceLabel = routingModelSourceLabel(payload)
+  const tierReason = routingTierReasonLabel(payload)
+  const signalLabels = routingSignalLabels(payload)
+
+  return [
+    "Model routing",
+    `Agent: ${agentName} (${payload.agent})`,
+    `Tier: ${payload.tier} (${tierReason})`,
+    `Source: ${sourceLabel}`,
+    `Model: ${payload.model}`,
+    `Reasons: ${signalLabels.join("; ")}`,
+  ].join("\n")
+}
+
+function routingModelSourceLabel(payload: RoutingSessionPayload): string {
+  switch (payload.source) {
     case "native_agent_model":
       return "agent model"
     case "complexity_model":
-      return "tier route"
+      return `plugin complexity_models.${payload.tier}`
     case "current_selected_model":
-      return "selected model"
+      return "current selected model"
     case "no_model":
       return "no model"
   }
+}
+
+function routingTierReasonLabel(payload: RoutingSessionPayload): string {
+  const criticalRoleState = routingCriticalRoleState(payload.classificationReasons)
+  if (criticalRoleState === "escalate") return "critical role escalation"
+  if (criticalRoleState === "boost") return "critical role boost"
+  if (criticalRoleState === "hint") return "critical role complex"
+  const reasons = payload.classificationReasons ?? []
+  if (reasons.some((reason) => reason.startsWith("risk_upgrade_"))) return "risk upgrade"
+  if (reasons.includes("complexity_signal_highest_tier")) return "complexity signal"
+  if (reasons.includes("missing_complexity_signal_default_medium")) return "default heuristic"
+  if (payload.resolutionReason?.includes("fallback")) return "fallback"
+  return "resolved"
+}
+
+function routingSignalLabels(payload: RoutingSessionPayload): string[] {
+  const labels: string[] = []
+  const reasons = payload.classificationReasons ?? []
+
+  const criticalRoleState = routingCriticalRoleState(reasons)
+  if (criticalRoleState === "escalate") labels.push("critical role escalation")
+  if (criticalRoleState === "boost") labels.push("critical role boost")
+  if (criticalRoleState === "hint") labels.push("critical role complex")
+  if (reasons.includes("complexity_signal_highest_tier")) labels.push("complexity")
+  if (reasons.some((reason) => reason.startsWith("risk_upgrade_"))) labels.push("risk")
+  if (reasons.includes("missing_complexity_signal_default_medium")) labels.push("default complexity")
+  if (payload.resolutionReason?.includes("fallback")) labels.push("fallback")
+
+  if (labels.length === 0) {
+    switch (payload.source) {
+      case "native_agent_model":
+        labels.push("agent model")
+        break
+      case "complexity_model":
+        labels.push("plugin tier model")
+        break
+      case "current_selected_model":
+        labels.push("current model")
+        break
+      case "no_model":
+        labels.push("no model")
+        break
+    }
+  }
+
+  return labels.slice(0, 3)
+}
+
+function routingCriticalRoleState(reasons: string[] | undefined): "escalate" | "boost" | "hint" | undefined {
+  if (reasons === undefined) return undefined
+  if (reasons.some(isCriticalRoleEscalationReason)) return "escalate"
+  if (reasons.some(isCriticalRoleBoostReason)) return "boost"
+  if (reasons.some(isCriticalRoleHintReason)) return "hint"
+  return undefined
+}
+
+function isCriticalRoleHintReason(reason: string): boolean {
+  return reason === "critical_role_hint"
+}
+
+function isCriticalRoleEscalationReason(reason: string): boolean {
+  return reason === "critical_role_escalate_medium_to_complex"
+    || reason === "critical_role_escalate_simple_to_complex"
+}
+
+function isCriticalRoleBoostReason(reason: string): boolean {
+  return reason === "critical_role_boost_simple_to_medium"
+}
+
+function routingAgentDisplayName(agent: string): string {
+  return agentDisplayNames[agent] ?? agent
+}
+
+const agentDisplayNames: Record<string, string> = {
+  "gem-browser-tester": "Browser Tester",
+  "gem-code-simplifier": "Code Simplifier",
+  "gem-critic": "Critic",
+  "gem-debugger": "Debugger",
+  "gem-designer-mobile": "Mobile Designer",
+  "gem-designer": "Designer",
+  "gem-devops": "DevOps",
+  "gem-documentation-writer": "Documentation Writer",
+  "gem-implementer-mobile": "Mobile Implementer",
+  "gem-implementer": "Implementer",
+  "gem-mobile-tester": "Mobile Tester",
+  "gem-orchestrator": "Orchestrator",
+  "gem-planner": "Planner",
+  "gem-researcher": "Researcher",
+  "gem-reviewer": "Reviewer",
+  "gem-skill-creator": "Skill Creator",
 }
 
 function signalsFromChatParams(input: ChatParamsInput): ComplexityClassificationInput {

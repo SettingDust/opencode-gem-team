@@ -97,6 +97,13 @@ export type RoutingSessionPayload = {
   tier: ComplexityTier
   source: ModelResolutionSource
   model: string
+  classificationReasons?: string[]
+  resolutionReason?: string
+  variant?: string
+  modelInfo?: {
+    providerID: string
+    modelID: string
+  }
 }
 
 export type RoutingSessionNotifier = (payload: RoutingSessionPayload) => Promise<void> | void

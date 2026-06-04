@@ -1,7 +1,7 @@
 plan_id: 20260603-implement-opencode-gem-team-plugin
 objective: "Implement OpenCode Gem Team plugin from clean baseline using PoC-gated, reviewer-approved executable DAG."
 created_at: "2026-06-03T00:00:00+08:00"
-updated_at: "2026-06-03T13:00:00+08:00"
+updated_at: "2026-06-04T20:30:00+08:00"
 created_by: gem-planner
 status: ready_for_final_review
 baseline:
@@ -15,7 +15,6 @@ plan_metrics:
   risk_score: high
 tldr: |
   Twelve-wave implementation plan. Wave 1 proves feasibility before implementation; later hooks, docs, dist, and release/commit paths are blocked by the PoC gates. GitHub install, dist, and package-manager conclusions remain Pending/Blocked until PoC evidence verifies them.
-
 canonical_slugs:
   - gem-browser-tester
   - gem-code-simplifier
@@ -33,7 +32,6 @@ canonical_slugs:
   - gem-researcher
   - gem-reviewer
   - gem-skill-creator
-
 mvp_gates:
   - id: MVP-1
     name: agent load
@@ -47,7 +45,6 @@ mvp_gates:
     name: tier routing
     required_by: [T03, T08]
     acceptance: "Only simple, medium, and complex tiers are supported; no per-agent, role, provider router, or fallback-chain model config."
-
 global_guards:
   sync_network_guard:
     - "GitHub access is read-only."
@@ -71,14 +68,12 @@ global_guards:
     - "dist is not submitted by default."
     - "Optional dist task runs only if T01 PoC proves dist is necessary."
     - "If dist exists, validate:dist freshness is mandatory."
-
 poc_dependent_items:
   - "@opencode-ai/plugin type shape and PluginModule/legacy function support."
   - "GitHub source syntax for OpenCode plugin install; format observed from redacted global config, end-to-end install/load still Pending."
   - "Whether dist must be committed for GitHub install/load."
   - "Whether a package manager participates in GitHub install/load."
   - "Whether OpenCode model mutation hooks can prove AC-20 beyond experimental/limited behavior."
-
 open_questions:
   - question: "Does the observed GitHub source syntax load this repository as an OpenCode plugin end-to-end?"
     status: format_observed_end_to_end_pending
@@ -89,7 +84,6 @@ open_questions:
   - question: "Is committed dist necessary for GitHub install/load?"
     status: pending_poc
     blocks: [T10, T12]
-
 contracts:
   - id: C01
     from_task: T01
@@ -196,7 +190,6 @@ contracts:
     to_task: T12
     interface: "Reviewer pass/fail findings determine final verification and commit eligibility."
     format: "review report and validation evidence"
-
 waves:
   - wave: 1
     title: "Early feasibility PoC gate"
@@ -243,10 +236,12 @@ waves:
   - wave: 11
     title: "Full security/scope review"
     tasks: [T11]
+    status: completed
+    review_status: passed_no_blocking_findings
+    continue_to_next_wave: true
   - wave: 12
     title: "Verification and commit"
     tasks: [T12]
-
 tasks:
   - id: T01
     title: "Early feasibility PoC"
@@ -284,7 +279,6 @@ tasks:
       package_manager_for_github_source: Pending
       needs_dist: pending
       model_routing_hook: Partial
-
   - id: T02
     title: "Scaffold TypeScript package"
     wave: 2
@@ -333,7 +327,6 @@ tasks:
       build: "npm run build passed."
       lint: "npm run lint passed."
       validators: "npm run validate:no-model-ids passed; sync placeholders ran and are explicitly deferred."
-
   - id: T03
     title: "Pure routing/types"
     wave: 3
@@ -363,11 +356,10 @@ tasks:
     findings:
       priority_chain: "resolveModel returns native_agent_model before complexity_model before current_selected_model and no_model when all are absent."
       tier_scope: "Only simple, medium, and complex tiers are accepted; missing or unknown tiers deterministically fallback to medium with reason metadata."
-      role_scope: "Reasoning-critical roles can raise minimum tier but do not create role_models, per-agent mappings, or model overrides."
+      role_scope: "Critical roles use limited boost/hint only: simple->medium boost, medium hint-only, and complex only from strong signals; no role_models, per-agent mappings, or model overrides."
       validator: "validate:no-model-ids now scans docs/plan and model-assignment provider-style patterns while avoiding package-scope false positives such as @opencode-ai/plugin."
     verification_results:
       test: "npm test passed: 13 tests, 13 passed."
-
   - id: T04
     title: "Read-only upstream sync script"
     wave: 4
@@ -424,7 +416,6 @@ tasks:
         - "Keep model values opaque and avoid env secrets."
         - "Keep GitHub install syntax, dist necessity/package-manager behavior, and actual request model mutation pending until proven."
         - "Run validators and add conversion-layer parity checks if body diffs appear."
-
   - id: T05
     title: "Runtime generated loader and config hook injection"
     wave: 5
@@ -481,7 +472,6 @@ tasks:
         - "Do not inject unsupported metadata into OpenCode agent config."
         - "Do not introduce concrete provider model IDs, provider examples, secrets/env output, forbidden routing dimensions, forbidden features, or global config writes."
         - "Keep T03 priority chain and keep GitHub install, dist/package-manager behavior, and actual request model mutation AC-20 pending until proven."
-
   - id: T06
     title: "Sync validation and generated constants"
     wave: 6
@@ -537,7 +527,6 @@ tasks:
         - "Keep tiers simple, medium, and complex only; do not add per-agent/role model mappings or forbidden routing features."
         - "Newly injected agents continue to omit default model fields."
         - "Keep GitHub install syntax, dist/package-manager behavior, package exports, and AC-20 runtime mutation Pending until verified."
-
   - id: T07
     title: "Plugin config hook load evidence"
     wave: 7
@@ -598,7 +587,6 @@ tasks:
         - "Do not write global OpenCode config."
         - "If dist is committed, ensure regenerate-clean and validate:dist green."
         - "Inspect git status, diff, and recent log before any commit."
-
   - id: final-wave-hardening
     title: "Final validation hardening before review"
     status: completed
@@ -638,7 +626,6 @@ tasks:
         - "Inspect git status, git diff, and git log --oneline -10 before any commit."
         - "Confirm uncommitted/untracked implementation artifacts are intended."
         - "Preserve Verified/Partial/Pending boundaries for GitHub install, package-manager behavior, remote dist necessity, and AC-20 runtime mutation."
-
   - id: T08
     title: "PoC-dependent model routing hooks"
     wave: 8
@@ -658,29 +645,39 @@ tasks:
       - "Never overrides OpenCode agent.model and never emits concrete model IDs or provider model names."
     verification: ["npm test", "npm run validate:no-model-ids"]
     findings:
-      notification_decision: "Superseded historical note: user previously chose default-visible model-selection notification via toast; current active decision replaces toast with a session-based notification while still not requiring debug_model_routing."
-      source_reference: "Current preferred transport is ACP-like client.session.prompt(...) with noReply: true and an ignored: true text part; keep compatibility fallback for SDK path/body prompt shapes when host support differs."
-      compatibility_shape: "Use a session-first compatibility wrapper with in-session memory dedup so repeated routing events do not spam the user; do not delete the toast history, but mark it superseded."
-      fallback_guard: "If the session prompt transport is unavailable or rejected, silently skip notification; do not fall back to chat.message, and do not treat ignored session text as a true non-context toast equivalent."
+      notification_decision: "Latest user requirement keeps the ACP-like client.session.prompt hidden-context transport and expands the English notice into multiline decision-useful information."
+      probe_goal: "Historical minimal and toast-only follow-ups are retained for context, but the current production follow-up uses client.session.prompt(...) with an ACP-like hidden-context payload instead of toast."
+      transport_shape: "Production notice transport remains client.session.prompt(...) with path.id=sessionID, query.directory=process.cwd(), and body containing noReply: true plus a single ignored text part; there is no toast or chat fallback."
+      payload_removals: "Production routing notices no longer use client.tui.showToast(...); if session.prompt is unavailable or fails, the notice is silently skipped instead of falling back to toast/chat.message."
+      routing_invariant: "Routing priority and output.options.model behavior stay unchanged: OpenCode agent.model > plugin complexity_models[tier] > current selected model."
+      fallback_guard: "Do not reintroduce client.tui.showToast(...), chat.message, debug_model_routing, role_models, agent_complexity_models, or per-agent model IDs; silently skip when session.prompt is unavailable or rejected."
+      copy_contract: English-only multiline copy includes Agent, Tier, Source, Model, and Signals when available from reliable routing payload fields; it does not guess provider, environment, or user message content.
+      critical_role_policy: "Active policy is limited boost/hint, not fixed complex floor: critical roles boost simple to medium, keep medium as hint-only, and require high/critical risk, productionImpact, securitySensitive, requiresApproval, requiresDesignValidation, reviewDepth deep, or original high/complex signals for complex."
+      reviewer_warning_cleanup: "Handled stale plan/context complex-floor narrative; hint-only notices now say critical role hint, true simple->medium upgrades say critical role boost."
     verification_results:
-      test: "npm test passed: 43 tests, 43 passed."
-      typecheck: "npm run typecheck passed."
-      compile: "npm run compile passed."
-      lint: "npm run lint passed."
-      validate_no_model_ids: "npm run validate:no-model-ids passed."
-      validate_dist: "npm run validate:dist passed."
+      test: "Implementer reported npm test 50/50 passed for multiline notice; later policy adjustment passed npm test 53/53, and hint/boost copy fix passed npm test 54/54. Focused npm test -- test/model-routing-hook.test.ts remains a low-risk non-compatible invocation for the current script, not a product failure."
+      typecheck: "Implementer and reviewer reported npm run typecheck passed."
+      compile: "npm run compile passed for multiline notice and again after hint/boost copy fix."
+      lint: "Implementer reported npm run lint passed; policy adjustment lint also passed."
+      validate_no_model_ids: "Implementer and reviewer reported npm run validate:no-model-ids passed; hint/boost copy fix validation also passed."
+      validate_dist: "Implementer and reviewer reported npm run validate:dist passed."
     review_results:
       status: passed_no_blocking_findings
       continue_to_wave_9: true
       warnings:
-        - "session.prompt with ignored: true is not a true non-context toast equivalent and must not be documented as one."
-        - "Plugin instance reconstruction can clear in-memory dedup state and allow a repeated notification later in the broader workflow."
-        - "Host support can differ between direct-shape session.prompt and SDK path/body prompt shapes, so compatibility fallback must remain documented."
+        - Repo-side code still uses session.prompt-only hidden-context payload semantics with no toast/chat fallback.
+        - Standard npm test passed; npm test -- test/model-routing-hook.test.ts is not suitable for the current test script and is treated as a low-risk command-shape warning.
+        - Model displays the final resolved model string; if a user-configured model string itself is sensitive, the plugin does not redact it under the current approved decision-information scope.
+        - Stale critical-role fixed complex-floor narrative was found in plan context and has been cleaned or marked superseded; remaining risk is historical entries being misread if status markers are ignored.
       next_wave_guards:
-        - "Document session-first default behavior, the absence of debug_model_routing, and the toast decision as superseded history."
-        - "Do not substitute chat.message for session notification behavior."
+        - "Document the active production behavior as ACP-like client.session.prompt(...) with noReply: true and ignored:true text-part payload, not toast-only."
+        - "Mark earlier minimal probe and toast-only follow-ups as historical/superseded context only."
+        - "Document the absence of toast/chat production fallbacks and the absence of debug_model_routing, role_models, agent_complexity_models, and per-agent model IDs."
+        - "Do not substitute transcript-visible paths or toast-only behavior back in for production routing notices."
         - "Keep notification dedup scoped to session memory unless stronger persistence is explicitly approved."
-
+        - 'Keep routing notice decision information limited to reliable routing payload fields: agent, tier, source, resolved model, classification reasons, and resolution reason.'
+        - Do not guess provider, environment, or user message content in routing notices.
+        - "Keep active critical-role routing as limited boost/hint only; do not restore fixed complex floor or minimum-tier-to-complex behavior."
   - id: T09
     title: "README, examples, installation docs"
     wave: 9
@@ -701,7 +698,9 @@ tasks:
       - "Target remains GitHub-only with PoC caveats; no npm registry publish claim."
       - "Docs preserve PoC-dependent status for GitHub install, dist, and package-manager conclusions."
     verification: ["npm run validate:no-model-ids", "docs status table review"]
-
+    findings:
+      docs_scope_note: "README.md and AGENTS.md were updated to align with the current verified implementation and documentation boundaries."
+      next_doc_boundary: "Keep future docs aligned with the current behavior: ACP-like session.prompt notice with noReply: true and ignored:true text-part payload, model priority OpenCode agent.model > complexity_models[tier] > current selected model, compile-not-build command naming, and no end-to-end GitHub install/load claim."
   - id: T10
     title: "Optional dist packaging only if necessary"
     wave: 10
@@ -720,11 +719,11 @@ tasks:
       - "If produced, validate:dist freshness and export smoke test pass."
       - "No secrets or concrete model IDs in dist."
     verification: ["npm run build", "npm run validate:dist if applicable", "export smoke test if applicable"]
-
   - id: T11
     title: "Full security and scope review"
     wave: 11
     agent: gem-reviewer
+    status: completed
     dependencies: [T10, T09, T08, T07, T06]
     deps: [T10, T09, T08, T07, T06]
     conflicts_with: []
@@ -749,7 +748,16 @@ tasks:
       - "No overwrite of OpenCode agent.model."
       - "Plan and PRD compliance confirmed."
     verification: ["npm run validate:no-model-ids", "npm run validate:sync", "manual review report"]
-
+    findings:
+      critical_role_strategy: "Reviewer confirmed the five critical roles now share the same more aggressive ladder: simple defaults to medium, medium upgrades to complex earlier on any strong signal or on two or more medium signals, and complex remains complex without becoming fixed highest-tier routing."
+      invariants_preserved: "Routing priority stayed OpenCode agent.model > complexity_models[tier] > current selected model; ACP-like English-only session.prompt notice contract stayed unchanged; forbidden routing dimensions were not introduced."
+      file_scope_note: "Reviewer noted the real touched file set is slightly broader than the implementer summary and also includes src/types.ts plus matching dist artifacts."
+      residual_risk: "The ladder remains heuristic and depends on current signal quality; if upstream semantics or signal quality changes, thresholds may need future retuning."
+    review_results:
+      status: passed_no_blocking_findings
+      continue_to_wave_12: true
+      warnings:
+        - "Low risk: actual changes include src/types.ts and corresponding dist artifacts in addition to the main routing/hook/test files."
   - id: T12
     title: "Verification and commit"
     wave: 12

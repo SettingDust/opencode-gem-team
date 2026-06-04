@@ -121,14 +121,73 @@ describe("complexity classification", () => {
     assert.equal(classifyComplexityTier({ plannerComplexity: "complex", riskLevel: "low" }).tier, "complex")
   })
 
-  it("treats reasoning-critical roles as tier hints, not model mappings", () => {
+  it("boosts critical roles from simple to medium without forcing complex", () => {
     const result = classifyComplexityTier({ roleSlug: "gem-planner", plannerComplexity: "simple" })
 
     assert.equal(result.tier, "medium")
     assert.equal(Object.hasOwn(result, "model"), false)
-    assert.ok(result.reasons.includes("reasoning_critical_role_minimum_medium"))
+    assert.ok(result.reasons.includes("critical_role_boost_simple_to_medium"))
 
+    const orchestrator = classifyComplexityTier({ roleSlug: "gem-orchestrator", plannerComplexity: "simple" })
+    assert.equal(orchestrator.tier, "medium")
+    assert.ok(orchestrator.reasons.includes("critical_role_boost_simple_to_medium"))
+  })
+
+  it("keeps all five critical roles on the same medium escalation policy", () => {
+    const criticalRoles = [
+      "gem-orchestrator",
+      "gem-planner",
+      "gem-debugger",
+      "gem-critic",
+      "gem-reviewer",
+    ]
+
+    for (const roleSlug of criticalRoles) {
+      const escalated = classifyComplexityTier({ roleSlug, plannerComplexity: "medium" })
+      assert.equal(escalated.tier, "complex")
+      assert.ok(escalated.reasons.includes("critical_role_escalate_medium_to_complex"))
+    }
+  })
+
+  it("keeps complex critical roles at complex", () => {
+    assert.equal(classifyComplexityTier({ roleSlug: "gem-reviewer", plannerComplexity: "complex" }).tier, "complex")
     assert.equal(classifyComplexityTier({ roleSlug: "gem-reviewer", riskLevel: "high" }).tier, "complex")
+    assert.equal(classifyComplexityTier({ roleSlug: "gem-debugger", plannerComplexity: "medium" }).tier, "complex")
+    assert.equal(classifyComplexityTier({ roleSlug: "gem-orchestrator", orchestratorComplexity: "HIGH" }).tier, "complex")
+  })
+
+  it("escalates medium critical roles unconditionally", () => {
+    const roles = ["gem-orchestrator", "gem-planner", "gem-debugger", "gem-critic", "gem-reviewer"]
+
+    for (const roleSlug of roles) {
+      const result = classifyComplexityTier({ roleSlug, plannerComplexity: "medium" })
+      assert.equal(result.tier, "complex")
+      assert.ok(result.reasons.includes("critical_role_escalate_medium_to_complex"))
+    }
+  })
+
+  it("escalates medium critical roles even without extra signals", () => {
+    const result = classifyComplexityTier({
+      roleSlug: "gem-reviewer",
+      plannerComplexity: "medium",
+    })
+
+    assert.equal(result.tier, "complex")
+    assert.ok(result.reasons.includes("critical_role_escalate_medium_to_complex"))
+  })
+
+  it("does not drift non-critical role classification", () => {
+    assert.equal(classifyComplexityTier({ roleSlug: "gem-implementer", plannerComplexity: "simple" }).tier, "simple")
+    assert.equal(classifyComplexityTier({ roleSlug: "gem-implementer", plannerComplexity: "medium" }).tier, "medium")
+    assert.equal(classifyComplexityTier({ roleSlug: "gem-implementer", plannerComplexity: "medium", estimatedEffort: 5 }).tier, "medium")
+  })
+
+  it("keeps complex critical roles as complex with hint reason", () => {
+    const result = classifyComplexityTier({ roleSlug: "gem-reviewer", plannerComplexity: "complex" })
+
+    assert.equal(result.tier, "complex")
+    assert.ok(result.reasons.includes("critical_role_hint"))
+    assert.ok(!result.reasons.includes("critical_role_escalate_medium_to_complex"))
   })
 })
 

@@ -5,7 +5,8 @@ const tierRank = {
     complex: 2,
 };
 const rankTier = ["simple", "medium", "complex"];
-const reasoningCriticalRoles = new Set([
+const criticalRoles = new Set([
+    "gem-orchestrator",
     "gem-planner",
     "gem-debugger",
     "gem-critic",
@@ -38,12 +39,18 @@ export function classifyComplexityTier(input = {}) {
     else {
         reasons.push("missing_complexity_signal_default_medium");
     }
-    if (input.roleSlug !== undefined && reasoningCriticalRoles.has(input.roleSlug)) {
-        if (rank < tierRank.medium)
-            reasons.push("reasoning_critical_role_minimum_medium");
-        else
-            reasons.push("reasoning_critical_role_hint");
-        rank = Math.max(rank, tierRank.medium);
+    if (input.roleSlug !== undefined && criticalRoles.has(input.roleSlug)) {
+        if (rank === tierRank.simple) {
+            rank = tierRank.medium;
+            reasons.push("critical_role_boost_simple_to_medium");
+        }
+        else if (rank === tierRank.medium) {
+            rank = tierRank.complex;
+            reasons.push("critical_role_escalate_medium_to_complex");
+        }
+        else {
+            reasons.push("critical_role_hint");
+        }
     }
     const riskTier = riskUpgradeTier(input);
     if (riskTier !== undefined && tierRank[riskTier] > rank) {
@@ -71,11 +78,7 @@ function mapPlannerComplexity(value) {
     return normalizeKnownTier(value);
 }
 function riskUpgradeTier(input) {
-    const riskText = [input.riskLevel, input.riskScore, input.overallRiskLevel]
-        .filter((value) => value !== undefined)
-        .map(String)
-        .join(" ")
-        .toLowerCase();
+    const riskText = normalizedRiskText(input);
     if (riskText.includes("critical") || riskText.includes("high"))
         return "complex";
     if (riskText.includes("medium") || riskText.includes("moderate"))
@@ -94,6 +97,13 @@ function riskUpgradeTier(input) {
         return "medium";
     }
     return undefined;
+}
+function normalizedRiskText(input) {
+    return [input.riskLevel, input.riskScore, input.overallRiskLevel]
+        .filter((value) => value !== undefined)
+        .map(String)
+        .join(" ")
+        .toLowerCase();
 }
 function atLeast(value, threshold) {
     return typeof value === "number" && Number.isFinite(value) && value >= threshold;
