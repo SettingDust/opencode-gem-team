@@ -6,6 +6,7 @@ export type SyncedAgentManifestEntry = {
     name?: string;
     sourceUrl: string;
     rawUrl: string;
+    upstreamRef: string;
     upstreamCommit: string;
     sourceBodySha256: string;
     bodyPath: string;
@@ -24,7 +25,7 @@ export type SyncedAgentsManifest = {
         owner: string;
         repo: string;
         path: string;
-        branch: string;
+        ref: string;
         commit: string;
     };
     syncBatchId: string;

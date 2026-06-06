@@ -25,6 +25,7 @@ export type SyncedAgentManifestEntry = {
   name?: string
   sourceUrl: string
   rawUrl: string
+  upstreamRef: string
   upstreamCommit: string
   sourceBodySha256: string
   bodyPath: string
@@ -44,7 +45,7 @@ export type SyncedAgentsManifest = {
     owner: string
     repo: string
     path: string
-    branch: string
+    ref: string
     commit: string
   }
   syncBatchId: string
@@ -61,6 +62,7 @@ const FORBIDDEN_KEY_PATTERN = /\b(?:role_models|agent_complexity_models|provider
 const FORBIDDEN_MODEL_ID_PATTERN = /\bmodel\b\s*[:=]\s*["'`](?!@)[a-z][a-z0-9-]*\/[a-z0-9][a-z0-9._-]*["'`]/i
 const SECRET_PATTERN = /\b(?:api[_-]?key|access[_-]?token|auth[_-]?token|private[_-]?key|client[_-]?secret)\s*[:=]\s*['"`][^'"`]+['"`]/i
 const SHA256_HEX_PATTERN = /^[a-f0-9]{64}$/
+const COMMIT_SHA_PATTERN = /^[a-f0-9]{40}$/
 
 export function validateManifest(manifest: SyncedAgentsManifest): SyncValidationResult {
   const errors: string[] = []
@@ -76,7 +78,8 @@ export function validateManifest(manifest: SyncedAgentsManifest): SyncValidation
     errors.push("manifest.source must point to mubaidr/gem-team")
   }
   if (manifest.source?.path !== ".apm/agents") errors.push("manifest.source.path must be .apm/agents")
-  if (!manifest.source?.commit) errors.push("manifest.source.commit is required")
+  if (!manifest.source?.ref) errors.push("manifest.source.ref is required")
+  if (!COMMIT_SHA_PATTERN.test(manifest.source?.commit ?? "")) errors.push("manifest.source.commit must be a resolved commit SHA")
 
   const missing = expected.filter((slug) => !actualSet.has(slug))
   const extra = actual.filter((slug) => !expectedSet.has(slug))
@@ -91,7 +94,7 @@ export function validateManifest(manifest: SyncedAgentsManifest): SyncValidation
   }
 
   for (const entry of manifest.agents) {
-    validateEntry(entry, errors)
+    validateEntry(entry, manifest, errors)
   }
 
   const orchestrator = manifest.agents.find((agent) => agent.slug === "gem-orchestrator")
@@ -107,11 +110,13 @@ export function validateManifest(manifest: SyncedAgentsManifest): SyncValidation
   return errors.length === 0 ? { valid: true, errors: [] } : { valid: false, errors }
 }
 
-function validateEntry(entry: SyncedAgentManifestEntry, errors: string[]): void {
+function validateEntry(entry: SyncedAgentManifestEntry, manifest: SyncedAgentsManifest, errors: string[]): void {
   if (entry.localSlug !== entry.slug) errors.push(`${entry.slug}: localSlug must match slug`)
   if (!entry.sourceUrl?.startsWith("https://github.com/mubaidr/gem-team/")) errors.push(`${entry.slug}: sourceUrl must point to GitHub upstream`)
   if (!entry.rawUrl?.startsWith("https://raw.githubusercontent.com/mubaidr/gem-team/")) errors.push(`${entry.slug}: rawUrl must point to read-only GitHub raw upstream`)
-  if (!entry.upstreamCommit) errors.push(`${entry.slug}: upstreamCommit is required`)
+  if (entry.upstreamRef !== manifest.source?.ref) errors.push(`${entry.slug}: upstreamRef must match manifest source ref`)
+  if (entry.upstreamCommit !== manifest.source?.commit) errors.push(`${entry.slug}: upstreamCommit must match manifest source commit`)
+  if (!COMMIT_SHA_PATTERN.test(entry.upstreamCommit ?? "")) errors.push(`${entry.slug}: upstreamCommit must be a resolved commit SHA`)
   if (!SHA256_HEX_PATTERN.test(entry.sourceBodySha256 ?? "")) errors.push(`${entry.slug}: sourceBodySha256 must be sha256 hex`)
   if (!entry.bodyPath?.endsWith(`${entry.slug}.agent.md`)) errors.push(`${entry.slug}: bodyPath must reference local agent body`)
   if (!Number.isInteger(entry.bodyBytes) || entry.bodyBytes <= 0) errors.push(`${entry.slug}: bodyBytes must be positive`)
