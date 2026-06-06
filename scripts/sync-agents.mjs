@@ -5,7 +5,7 @@ import path from "node:path"
 const ROOT = process.cwd()
 const OWNER = "mubaidr"
 const REPO = "gem-team"
-const BRANCH = "main"
+const DEFAULT_UPSTREAM_REF = "main"
 const UPSTREAM_PATH = ".apm/agents"
 const OUTPUT_DIR = path.join(ROOT, "agents", "generated")
 const MANIFEST_PATH = path.join(OUTPUT_DIR, "manifest.json")
@@ -30,7 +30,8 @@ const EXPECTED_SLUGS = [
 
 const timestamp = new Date().toISOString()
 const syncBatchId = `gem-team-sync-${timestamp.replace(/[:.]/g, "-")}`
-const upstreamCommit = await resolveUpstreamCommit()
+const upstreamRef = readUpstreamRef()
+const upstreamCommit = await resolveUpstreamCommit(upstreamRef)
 
 await rm(OUTPUT_DIR, { recursive: true, force: true })
 await mkdir(OUTPUT_DIR, { recursive: true })
@@ -38,8 +39,8 @@ await mkdir(OUTPUT_DIR, { recursive: true })
 const agents = []
 
 for (const slug of EXPECTED_SLUGS) {
-  const rawUrl = rawUrlFor(slug, upstreamCommit)
-  const sourceUrl = sourceUrlFor(slug, upstreamCommit)
+  const rawUrl = rawUrlFor(slug, upstreamRef)
+  const sourceUrl = sourceUrlFor(slug, upstreamRef)
   const body = await fetchText(rawUrl, slug)
   const hash = sha256(body)
   const bodyPath = `agents/generated/${slug}.agent.md`
@@ -51,6 +52,7 @@ for (const slug of EXPECTED_SLUGS) {
     name: readFrontmatterName(body) ?? slug,
     sourceUrl,
     rawUrl,
+    upstreamRef,
     upstreamCommit,
     sourceBodySha256: hash,
     bodyPath,
@@ -73,7 +75,7 @@ const manifest = {
     owner: OWNER,
     repo: REPO,
     path: UPSTREAM_PATH,
-    branch: BRANCH,
+    ref: upstreamRef,
     commit: upstreamCommit,
   },
   syncBatchId,
@@ -85,20 +87,30 @@ const manifest = {
 await writeFile(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, "utf8")
 
 console.log(`sync:agents completed ${agents.length} agents -> agents/generated`)
+console.log(`sync:agents upstream ref ${upstreamRef}`)
 console.log(`sync:agents upstream commit ${upstreamCommit}`)
 
-async function resolveUpstreamCommit() {
-  const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/commits/${BRANCH}`
+function readUpstreamRef() {
+  const cliRefIndex = process.argv.indexOf("--upstream-ref")
+  const cliRef = cliRefIndex >= 0 ? process.argv[cliRefIndex + 1] : undefined
+  const ref = cliRef ?? process.env.GEM_TEAM_UPSTREAM_REF ?? DEFAULT_UPSTREAM_REF
+  if (typeof ref !== "string" || ref.trim().length === 0 || ref === "--upstream-ref") throw new Error("--upstream-ref requires a non-empty ref")
+  return ref.trim()
+}
+
+async function resolveUpstreamCommit(ref) {
+  const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/commits/${encodeURIComponent(ref)}`
   try {
     const response = await fetch(apiUrl, {
       method: "GET",
       headers: { "User-Agent": "opencode-gem-team-readonly-sync" },
     })
-    if (!response.ok) return "unknown-public-github-commit-unavailable"
+    if (!response.ok) throw new Error(`failed to resolve upstream ref ${ref}: ${response.status} ${response.statusText}`)
     const data = await response.json()
-    return typeof data.sha === "string" && data.sha.length > 0 ? data.sha : "unknown-public-github-commit-unavailable"
-  } catch {
-    return "unknown-public-github-commit-unavailable"
+    if (typeof data.sha === "string" && data.sha.length > 0) return data.sha
+    throw new Error(`failed to resolve upstream ref ${ref}: missing commit sha`)
+  } catch (error) {
+  throw new Error(`failed to resolve upstream ref ${ref}: ${error instanceof Error ? error.message : String(error)}`)
   }
 }
 
@@ -114,13 +126,11 @@ async function fetchText(url, slug) {
 }
 
 function rawUrlFor(slug, ref) {
-  const safeRef = ref.startsWith("unknown-") ? BRANCH : ref
-  return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${safeRef}/${UPSTREAM_PATH}/${slug}.agent.md`
+  return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${encodeURIComponent(ref)}/${UPSTREAM_PATH}/${slug}.agent.md`
 }
 
 function sourceUrlFor(slug, ref) {
-  const safeRef = ref.startsWith("unknown-") ? BRANCH : ref
-  return `https://github.com/${OWNER}/${REPO}/blob/${safeRef}/${UPSTREAM_PATH}/${slug}.agent.md`
+  return `https://github.com/${OWNER}/${REPO}/blob/${encodeURIComponent(ref)}/${UPSTREAM_PATH}/${slug}.agent.md`
 }
 
 function sha256(text) {

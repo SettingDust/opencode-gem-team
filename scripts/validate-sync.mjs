@@ -27,6 +27,7 @@ const FORBIDDEN_CONFIG_PATTERN = /\b(?:role_models|agent_complexity_models|provi
 const FORBIDDEN_MODEL_PATTERN = /\bmodel\b\s*[:=]\s*["'`](?!@)[a-z][a-z0-9-]*\/[a-z0-9][a-z0-9._-]*["'`]/i
 const SECRET_PATTERN = /\b(?:api[_-]?key|access[_-]?token|auth[_-]?token|private[_-]?key|client[_-]?secret)\s*[:=]\s*['"`][^'"`]+['"`]/i
 const SHA256_HEX_PATTERN = /^[a-f0-9]{64}$/
+const COMMIT_SHA_PATTERN = /^[a-f0-9]{40}$/
 
 const failures = []
 const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8"))
@@ -53,7 +54,8 @@ function validateManifestShape(manifest, errors) {
   if (manifest.schemaVersion !== 1) errors.push("manifest.schemaVersion must be 1")
   if (manifest.source?.owner !== "mubaidr" || manifest.source?.repo !== "gem-team") errors.push("manifest.source must point to mubaidr/gem-team")
   if (manifest.source?.path !== ".apm/agents") errors.push("manifest.source.path must be .apm/agents")
-  if (!manifest.source?.commit) errors.push("manifest.source.commit is required")
+  if (!manifest.source?.ref) errors.push("manifest.source.ref is required")
+  if (!COMMIT_SHA_PATTERN.test(manifest.source?.commit ?? "")) errors.push("manifest.source.commit must be a resolved commit SHA")
   if (!isIsoDateTime(manifest.syncedAt)) errors.push("manifest.syncedAt must be ISO")
   if (!manifest.syncBatchId) errors.push("manifest.syncBatchId is required")
   if (!Array.isArray(manifest.expectedSlugs) || manifest.expectedSlugs.length !== EXPECTED_SLUGS.length || EXPECTED_SLUGS.some((slug, index) => manifest.expectedSlugs[index] !== slug)) {
@@ -78,7 +80,7 @@ function validateEntry(entry, errors) {
   if (entry.localSlug !== entry.slug) errors.push(`${entry.slug}: localSlug must match slug`)
   if (!entry.sourceUrl?.startsWith("https://github.com/mubaidr/gem-team/")) errors.push(`${entry.slug}: sourceUrl must point to upstream`)
   if (!entry.rawUrl?.startsWith("https://raw.githubusercontent.com/mubaidr/gem-team/")) errors.push(`${entry.slug}: rawUrl must point to raw upstream`)
-  if (!entry.upstreamCommit) errors.push(`${entry.slug}: upstreamCommit is required`)
+  if (!COMMIT_SHA_PATTERN.test(entry.upstreamCommit ?? "")) errors.push(`${entry.slug}: upstreamCommit must be a resolved commit SHA`)
   if (!SHA256_HEX_PATTERN.test(entry.sourceBodySha256 ?? "")) errors.push(`${entry.slug}: sourceBodySha256 must be sha256 hex`)
   if (!entry.bodyPath?.endsWith(`${entry.slug}.agent.md`)) errors.push(`${entry.slug}: bodyPath must reference local body`)
   if (!Number.isInteger(entry.bodyBytes) || entry.bodyBytes <= 0) errors.push(`${entry.slug}: bodyBytes must be positive`)
