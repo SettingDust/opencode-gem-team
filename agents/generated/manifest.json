@@ -7,8 +7,8 @@
     "ref": "gem-team-v1.56.0",
     "commit": "0fd8398fcaa2fb01f418e985c8c7ec88cfed460f"
   },
-  "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-  "syncedAt": "2026-06-08T08:22:14.451Z",
+  "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+  "syncedAt": "2026-06-09T06:58:04.903Z",
   "expectedSlugs": [
     "gem-browser-tester",
     "gem-code-simplifier",
@@ -39,8 +39,8 @@
       "sourceBodySha256": "21245e8459ea89694cdae01fe77e802d092e525887423f549fb63863baf7858f",
       "bodyPath": "agents/generated/gem-browser-tester.agent.md",
       "bodyBytes": 4877,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -54,8 +54,8 @@
       "sourceBodySha256": "e7dfb616aa924c40fa9b5bf01afad61f306ad9a0565dfa244bb4b649c233d6e8",
       "bodyPath": "agents/generated/gem-code-simplifier.agent.md",
       "bodyBytes": 5420,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -69,8 +69,8 @@
       "sourceBodySha256": "9866d35dc26d19c1d5b37ec5e1f2ab8fc2f63bba4455c42fed48cfd9c548dc37",
       "bodyPath": "agents/generated/gem-critic.agent.md",
       "bodyBytes": 4680,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -84,8 +84,8 @@
       "sourceBodySha256": "97321b4520a3930e4cb92c98ca440b06c510b8a217767709a078b7ed9519f3d2",
       "bodyPath": "agents/generated/gem-debugger.agent.md",
       "bodyBytes": 5376,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -99,8 +99,8 @@
       "sourceBodySha256": "0168c3f9da08dbda92185106b11f679061caad2ef5ccaf783d7cc369f7edc994",
       "bodyPath": "agents/generated/gem-designer-mobile.agent.md",
       "bodyBytes": 10315,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -114,8 +114,8 @@
       "sourceBodySha256": "5f24c5375e04eefba18ac2aff507455d0203ea5e3d8bf5e906695db56390c710",
       "bodyPath": "agents/generated/gem-designer.agent.md",
       "bodyBytes": 8621,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -129,8 +129,8 @@
       "sourceBodySha256": "0a21c9497e83dbaa1e5cbeb70091d640d342ee0ef1f8b2fe14774d6ec71282ef",
       "bodyPath": "agents/generated/gem-devops.agent.md",
       "bodyBytes": 6819,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -144,8 +144,8 @@
       "sourceBodySha256": "4fe5d159f254d1e0c729d093d3fbe2c9480ef2fcadd4a47d80ddb89300934d15",
       "bodyPath": "agents/generated/gem-documentation-writer.agent.md",
       "bodyBytes": 6093,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -159,8 +159,8 @@
       "sourceBodySha256": "81d1518b3e44b295c0d5006d3fd1bf6f28313b31dbd835d60c7f4300a876e9a9",
       "bodyPath": "agents/generated/gem-implementer-mobile.agent.md",
       "bodyBytes": 5804,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -174,8 +174,8 @@
       "sourceBodySha256": "63cbf959aff53d3aa5f6ad10c16e655ea55791ea769b0f5b6d76a73a18821bee",
       "bodyPath": "agents/generated/gem-implementer.agent.md",
       "bodyBytes": 5238,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -189,8 +189,8 @@
       "sourceBodySha256": "3ad41827d61fbae34a54a9cea4eba66053fedadf131975b7ee2a7a85b1ae7736",
       "bodyPath": "agents/generated/gem-mobile-tester.agent.md",
       "bodyBytes": 6398,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -204,8 +204,8 @@
       "sourceBodySha256": "abc0452bbf5cbf838de19b9184752ac9f734694c621ee69defb8d7b08f1ab08b",
       "bodyPath": "agents/generated/gem-orchestrator.agent.md",
       "bodyBytes": 16479,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {
         "routingTargets": [
           "gem-researcher",
@@ -237,8 +237,8 @@
       "sourceBodySha256": "6436515bcd3ba0d713de11996a67602847321a75b8c1504ef0ca96b3280235ad",
       "bodyPath": "agents/generated/gem-planner.agent.md",
       "bodyBytes": 23280,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -252,8 +252,8 @@
       "sourceBodySha256": "2f95d79f83117faee37da98a1dfda4e4776b82ce0a3270449daaebd7306b3e0d",
       "bodyPath": "agents/generated/gem-researcher.agent.md",
       "bodyBytes": 3998,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -267,8 +267,8 @@
       "sourceBodySha256": "360eab4005b0975cb77bd8ef2fda1f7ca5f309e8851dc195b51389c081848362",
       "bodyPath": "agents/generated/gem-reviewer.agent.md",
       "bodyBytes": 5318,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     },
     {
@@ -282,8 +282,8 @@
       "sourceBodySha256": "0f6563604e013960849ab28cb3802850f3d7027764b155334c373eab9f3216a4",
       "bodyPath": "agents/generated/gem-skill-creator.agent.md",
       "bodyBytes": 5531,
-      "syncBatchId": "gem-team-sync-2026-06-08T08-22-14-451Z",
-      "syncedAt": "2026-06-08T08:22:14.451Z",
+      "syncBatchId": "gem-team-sync-2026-06-09T06-58-04-903Z",
+      "syncedAt": "2026-06-09T06:58:04.903Z",
       "metadata": {}
     }
   ]
