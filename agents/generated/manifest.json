@@ -201,9 +201,9 @@
       "rawUrl": "https://raw.githubusercontent.com/mubaidr/gem-team/main/.apm/agents/gem-orchestrator.agent.md",
       "upstreamRef": "main",
       "upstreamCommit": "78ba147b5529176d0854427a4c2ee86a4de0a870",
-      "sourceBodySha256": "f4db4725a2fb28c4060d3dd759944bdfc571fe3cbfebbabaadb9d1b1a07d71e9",
+      "sourceBodySha256": "d97d38ce86aec07b136acce65cf40eb1a835eb4fab162d214045dec12a820568",
       "bodyPath": "agents/generated/gem-orchestrator.agent.md",
-      "bodyBytes": 19474,
+      "bodyBytes": 20031,
       "syncBatchId": "gem-team-sync-2026-06-13T19-19-55-958Z",
       "syncedAt": "2026-06-13T19:19:55.958Z",
       "metadata": {
