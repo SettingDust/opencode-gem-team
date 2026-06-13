@@ -14,23 +14,12 @@
 - Syncs upstream agent bodies from `mubaidr/gem-team/.apm/agents/*.agent.md`.
 - Registers the canonical `gem-*` agents in OpenCode.
 - Keeps `gem-orchestrator` as the entry agent, but never as its own child/subagent.
-- Resolves model tiers through the priority chain:
-
-```text
-OpenCode agent.model > plugin complexity_models[tier] > current selected model
-```
-
-- Uses an ACP-like session notice for routing decisions:
-  - `client.session.prompt(...)`
-  - `noReply: true`
-  - ignored text part
-  - English-only decision summary
+- Preserves existing user `agent.model` values while injecting generated agent defaults.
 
 ## Key invariants
 
 - Do **not** add `role_models`, `agent_complexity_models`, per-agent model overrides, or provider-side routing.
 - Do **not** hardcode concrete model IDs in docs or code examples.
-- Do **not** switch production notices to `client.tui.showToast` or `chat.message`.
 - Do **not** let generated defaults override an existing user `agent.model`.
 - Do **not** let `gem-orchestrator` route to itself.
 - Preserve upstream agent behavior; only do OpenCode-compatible conversion.
@@ -41,14 +30,13 @@ OpenCode agent.model > plugin complexity_models[tier] > current selected model
 | --- | --- |
 | `src/index.ts` | Plugin entrypoint |
 | `src/hooks/` | OpenCode hook implementations |
-| `src/routing/` | Complexity/tier resolution helpers |
 | `src/agents/` | Generated agent manifests/loaders |
 | `src/sync/` | Sync validation helpers |
 | `scripts/` | Validation/sync scripts |
 | `docs/PRD.md` | Product requirements |
 | `docs/installation-poc.md` | Installation PoC evidence and boundaries |
 | `examples/opencode.json.example` | Example OpenCode plugin config |
-| `test/` | Node test coverage for routing, sync, config, and package-scripts |
+| `test/` | Node test coverage for sync, config, dist validation, and package-scripts |
 
 ## Working commands
 

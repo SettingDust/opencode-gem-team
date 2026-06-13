@@ -20,7 +20,6 @@ This document records only evidence that was obtained without real provider/API 
 | GitHub source syntax          | Format observed / end-to-end install Pending | User-approved read-only inspection of the user's global OpenCode config found a plugin entry string with redacted form `"plugin": ["github:<owner>/<repo>#<ref>"]`. | This proves only an observed config entry format. It does not prove this repo installs or loads from GitHub, nor package-manager lifecycle or dist behavior. Do not publish a final command. |
 | `dist` need                   | Partial/Prepared | Because this package's package entrypoints point to `./dist/src/index.js`, package-style installs require `dist/src` to exist. `npm run compile` creates it and `npm run validate:dist` checks package exports and import smoke. | Whether GitHub remote install specifically needs committed `dist/src` remains dependent on the unverified GitHub install path. |
 | Git dependency lifecycle prep | Fixed in package shape | The GitHub install failure was caused by npm pacote treating `package.json` `scripts.build` as a git-dependency preparation trigger and attempting an inner `npm install` spawn during OpenCode plugin installation. The script is now named `compile`, and `npm run validate:package-scripts` rejects `build`, `prepare`, `prepack`, `preinstall`, `install`, and `postinstall`. | This package-side fix avoids the known pacote prep trigger; remote install/load should still be re-run after publishing the changed package shape. |
-| AC-20 actual request mutation | Partial/Pending  | Tests prove typed/mock `chat.params` mutation of `output.options.model` for opaque complexity model strings only.                                                                                                              | No real provider/API call was made; actual OpenCode runtime request model mutation is not verified.                            |
 
 ## Dist strategy decision
 
@@ -31,7 +30,7 @@ The repo now exposes OpenCode-compatible package entrypoints via `main` and `exp
 - package entrypoints target `./dist/src/*`;
 - required built entrypoint and declaration files exist;
 - `dist/src/index.js` can be imported and exposes a PluginModule-like object with an id and server function;
-- dist source output has no obvious secret-like API key assignments or provider-style model assignments.
+- dist source output has no obvious secret-like API key assignments, provider-style model assignments, or deleted routing modules.
 
 The project still does **not** claim that GitHub source install is fully verified. If a later GitHub PoC proves a different package manager path, this strategy should be revised with new evidence.
 

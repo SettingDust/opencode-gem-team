@@ -23,8 +23,6 @@ const forbiddenDistRules = [
 ]
 
 const defensiveValidationFiles = new Set([
-  path.normalize("dist/src/routing/resolve-model.js"),
-  path.normalize("dist/src/routing/resolve-model.d.ts"),
   path.normalize("dist/src/sync/validation.js"),
   path.normalize("dist/src/sync/validation.d.ts"),
 ])
