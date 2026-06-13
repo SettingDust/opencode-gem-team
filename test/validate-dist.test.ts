@@ -29,11 +29,11 @@ describe("validate:dist forbidden feature scan", () => {
     ])
   })
 
-  it("allows forbidden names only in defensive validation code", async () => {
+  it("allows forbidden names only in sync validation code", async () => {
     const fixture = await mkdtemp(path.join(os.tmpdir(), "validate-dist-allowlist-"))
-    const distSrc = path.join(fixture, "dist", "src", "routing")
+    const distSrc = path.join(fixture, "dist", "src", "sync")
     await mkdir(distSrc, { recursive: true })
-    const file = path.join(distSrc, "resolve-model.js")
+    const file = path.join(distSrc, "validation.js")
     await writeFile(file, [
       "const FORBIDDEN_CONFIG_KEYS = [",
       "  'role_models',",

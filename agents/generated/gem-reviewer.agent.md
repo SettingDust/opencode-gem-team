@@ -55,10 +55,6 @@ IMPORTANT: Batch/join dependency-free steps; serialize only true dependencies wh
   - Wave parallelism, conflicts_with not parallel.
   - Wave assignment: tasks with no dependencies are in wave 1.
   - Tasks have verification + acceptance_criteria.
-  - Test file inclusion: if acceptance_criteria requires tests, verify target_files includes corresponding test file using pattern matching.
-  - Report missing test files as non-critical findings.
-  - PRD alignment, valid agents.
-  - Tech stack: context_envelope.tech_stack exists and is non-empty.
   - Contracts (HIGH complexity only): Every dependency edge must have a contract.
   - Diagnose-then-fix: every debugger task has a paired implementer task in a later wave.
 - Status:
@@ -120,11 +116,14 @@ Return ONLY valid JSON. CRITICAL: Omit nulls, empty arrays, zero values.
 
 ## Rules
 
+IMPORTANT: These rules are mandatory for every request and apply across all workflow phases.
+
 ### Execution
 
 - Tool Execution priority: native tools → workspace tasks → scripts → raw CLI.
-- Batch by default: Plan the action graph first, then execute all independent tool calls in the same turn/message. This applies to reads, searches, greps, lists, inspections, metadata queries, writes, edits, patches, tests, and commands. Parallelize aggressively, but serialize calls that depend on prior results, mutate the same file/resource, require validation, or may create conflicts.
-- Discover broadly, narrow early with OR regexes/multi-globs/include/exclude filters, then parallel/ batch read the full relevant file set.
+- Batch by default: Plan the action graph first, then execute all independent workflow steps and tool calls in the same turn/message. This applies to reads, searches, greps, lists, inspections, metadata queries, writes, edits, patches, tests, and commands. Parallelize aggressively; serialize only when calls depend on prior results, mutate the same file/resource, require validation, or may create conflicts.
+- Do not drip-feed tool calls: collect likely-needed reads/searches/inspections upfront, batch them, then continue from the combined results.
+- Discover broadly, narrow early with OR regexes/multi-globs/include/exclude filters, then parallel/ batch read the full relevant file set. Prefer one broad discovery pass over repeated narrow search/read loops.
 - Execute autonomously; ask only for true blockers.
 - Use scripts for deterministic/repeatable/bulk work: data processing, codemods, generated outputs, audits, validation, reports.
   - Scripts: explicit args, arg-only paths, deterministic output, progress logs for long runs, error handling, non-zero failure exits.

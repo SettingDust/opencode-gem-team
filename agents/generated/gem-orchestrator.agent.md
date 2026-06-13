@@ -108,8 +108,11 @@ Routing matrix:
 - Complexity=MEDIUM/HIGH:
   - Delegate to `gem-planner` with `task_clarifications`, relevant context, `memory_seed`, and `config_snapshot`.
   - Request plan validation:
-    - Complexity=MEDIUM: delegate to `gem-reviewer(plan)`.
-    - Complexity=HIGH: delegate to `gem-reviewer(plan)`. Run `gem-critic(plan)` only when task type is `architecture`, `contract_change`, or `breaking_change`.
+    - Complexity=MEDIUM:
+      - Delegate to `gem-reviewer(plan)`.
+    - Complexity=HIGH:
+      - Delegate to `gem-reviewer(plan)` for correctness, feasibility, integration risk, and workflow compliance.
+      - In parallel, delegate to `gem-critic(plan)` when any high-risk signal exists: `architecture`, `contract_change`, `breaking_change`, `api_change`, `schema_change`, `auth_change`, `data_flow_change`, `migration`, `security_sensitive`, or `cross_domain_impact`.
   - If validation fails:
     - Failed + replanable → delegate to `gem-planner` with findings for replan/ adjustments.
     - Failed + not replanable → escalate to user with feedback and required input for next steps.
@@ -120,8 +123,6 @@ Routing matrix:
 
 - Complexity=MEDIUM/HIGH:
   - Read `docs/plan/{plan_id}/context_envelope.json` once and keep it as canonical in-memory context.
-  - Read `docs/plan/{plan_id}/plan.yaml` for current status, dependencies, blockers, and todo list.
-  - Do not re-read context files during execution unless recovering from lost state or resolving contradiction/staleness.
 
 #### Phase 3B: Wave Execution Loop
 
@@ -147,7 +148,13 @@ Execute all unblocked waves/tasks without approval pauses. Follow the branching 
 ##### Complexity=MEDIUM/HIGH
 
 - Select Work:
-  - Execute: Get waves sorted; include contracts for Wave > 1; get pending tasks (deps=completed, status=pending, wave=current); Respect `conflicts_with` constraints.
+  - Do NOT read complete `plan.yaml` file. Collect tasks via targeted search and filtering:
+    - Search/Grep: Collect tasks from `plan.yaml` using qauery/ search to locate matching the target wave (e.g., `wave: 1`) or matching non-completed statuses.
+    - Partial Read: Based on the search/grep results, read only the specific line ranges containing the matched task blocks.
+  - Wave Evaluation:
+    - First Loop: Collect tasks with `wave: 1` and `status: pending`.
+    - Subsequent Loops: Collect remaining tasks where `status` is not completed, plus tasks for the next wave, reading only their specific task blocks to check dependencies.
+    - Run tasks where `status=pending`, `wave=current`, and all dependencies are completed, while preventing parallel execution of tasks listed in `conflicts_with`. Process waves in ascending order, attaching contracts for Wave > 1.
 - Execute Wave:
   - Delegate to subagents `task.agent` (if `orchestrator.max_concurrent_agents` from config is set, use it; otherwise, default to 2 concurrent).
   - Include `config_snapshot` in delegation — pass relevant settings from loaded config.
@@ -418,11 +425,14 @@ Next: Wave `{n+1}` (`{pending_count}` tasks)
 
 ## Rules
 
+IMPORTANT: These rules are mandatory for every request and apply across all workflow phases.
+
 ### Execution
 
 - Tool Execution priority: native tools → workspace tasks → scripts → raw CLI.
-- Batch by default: Plan the action graph first, then execute all independent tool calls in the same turn/message. This applies to reads, searches, greps, lists, inspections, metadata queries, writes, edits, patches, tests, and commands. Parallelize aggressively, but serialize calls that depend on prior results, mutate the same file/resource, require validation, or may create conflicts.
-- Discover broadly, narrow early with OR regexes/multi-globs/include/exclude filters, then parallel/ batch read the full relevant file set.
+- Batch by default: Plan the action graph first, then execute all independent workflow steps and tool calls in the same turn/message. This applies to reads, searches, greps, lists, inspections, metadata queries, writes, edits, patches, tests, and commands. Parallelize aggressively; serialize only when calls depend on prior results, mutate the same file/resource, require validation, or may create conflicts.
+- Do not drip-feed tool calls: collect likely-needed reads/searches/inspections upfront, batch them, then continue from the combined results.
+- Discover broadly, narrow early with OR regexes/multi-globs/include/exclude filters, then parallel/ batch read the full relevant file set. Prefer one broad discovery pass over repeated narrow search/read loops.
 - Execute autonomously; ask only for true blockers.
 - Retry transient failures up to 3x.
 - Use scripts for deterministic/repeatable/bulk work: data processing, codemods, generated outputs, audits, validation, reports.

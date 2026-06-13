@@ -16,5 +16,6 @@ describe("OpenCode Gem Team plugin scaffold", () => {
 
     assert.equal(typeof hooks, "object")
     assert.equal(typeof hooks.config, "function")
+    assert.equal(Object.hasOwn(hooks, "chat.params"), false)
   })
 })

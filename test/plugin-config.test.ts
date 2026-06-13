@@ -19,13 +19,14 @@ describe("Gem Team config hook injection", () => {
   })
 
   it("uses the plugin config hook to inject agents", async () => {
-    const hooks = await plugin.server({} as never)
+    const hooks = await plugin.server({} as never, { complexity_models: { medium: "legacy-tier-model" } })
     const config: OpenCodeConfigWithAgents = {}
 
     await hooks.config?.(config as never)
 
     assert.equal(Object.keys(config.agent ?? {}).length, GEM_TEAM_AGENT_COUNT)
     assert.ok(config.agent?.["gem-orchestrator"])
+    assert.equal(Object.hasOwn(hooks, "chat.params"), false)
   })
 
   it("marks orchestrator primary and all other generated agents as subagents", () => {
