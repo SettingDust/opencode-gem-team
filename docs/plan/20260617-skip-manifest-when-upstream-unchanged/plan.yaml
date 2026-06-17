@@ -1,0 +1,269 @@
+plan_id: 20260617-skip-manifest-when-upstream-unchanged
+objective: 修复 sync-agents 行为：上游没有实际更新时不要更新 agents/generated/manifest.json；修复后提交，触发一次 sync action，再把远端结果更新到本地。
+created_at: "2026-06-17T00:00:00+08:00"
+created_by: gem-planner
+status: completed
+tldr: |
+  中等复杂度同步脚本修复计划：先对 scripts/sync-agents.mjs 增加稳定内容比较，确保 upstream ref/commit、slug 清单、agent body/hash/bytes/metadata 等稳定字段不变时直接 no-op，不删除/重写 agents/generated，也不刷新 syncBatchId/syncedAt；再补幂等与真实变更测试；最后执行完整验证、提交、触发 GitHub sync workflow，并将远端 action 结果拉回本地。
+
+plan_metrics:
+  wave_1_task_count: 1
+  total_dependencies: 5
+  risk_score: medium
+quality_warnings:
+  - sync:agents 依赖 GitHub 网络与上游 release/tag；执行阶段需区分脚本缺陷与网络/权限失败。
+    - workflow trigger/pull 依赖 gh CLI 认证、仓库写权限与分支策略；T4 必须让 commit/push/workflow/pull 使用同一个已推送 ref，若必须使用 main 但当前未获直接 main 推送/合并许可，应阻塞并请求用户批准。
+
+open_questions:
+  - question: 当前 gh CLI 是否已认证且有权限推送当前分支、触发 sync-agents.yml 并读取 workflow run 结果？
+    context: 用户允许使用 gh CLI；执行阶段应默认选择当前分支作为 workflow_ref，在提交并推送后验证远端 ref 包含该修复提交再触发 workflow。若仓库策略要求 workflow 只能在 main 上有意义，但当前分支不是 main 且没有直接 main 推送/合并批准，则必须阻塞并请求用户批准。
+    type: research
+    affects:
+      - T4-commit-trigger-and-pull
+
+pre_mortem:
+  overall_risk_level: medium
+  critical_failure_modes:
+    - scenario: no-op 比较仍包含 syncedAt/syncBatchId 等易变字段，导致 manifest-only diff 继续出现。
+      likelihood: medium
+      impact: high
+      mitigation: 实现稳定化比较函数，显式排除顶层与 entry 级 syncedAt/syncBatchId，只比较 upstreamRef/upstreamCommit/sourceBodySha256/bodyBytes/bodyPath/name/metadata 等稳定字段。
+    - scenario: no-op 过早返回，错过新增/删除 canonical slug 或 metadata/routingTargets 变化。
+      likelihood: medium
+      impact: high
+      mitigation: proposed manifest 必须完整 fetch/计算所有 EXPECTED_SLUGS 后再比较；expectedSlugs 和每个 entry 的稳定字段都参与比较。
+    - scenario: 为测试幂等性引入大量网络 mocking 或重构脚本，扩大风险。
+      likelihood: medium
+      impact: medium
+      mitigation: 保持最小改动；优先提取纯函数或给脚本加可测试 fetch/IO 注入点，只覆盖 no-op 与真实 body 变更两个关键路径。
+    - scenario: 本地提交后 workflow 产生新的远端提交，执行者忘记 pull/rebase 导致本地落后。
+      likelihood: low
+      impact: medium
+      mitigation: devops 任务必须等待或检查 workflow 结果，再执行 git pull --ff-only 或等价更新，并报告最终本地 HEAD。
+  assumptions:
+    - product 行为没有新增用户可见能力；通常不需要更新 docs/PRD.md。
+    - agents/generated/manifest.json 当前包含 gem-team-v1.66.0 与 resolved commit，可作为幂等 no-op 基线。
+
+tasks:
+  - id: T1-implement-sync-noop-and-tests
+    title: 实现 sync-agents 上游未变 no-op 与回归测试
+    description: 修改 scripts/sync-agents.mjs：先读取旧 manifest，fetch 并计算 proposed 稳定内容；当 upstream ref/commit、canonical expectedSlugs、agent body/hash/bytes/name/path/url/metadata 等稳定字段等价时直接 exit 0，不 rm/rewrite agents/generated，不刷新 syncedAt/syncBatchId。上游真实变化时仍完整重写 output dir、删除过期生成文件并刷新时间/批次。新增测试覆盖连续同内容同步无 diff，以及 body 变化会更新。
+    wave: 1
+    agent: gem-implementer
+    status: completed
+    covers:
+      - sync-script-noop
+      - idempotency-regression
+      - real-change-regression
+    dependencies: []
+    conflicts_with: []
+    context_files:
+      - path: scripts/sync-agents.mjs
+        description: 当前每次生成 timestamp/syncBatchId 并无条件 rm/rewrite output dir，是 manifest-only diff 根因。
+      - path: agents/generated/manifest.json
+        description: 当前生成 manifest；稳定字段比较应排除 syncedAt/syncBatchId。
+      - path: test/sync-validation.test.ts
+        description: 现有 node:test/TypeScript 测试风格参考；可新增 sync script 专用测试文件。
+      - path: package.json
+        description: npm test 会先 compile 后运行 dist/test/**/*.test.js；新增测试应被 tsconfig include 覆盖。
+      - path: scripts/validate-sync.mjs
+        description: manifest shape/body hash 校验；修复后仍需通过。
+    flags:
+      flaky: false
+      retries_used: 0
+      requires_design_validation: false
+    acceptance_criteria:
+      - 上游 ref/commit 与所有 agent 稳定字段不变时，sync:agents 不修改 agents/generated/manifest.json 或 *.agent.md。
+      - 上游真实 body/hash/metadata/slug 清单变化时，sync:agents 仍重写生成目录并刷新 syncedAt/syncBatchId。
+      - 不改变上游 agent body 内容，不新增模型路由、role_models、per-agent model override 或具体模型 ID。
+    success_criteria:
+      - 新增测试能证明同一 upstream 内容连续同步不会产生 manifest-only diff。
+      - 新增测试能证明至少一个 body 变更会更新对应 body/hash/bytes，并刷新 manifest 时间/批次。
+      - npm run validate:sync 与 npm test 通过。
+    tech_stack:
+      - Node.js ESM
+      - TypeScript 5.9.3
+      - node:test
+      - GitHub raw/API fetch
+    test_coverage: 新增 sync script 幂等性与真实变更路径测试；避免真实网络依赖，优先使用可注入 fetch/fixture 或临时目录。
+    handoff:
+      do_not_reinvestigate:
+        - 根因已明确：timestamp/syncBatchId 与无条件 rm/rewrite 导致上游未变仍产生 manifest-only diff。
+        - 不重新设计 Gem Team agent 同步契约，不改变 canonical slugs。
+      required_test_first: 先写能在旧实现下失败的幂等/no-op 测试，再实现最小修复。
+      target_files:
+        - scripts/sync-agents.mjs
+        - test/sync-agents.test.ts
+        - agents/generated/manifest.json
+        - agents/generated/*.agent.md
+      minimal_change: 只修改 sync 脚本与必要测试；生成产物仅在真实上游变化或验证命令需要时更新。
+      acceptance_checks:
+        - npm run sync:agents -- --upstream-ref gem-team-v1.66.0
+        - git diff -- agents/generated/manifest.json agents/generated/*.agent.md
+        - npm run validate:sync
+        - npm test
+
+  - id: T2-full-local-verification
+    title: 执行本地完整验证矩阵
+    description: 在 T1 后执行用户指定验证命令，确认 sync no-op 无生成产物 diff，且 sync validation、测试、typecheck、lint、dist 校验、no-model-ids 均通过。记录失败命令、输出摘要与是否需要返回 T1 修复。
+    wave: 2
+    agent: gem-devops
+    status: completed
+    covers:
+      - local-verification
+      - generated-artifact-check
+      - quality-gates
+    dependencies:
+      - T1-implement-sync-noop-and-tests
+    conflicts_with: []
+    context_files:
+      - path: package.json
+        description: 验证脚本定义；build 命令故意名为 compile。
+      - path: agents/generated/manifest.json
+        description: no-op 验证重点 diff 文件。
+      - path: .github/workflows/sync-agents.yml
+        description: workflow 中也会运行 sync、validate、test、lint、dist validation。
+    flags:
+      flaky: false
+      retries_used: 0
+      requires_design_validation: false
+    acceptance_criteria:
+      - 用户列出的全部 verification_commands 已执行；失败需明确阻塞原因。
+      - sync:agents 对 gem-team-v1.66.0 不产生 manifest-only diff，除非上游确有实际内容变化。
+    success_criteria:
+      - npm run sync:agents -- --upstream-ref gem-team-v1.66.0 后 git diff -- agents/generated/manifest.json agents/generated/*.agent.md 为空或仅包含真实上游 body 变化。
+      - npm run validate:sync、npm test、npm run typecheck、npm run lint、npm run validate:dist、npm run validate:no-model-ids 全部通过。
+    environment: development
+    requires_approval: false
+    devops_security_sensitive: false
+    handoff:
+      do_not_reinvestigate:
+        - 不运行未列出的长流程或发布命令。
+      target_files:
+        - scripts/sync-agents.mjs
+        - test/sync-agents.test.ts
+        - agents/generated/manifest.json
+        - agents/generated/*.agent.md
+      acceptance_checks:
+        - npm run sync:agents -- --upstream-ref gem-team-v1.66.0
+        - git diff -- agents/generated/manifest.json agents/generated/*.agent.md
+        - npm run validate:sync
+        - npm test
+        - npm run typecheck
+        - npm run lint
+        - npm run validate:dist
+        - npm run validate:no-model-ids
+
+  - id: T3-review-sync-fix
+    title: 审查 sync no-op 修复与测试充分性
+    description: 审查 T1/T2 结果，重点确认稳定字段比较正确排除易变字段、真实 upstream 变化不会被吞掉、测试无真实网络依赖、生成产物与 PRD 约束未被破坏。
+    wave: 3
+    agent: gem-reviewer
+    status: completed
+    covers:
+      - correctness-review
+      - regression-risk-review
+      - invariant-check
+    dependencies:
+      - T2-full-local-verification
+    conflicts_with: []
+    context_files:
+      - path: scripts/sync-agents.mjs
+        description: 核心修复审查对象。
+      - path: test/sync-agents.test.ts
+        description: 新增幂等与真实变更测试。
+      - path: docs/PRD.md
+        description: 同步契约、模型边界、orchestrator 自路由禁止等产品约束。
+    flags:
+      flaky: false
+      retries_used: 0
+      requires_design_validation: false
+    acceptance_criteria:
+      - 确认不会再出现上游无更新却只更新 manifest 的提交。
+      - 确认真实上游内容变化仍被同步并提交。
+      - 确认未引入模型路由、provider model ID、secret-like 内容或 orchestrator self-routing。
+    success_criteria:
+      - 审查结论为 approve 或列出必须修复项；必须修复项返回 T1。
+      - reviewer_focus 中的风险维度已全部检查。
+    requires_review: true
+    review_depth: standard
+    review_security_sensitive: false
+    handoff:
+      do_not_reinvestigate:
+        - 根因和推荐设计来自 task_definition；审查重点是实现是否满足，不重开方案大改。
+      target_files:
+        - scripts/sync-agents.mjs
+        - test/sync-agents.test.ts
+        - agents/generated/manifest.json
+      acceptance_checks:
+        - git diff --check
+        - npm test
+        - npm run validate:sync
+
+  - id: T4-commit-trigger-and-pull
+    title: 提交修复、触发 sync action 并同步远端结果到本地
+    description: 使用 Conventional Commit 提交已验证修复；选择 workflow_ref=提交时的当前分支/ref，推送同一 ref，并在触发前验证远端 workflow_ref 已包含本地修复提交（例如 git rev-parse HEAD 等于 refs/remotes/origin/<workflow_ref> 或 git branch -r --contains HEAD 包含 origin/<workflow_ref>）。随后通过 gh workflow run sync-agents.yml --ref <workflow_ref> 触发一次 GitHub sync action；等待/检查同一 ref 上的 workflow run 结果，若 action 推送生成产物提交，则从同一 ref fast-forward 更新本地并确认最终状态。若仓库 workflow/action 只在 main 上有意义，而当前 ref 不是 main 且没有用户明确批准直接 main push/merge，则停止并报告需要批准的阻塞项。
+    wave: 4
+    agent: gem-devops
+    status: completed
+    covers:
+      - git-commit
+      - workflow-dispatch
+      - remote-result-sync
+    dependencies:
+      - T3-review-sync-fix
+    conflicts_with: []
+    context_files:
+      - path: .github/workflows/sync-agents.yml
+        description: workflow_dispatch 入口；会 resolve latest upstream release、运行 sync/validation/test/lint/dist 并按需 commit push。
+      - path: package.json
+        description: workflow 与本地验证脚本来源。
+      - path: AGENTS.md
+        description: Conventional Commits 与验证命令约定。
+    flags:
+      flaky: false
+      retries_used: 0
+      requires_design_validation: false
+    acceptance_criteria:
+      - 修复提交已创建，提交信息使用 Conventional Commits。
+      - commit、push、workflow_dispatch 与 pull/ff-only 全部使用同一个选定 workflow_ref（默认提交时当前分支/ref），不得提交到非 main 分支却用 --ref main 触发旧代码。
+      - 触发 workflow 前已确认远端 workflow_ref 包含修复提交：git rev-parse HEAD 等于远端 ref HEAD，或远端 ref 可证明 contains 该提交。
+      - 已触发一次 sync-agents.yml workflow_dispatch --ref <workflow_ref>；若 gh 认证/权限、推送权限或分支策略不足，明确报告阻塞。
+      - workflow 产生的同一 ref 远端结果已更新到本地，最终本地工作区状态已报告。
+    success_criteria:
+      - git status 在提交前只包含本任务相关变更。
+      - commit message 建议：fix: skip manifest sync when upstream unchanged。
+      - workflow_ref 由 git branch --show-current 或等价方式确定为当前提交所在 ref；git push origin HEAD:<workflow_ref> 或等价命令成功。
+      - gh workflow run sync-agents.yml --ref <workflow_ref> 在确认远端 ref 包含修复提交后成功触发，或权限/策略阻塞证据完整。
+      - git pull --ff-only origin <workflow_ref> 或等价命令完成后，本地 HEAD 与远端 <workflow_ref> 对齐；若 workflow 无变更提交，也需确认无待拉取结果。
+      - 若 workflow/action 仅适用于 main，且当前 workflow_ref 不是 main，则必须在 direct main push/merge 获得用户批准后才能改用 main；否则任务状态为 blocked。
+    environment: development
+    requires_approval: false
+    devops_security_sensitive: false
+    handoff:
+      do_not_reinvestigate:
+        - 不创建 release，不更改 workflow 行为，除非 T1/T3 指出必要。
+      target_files:
+        - scripts/sync-agents.mjs
+        - test/sync-agents.test.ts
+        - agents/generated/manifest.json
+        - agents/generated/*.agent.md
+      acceptance_checks:
+        - git status --short
+        - git commit -m "fix: skip manifest sync when upstream unchanged"
+        - workflow_ref="$(git branch --show-current)"
+        - git push origin HEAD:"$workflow_ref"
+        - git rev-parse HEAD && git ls-remote origin "refs/heads/$workflow_ref"
+        - git branch -r --contains HEAD | grep "origin/$workflow_ref"
+        - gh workflow run sync-agents.yml --ref "$workflow_ref"
+        - gh run list --workflow sync-agents.yml --limit 1
+        - git pull --ff-only origin "$workflow_ref"
+
+reviewer_focus:
+  - idempotency
+  - stable-field-comparison
+  - real-upstream-change-preservation
+  - generated-artifact-integrity
+  - workflow/gh-permission-handling
+
+prd_update_recommended: false

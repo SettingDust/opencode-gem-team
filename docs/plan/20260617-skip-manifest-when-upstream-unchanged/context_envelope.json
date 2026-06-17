@@ -1,0 +1,376 @@
+{
+  "context_envelope": {
+    "meta": {
+      "plan_id": "20260617-skip-manifest-when-upstream-unchanged",
+      "created_at": "2026-06-17T00:00:00+08:00",
+      "last_updated": "2026-06-17T00:00:00+08:00",
+      "version": 1,
+      "source": [
+        "user task_definition",
+        "scripts/sync-agents.mjs",
+        "agents/generated/manifest.json",
+        ".github/workflows/sync-agents.yml",
+        "package.json",
+        "docs/PRD.md",
+        "AGENTS.md"
+      ]
+    },
+    "scope": {
+      "purpose": [
+        "Reusable implementation context for fixing sync-agents idempotency.",
+        "Avoids rediscovering root cause, verification commands, and repo invariants before implementation/DevOps steps."
+      ],
+      "applies_to": [
+        "scripts/sync-agents.mjs no-op behavior",
+        "agents/generated manifest/body generation",
+        "sync-agents GitHub workflow dispatch and remote result sync"
+      ],
+      "non_goals": [
+        "Do not redesign Gem Team agent sync contract.",
+        "Do not add provider/model routing or hardcoded model IDs.",
+        "Do not update PRD unless implementation changes product behavior."
+      ]
+    },
+    "tech_stack": [
+      {
+        "name": "Node.js ESM",
+        "version": "22 in GitHub workflow; local version from environment",
+        "usage_context": "scripts/sync-agents.mjs and validation scripts",
+        "config_files": ["package.json", ".github/workflows/sync-agents.yml"]
+      },
+      {
+        "name": "TypeScript",
+        "version": "5.9.3",
+        "usage_context": "src and test compilation before node:test execution",
+        "config_files": ["tsconfig.json", "package.json"]
+      },
+      {
+        "name": "node:test",
+        "version": "built-in",
+        "usage_context": "dist/test/**/*.test.js after npm run compile",
+        "config_files": ["package.json", "tsconfig.json"]
+      },
+      {
+        "name": "GitHub Actions / gh CLI",
+        "version": "workflow_dispatch",
+        "usage_context": "manual sync action trigger and remote result retrieval",
+        "config_files": [".github/workflows/sync-agents.yml"]
+      }
+    ],
+    "conventions": [
+      "Commit messages use Conventional Commits.",
+      "Build command is named compile, not build, to avoid npm git-dependency preparation hooks.",
+      "npm test runs npm run compile first, then node --test dist/test/**/*.test.js.",
+      "Generated artifacts under agents/generated and dist must remain aligned with validation scripts.",
+      "Docs/PRD.md is the product source of truth; trust code/tests plus PRD when docs diverge."
+    ],
+    "constraints": {
+      "hard": [
+        "When upstream stable content is unchanged, sync-agents must not touch agents/generated/manifest.json or generated agent bodies.",
+        "When upstream content changes, sync-agents must still rewrite generated output and remove obsolete generated files.",
+        "Do not let generated defaults override existing user agent.model.",
+        "Do not let gem-orchestrator route to itself.",
+        "Do not add role_models, agent_complexity_models, per-agent model overrides, provider-side routing, or concrete model IDs.",
+        "T4 DevOps must use one consistent workflow_ref for commit, push, workflow_dispatch, and pull; default workflow_ref is the current branch/ref after the fix commit.",
+        "Before gh workflow run sync-agents.yml --ref <workflow_ref>, the remote workflow_ref must be verified to contain the fix commit; otherwise the workflow may run stale code."
+      ],
+      "soft": [
+        "Keep changes limited to sync script, tests, and generated artifacts only when necessary.",
+        "Prefer no real network in unit tests; use fixture/fetch/IO injection or temp dirs."
+      ],
+      "compatibility": [
+        "Manifest schemaVersion remains 1.",
+        "Manifest must keep upstream source URL, commit, body hash, local slug, syncedAt, and syncBatchId fields for validation compatibility.",
+        "No-op comparison should ignore volatile syncedAt/syncBatchId but preserve them unchanged from previous manifest.",
+        "If sync-agents workflow is only meaningful on main, using main requires explicit user approval for direct main push/merge when branch policy is unknown."
+      ],
+      "security_requirements": [
+        "No secrets, tokens, cookies, API keys, private keys, or provider credentials in code/docs/generated files.",
+        "GitHub workflow uses github.token; local gh auth issues are execution blockers, not code assumptions."
+      ]
+    },
+    "architecture_snapshot": {
+      "key_dirs": {
+        "scripts/": ["sync-agents.mjs owns upstream fetching/generation", "validate-sync.mjs validates generated manifest and bodies"],
+        "agents/generated/": ["generated upstream agent markdown files", "manifest.json sync metadata"],
+        "test/": ["TypeScript node:test suites compiled into dist/test"],
+        ".github/workflows/": ["sync-agents.yml scheduled/manual sync workflow"],
+        "src/sync/": ["runtime TypeScript validation types and manifest validation"]
+      },
+      "patterns": [
+        "EXPECTED_SLUGS/CANONICAL_GEM_TEAM_SLUGS define the canonical 16-agent list in sync and validation layers.",
+        "Validation checks forbidden model/config dimensions and secret-like assignments in manifest/body content.",
+        "Workflow commits only when git diff --cached is non-empty after sync/validation/tests."
+      ],
+      "key_components": [
+        {
+          "name": "sync-agents script",
+          "location": "scripts/sync-agents.mjs:1",
+          "responsibility": [
+            "Resolve upstream ref to commit via GitHub API.",
+            "Fetch each mubaidr/gem-team .apm/agents/*.agent.md raw body.",
+            "Generate agents/generated/*.agent.md and manifest.json with hashes/timestamps/batch metadata."
+          ],
+          "confidence": 0.98
+        },
+        {
+          "name": "generated manifest",
+          "location": "agents/generated/manifest.json:1",
+          "responsibility": [
+            "Records source owner/repo/path/ref/commit, expected slugs, per-agent URLs/hash/bytes/metadata, syncedAt, syncBatchId.",
+            "Currently contains upstream ref gem-team-v1.66.0 and commit 716fc1e77a2f4faf620172ee57d25906bfd5552c."
+          ],
+          "confidence": 0.95
+        },
+        {
+          "name": "sync workflow",
+          "location": ".github/workflows/sync-agents.yml:1",
+          "responsibility": [
+            "Runs on schedule and workflow_dispatch.",
+            "Resolves latest upstream release tag with gh api.",
+            "Runs npm run sync:agents, validation/tests/lint/dist validation, then commits generated changes only when diff exists."
+          ],
+          "confidence": 0.96
+        },
+        {
+          "name": "manifest validation",
+          "location": "scripts/validate-sync.mjs:1 and src/sync/validation.ts:1",
+          "responsibility": [
+            "Ensures canonical slugs, upstream metadata, body hashes, no orchestrator self-routing, no forbidden model/config dimensions, and no secret-like assignments."
+          ],
+          "confidence": 0.94
+        }
+      ]
+    },
+    "research_digest": {
+      "relevant_files": [
+        {
+          "path": "scripts/sync-agents.mjs",
+          "purpose": ["Fetch and generate Gem Team agents"],
+          "why_relevant": ["Root cause is unconditional rm/rewrite and fresh timestamp/syncBatchId generation on every run."],
+          "key_elements": [
+            {
+              "element": "timestamp/syncBatchId",
+              "type": "variable",
+              "location": "scripts/sync-agents.mjs:31",
+              "description": "Volatile values created before any change detection."
+            },
+            {
+              "element": "await rm(OUTPUT_DIR...) / mkdir",
+              "type": "pattern",
+              "location": "scripts/sync-agents.mjs:36",
+              "description": "Unconditionally deletes generated output before knowing whether stable content changed."
+            },
+            {
+              "element": "manifest write",
+              "type": "pattern",
+              "location": "scripts/sync-agents.mjs:72",
+              "description": "Always writes manifest with new syncedAt/syncBatchId."
+            }
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 0.99
+        },
+        {
+          "path": ".github/workflows/sync-agents.yml",
+          "purpose": ["Scheduled/manual upstream sync"],
+          "why_relevant": ["After local fix, user requires triggering this workflow and pulling remote result locally."],
+          "key_elements": [
+            {
+              "element": "workflow_dispatch",
+              "type": "pattern",
+              "location": ".github/workflows/sync-agents.yml:6",
+              "description": "Manual trigger used by gh workflow run sync-agents.yml --ref main."
+            },
+            {
+              "element": "Commit and push changes",
+              "type": "pattern",
+              "location": ".github/workflows/sync-agents.yml:61",
+              "description": "Commits only when staged diff exists; no-op script should make unchanged upstream workflow produce no commit."
+            }
+          ],
+          "security_sensitivity": "internal",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 0.96
+        },
+        {
+          "path": "agents/generated/manifest.json",
+          "purpose": ["Generated sync metadata"],
+          "why_relevant": ["The file that must not change when upstream stable content is unchanged."],
+          "key_elements": [
+            {
+              "element": "source.ref/source.commit",
+              "type": "variable",
+              "location": "agents/generated/manifest.json:7",
+              "description": "Current baseline is gem-team-v1.66.0 at commit 716fc1e77a2f4faf620172ee57d25906bfd5552c."
+            },
+            {
+              "element": "agent sourceBodySha256/bodyBytes/metadata",
+              "type": "pattern",
+              "location": "agents/generated/manifest.json:30",
+              "description": "Stable per-agent fields used to detect real upstream changes."
+            }
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 0.95
+        },
+        {
+          "path": "package.json",
+          "purpose": ["Verification scripts"],
+          "why_relevant": ["Defines required npm scripts and npm test behavior."],
+          "key_elements": [
+            {
+              "element": "scripts",
+              "type": "pattern",
+              "location": "package.json:18",
+              "description": "compile, typecheck, test, lint, sync:agents, validate:sync, validate:dist, validate:no-model-ids."
+            }
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 0.93
+        }
+      ],
+      "patterns_found": [
+        {
+          "name": "stable-content no-op gate",
+          "category": "recommended_design",
+          "confidence": 0.9,
+          "source": "assumption",
+          "example_location": ["scripts/sync-agents.mjs"]
+        },
+        {
+          "name": "canonical slug validation",
+          "category": "validation",
+          "confidence": 0.95,
+          "source": "codebase_analysis",
+          "example_location": ["scripts/validate-sync.mjs", "src/sync/validation.ts", "test/sync-validation.test.ts"]
+        }
+      ],
+      "dependencies": {
+        "internal": [
+          "scripts/sync-agents.mjs -> agents/generated/*",
+          "scripts/validate-sync.mjs -> agents/generated/manifest.json + body files",
+          "src/sync/validation.ts -> src/index.js exports used by tests",
+          ".github/workflows/sync-agents.yml -> package.json scripts"
+        ],
+        "external": [
+          "GitHub API commits endpoint for mubaidr/gem-team",
+          "raw.githubusercontent.com for upstream agent bodies",
+          "gh CLI for workflow dispatch/result inspection"
+        ]
+      },
+      "gotchas": [
+        {
+          "text": "Do not compare JSON-serialized manifest including syncedAt/syncBatchId; those fields are intentionally volatile on real updates but must remain unchanged on no-op.",
+          "confidence": 0.98
+        },
+        {
+          "text": "No-op cannot skip fetching bodies solely because upstreamCommit matches; tags/refs and metadata/routing target extraction should still be validated through proposed stable entries or carefully justified cache semantics.",
+          "confidence": 0.82
+        },
+        {
+          "text": "Unit tests should not rely on live GitHub because network/tag state can make idempotency tests flaky.",
+          "confidence": 0.9
+        },
+        {
+          "text": "After external file edits, run validation commands; if using IDE semantic results later, sync IDE cache first.",
+          "confidence": 0.8
+        },
+        {
+          "text": "Do not commit/push a fix on a non-main branch and then trigger gh workflow run sync-agents.yml --ref main; the workflow ref must already contain the fix commit.",
+          "confidence": 0.99
+        }
+      ],
+      "domain_context": {
+        "security_considerations": [
+          {
+            "area": "Generated manifest/body validation",
+            "location": "scripts/validate-sync.mjs",
+            "concern": "Reject forbidden model/config dimensions, concrete provider model IDs, and secret-like assignments."
+          },
+          {
+            "area": "Workflow trigger",
+            "location": ".github/workflows/sync-agents.yml",
+            "concern": "Uses GitHub token in action; local execution should not expose or write credentials."
+          }
+        ],
+        "testing_patterns": {
+          "framework": "node:test with assert/strict, TypeScript compiled before execution",
+          "coverage_areas": ["manifest validation", "plugin shape/config", "dist validation", "package scripts"],
+          "test_organization": "test/**/*.test.ts compiled into dist/test/**/*.test.js",
+          "mock_patterns": ["Use temp dirs and injected dependencies for script behavior; avoid live network in unit tests."]
+        },
+        "error_handling": "Scripts throw or collect failures, print concise failure messages, and exit non-zero for validation failures.",
+        "data_flow": "sync-agents resolves upstream ref -> fetches 16 raw bodies -> hashes/extracts metadata -> writes agents/generated bodies and manifest -> validate-sync verifies metadata/body hashes -> workflow commits only if git diff exists."
+      },
+      "open_questions": [
+        {
+          "question": "Is gh CLI authenticated with permission to push the selected current workflow_ref, trigger sync-agents.yml on that ref, and read the run result?",
+          "context": "Required for final workflow dispatch and remote result sync; T4 must verify remote workflow_ref contains the fix commit before dispatch. If the action is only meaningful on main, direct main push/merge requires explicit user approval when policy is unknown.",
+          "type": "research",
+          "affects": ["T4-commit-trigger-and-pull"]
+        }
+      ]
+    },
+    "prior_decisions": [
+      {
+        "decision": "Fix should be a no-op gate in sync-agents rather than workflow-only filtering.",
+        "rationale": [
+          "The script itself currently causes manifest-only diffs by regenerating volatile values and rewriting output.",
+          "Local sync command should also be idempotent, not just scheduled CI."
+        ],
+        "evidence": ["scripts/sync-agents.mjs:31", "scripts/sync-agents.mjs:36", "scripts/sync-agents.mjs:87"],
+        "confidence": 0.95,
+        "linked_constraints": ["No manifest update when upstream stable content is unchanged"],
+        "linked_patterns": ["stable-content no-op gate"]
+      },
+      {
+        "decision": "PRD update is not recommended unless implementation changes product behavior.",
+        "rationale": [
+          "This is a maintenance/idempotency bug fix within existing sync contract.",
+          "PRD already requires sync metadata and validation, not a new user-facing feature."
+        ],
+        "evidence": ["docs/PRD.md:64", "docs/PRD.md:107", "docs/PRD.md:197"],
+        "confidence": 0.86,
+        "linked_constraints": ["Source of truth docs/PRD.md; update docs only if product behavior changes"],
+        "linked_patterns": []
+      },
+      {
+        "decision": "T4 uses the current branch/ref as workflow_ref for commit, push, workflow dispatch, and pull unless explicit user approval is obtained to move the fix onto main.",
+        "rationale": [
+          "Reviewer found the prior plan could push a fix to a non-main branch but trigger workflow on main, causing the action to miss the fix commit.",
+          "Verifying the remote workflow_ref contains HEAD before dispatch ensures GitHub Actions runs the fixed workflow/code state."
+        ],
+        "evidence": ["docs/plan/20260617-skip-manifest-when-upstream-unchanged/plan.yaml:T4-commit-trigger-and-pull"],
+        "confidence": 0.99,
+        "linked_constraints": ["commit/push/workflow/pull must use a single selected workflow_ref"],
+        "linked_patterns": []
+      }
+    ],
+    "reuse_notes": [
+      {
+        "path": "scripts/sync-agents.mjs",
+        "trust": "high"
+      },
+      {
+        "path": "agents/generated/manifest.json",
+        "trust": "high"
+      },
+      {
+        "path": ".github/workflows/sync-agents.yml",
+        "trust": "high"
+      },
+      {
+        "path": "test/sync-agents.test.ts",
+        "trust": "low"
+      }
+    ]
+  }
+}
