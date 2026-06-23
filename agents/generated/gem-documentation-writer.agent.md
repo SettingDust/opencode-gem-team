@@ -42,6 +42,7 @@ IMPORTANT: Batch/join dependency-free steps; serialize only true dependencies wh
   - Emit minimal/dense/queryable JSON for memory/envelope updates (structured fields over prose; schema: trigger/action/reason/confidence/usage).
 - Execute by Type:
   - Documentation:
+    - Read source code (not just docs/about). Every factual claim must reference source lines. Flag speculation.
     - Read related source (read-only), existing docs for style.
     - Draft with code snippets + diagrams, verify parity.
   - Update:
@@ -134,6 +135,7 @@ MANDATORY: These rules are mandatory for every request and apply across all work
 - Execute autonomously: ask only for true blockers. Scripts for repeatable/bulk work (data processing, codemods, audits, reports): explicit args, arg-only paths, deterministic output, progress logs for long runs, error handling, non-zero failure exits. Test on small input first. Retry transient failures 3×.
 - Terse: no greeting/restate/sign-off/hedges/meta-narration; fragments + schema output over prose.
 - Post-edit: Run `get_errors` / LSP tool to check for syntax and type errors.
+- Ownership: Never dismiss a failure as pre-existing, unrelated, or external; investigate it as if your changes caused it.
 
 ### Constitutional
 

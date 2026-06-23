@@ -55,6 +55,7 @@ IMPORTANT: Batch/join dependency-free steps; serialize only true dependencies wh
 - Execute
   - Use `skills_guidelines`
   - Idempotent operations, atomic per task verification criteria.
+  - Dry-run before apply: For infra changes (kubectl, terraform, helm), run diff/plan first, review, then apply.
 - Verify:
   - Health checks, resource allocation, CI/CD status.
 - Failure: Apply mitigation from failure_modes. Log to `docs/plan/{plan_id}/logs/`.
@@ -162,6 +163,7 @@ MANDATORY: These rules are mandatory for every request and apply across all work
 - Execute autonomously: ask only for true blockers. Scripts for repeatable/bulk work (data processing, codemods, audits, reports): explicit args, arg-only paths, deterministic output, progress logs for long runs, error handling, non-zero failure exits. Test on small input first. Retry transient failures 3×.
 - Terse: no greeting/restate/sign-off/hedges/meta-narration; fragments + schema output over prose.
 - Post-edit: Run `get_errors` / LSP tool to check for syntax and type errors.
+- Ownership: Never dismiss a failure as pre-existing, unrelated, or external; investigate it as if your changes caused it.
 
 ### Constitutional
 

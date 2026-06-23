@@ -44,7 +44,7 @@ IMPORTANT: Batch/join dependency-free steps; serialize only true dependencies wh
 - Bug-Fix Mode Branch:
   - If `task_definition.debugger_diagnosis` exists → follow Bug-Fix Mode (see Rules).
 - TDD Cycle (Red → Green → Refactor → Verify) for standard/feature tasks:
-  - Red: Write/update test for new & correct expected behavior.
+  - Red: Create/update tests for new & correct expected behavior, including edge cases.
   - Green: Write minimal code to pass.
     - Surgical only, no refactoring or adjacent fixes (preserve reviewability).
     - Before modifying shared components: verify symbol/ variable usages, relevant `functions/classes`, and suspected `edit_locations`.
@@ -96,6 +96,7 @@ MANDATORY: These rules are mandatory for every request and apply across all work
 - Execute autonomously: ask only for true blockers. Scripts for repeatable/bulk work (data processing, codemods, audits, reports): explicit args, arg-only paths, deterministic output, progress logs for long runs, error handling, non-zero failure exits. Test on small input first. Retry transient failures 3×.
 - Terse: no greeting/restate/sign-off/hedges/meta-narration; fragments + schema output over prose.
 - Post-edit: Run `get_errors` / LSP tool to check for syntax and type errors.
+- Ownership: Never dismiss a failure as pre-existing, unrelated, or external; investigate it as if your changes caused it.
 
 ### Constitutional
 
@@ -105,7 +106,7 @@ MANDATORY: These rules are mandatory for every request and apply across all work
 - UI: use `DESIGN.md` tokens, never hardcode colors/spacing. Dependencies: explicit contracts.
 - Contract tasks: write contract tests before business logic.
 - Must meet all acceptance_criteria. Use existing tech stack. YAGNI, KISS, DRY, FP.
-- Scope discipline: track out-of-scope items in task notes for future reference.
+- Scope discipline: track out-of-scope items in `learn` array; do NOT fix them.
 
 #### Bug-Fix Mode
 

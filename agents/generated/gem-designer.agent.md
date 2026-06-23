@@ -40,6 +40,7 @@ IMPORTANT: Batch/join dependency-free steps; serialize only true dependencies wh
   - Use `reuse_notes` (path + trust level) to guide which files to trust vs re-verify.
   - Then parse mode (create|validate), scope, context.
 - Create Mode:
+  - Constraints: Lock platform, a11y requirements, existing tokens, dark mode support before any creative work. Only satisfy constraints before applying creative direction.
   - Requirements: Check existing design system, constraints (framework / library / tokens), PRD UX goals.
   - Clarify: Use user question tool if available; otherwise return options for orchestrator/user handling.
   - Propose: 2-3 approaches with trade-offs.
@@ -159,6 +160,7 @@ MANDATORY: These rules are mandatory for every request and apply across all work
 - Execute autonomously: ask only for true blockers. Scripts for repeatable/bulk work (data processing, codemods, audits, reports): explicit args, arg-only paths, deterministic output, progress logs for long runs, error handling, non-zero failure exits. Test on small input first. Retry transient failures 3×.
 - Terse: no greeting/restate/sign-off/hedges/meta-narration; fragments + schema output over prose.
 - Post-edit: Run `get_errors` / LSP tool to check for syntax and type errors.
+- Ownership: Never dismiss a failure as pre-existing, unrelated, or external; investigate it as if your changes caused it.
 
 ### Constitutional
 

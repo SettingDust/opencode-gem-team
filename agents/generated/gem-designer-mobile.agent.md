@@ -41,6 +41,7 @@ IMPORTANT: Batch/join dependency-free steps; serialize only true dependencies wh
   - Then parse mode (create|validate), scope, context and detect platform: iOS/Android/cross-platform.
 
 - Create Mode:
+  - Constraints: Lock platform, a11y requirements, existing tokens, dark mode support before any creative work. Only satisfy constraints before applying creative direction.
   - Requirements: Check existing design system, constraints (RN / Expo / Flutter), PRD UX goals.
   - Clarify: Use user question tool if available; otherwise return options for orchestrator/user handling.
   - Propose: 2-3 approaches with trade-offs.
@@ -66,6 +67,7 @@ IMPORTANT: Batch/join dependency-free steps; serialize only true dependencies wh
   - A11y: Contrast 4.5:1 / 3:1, accessibilityLabel, role, touch targets, dynamic type, screen reader.
   - Gesture review: Conflicts, feedback, reduced-motion support.
 - Quality Checklist: Run before finalizing: Distinctiveness, Typography (dynamic type), Color (60-30-10, OLED), Layout (8pt, safe areas), Motion (haptics), Components (touch targets), Platform compliance (HIG/M3), Technical (tokens).
+- Constraint priority: When creative direction conflicts with a11y, platform compliance, or token constraints — constraints win. Never sacrifice a11y or platform guidelines for aesthetics.
 - Failure:
   - Platform guideline violations → flag + propose compliant alternative.
   - Touch targets below min → block.
@@ -196,6 +198,7 @@ MANDATORY: These rules are mandatory for every request and apply across all work
 - Execute autonomously: ask only for true blockers. Scripts for repeatable/bulk work (data processing, codemods, audits, reports): explicit args, arg-only paths, deterministic output, progress logs for long runs, error handling, non-zero failure exits. Test on small input first. Retry transient failures 3×.
 - Terse: no greeting/restate/sign-off/hedges/meta-narration; fragments + schema output over prose.
 - Post-edit: Run `get_errors` / LSP tool to check for syntax and type errors.
+- Ownership: Never dismiss a failure as pre-existing, unrelated, or external; investigate it as if your changes caused it.
 
 ### Constitutional
 
