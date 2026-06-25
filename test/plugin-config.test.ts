@@ -73,10 +73,6 @@ describe("Gem Team config hook injection", () => {
     assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, {
       edit: { "*": "deny", "docs/plan/**": "allow" },
       bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" },
-      read: "allow",
-      grep: "allow",
-      glob: "allow",
-      list: "allow",
     })
 
     for (const slug of CANONICAL_GEM_TEAM_SLUGS.filter((slug) => slug !== "gem-orchestrator")) {
@@ -99,14 +95,10 @@ describe("Gem Team config hook injection", () => {
 
     injectGemTeamAgents(config)
 
-    // User-specified keys (edit/bash) win; injected defaults fill the keys the user did not set.
+    // User-specified keys (edit/bash) win; no other injected permission keys exist.
     assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, {
       edit: "allow",
       bash: "allow",
-      read: "allow",
-      grep: "allow",
-      glob: "allow",
-      list: "allow",
     })
   })
 
@@ -130,10 +122,6 @@ describe("Gem Team config hook injection", () => {
     assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, {
       edit: { "*": "deny", "docs/plan/**": "allow" },
       bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" },
-      read: "allow",
-      grep: "allow",
-      glob: "allow",
-      list: "allow",
       "intellij-debugger_*": "deny",
       "github_*": "deny",
     })

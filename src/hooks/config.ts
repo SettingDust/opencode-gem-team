@@ -37,19 +37,15 @@ const GEM_ORCHESTRATOR_SLUG = "gem-orchestrator"
  * OpenCode evaluates the LAST matching rule, so broad rules are listed first and
  * narrow carve-outs last. There is no separate `write` permission key in OpenCode;
  * the `edit` rule gates both the `edit` and `write` tools.
- * Read-family access stays `allow` because reads are read-only and low-risk, the
- * permission layer cannot distinguish Phase 0 evaluation reads from deep research,
- * and `ask` would block interactively in a way that aborts the turn on denial. The
- * delegation-first guarantee is enforced by the graceful `edit`/`bash` denies plus
- * prompt guidance, not by gating read-only tools.
+ * read/grep/glob/list are intentionally omitted because OpenCode's global `*:
+ * allow` baseline already permits them; the orchestrator only needs the two
+ * hard deny-based locks (`edit`, `bash`) to enforce delegation-first, and reads
+ * stay unrestricted (read-only, low risk, and the permission layer can't
+ * distinguish evaluation reads from research anyway).
  */
 const GEM_ORCHESTRATOR_PERMISSION: OpenCodePermissionConfig = {
   edit: { "*": "deny", "docs/plan/**": "allow" },
   bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" },
-  read: "allow",
-  grep: "allow",
-  glob: "allow",
-  list: "allow",
 }
 
 export function injectGemTeamAgents(config: OpenCodeConfigWithAgents): void {
