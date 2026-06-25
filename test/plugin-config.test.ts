@@ -70,10 +70,7 @@ describe("Gem Team config hook injection", () => {
 
     injectGemTeamAgents(config)
 
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, {
-      edit: { "*": "deny", "docs/plan/**": "allow" },
-      bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" },
-    })
+    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/**": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/**": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/**": "allow" }, glob: { "*": "deny", "docs/plan/**": "allow" } })
 
     for (const slug of CANONICAL_GEM_TEAM_SLUGS.filter((slug) => slug !== "gem-orchestrator")) {
       assert.equal(
@@ -117,11 +114,8 @@ describe("Gem Team config hook injection", () => {
 
     injectGemTeamAgents(config)
 
-    // User-specified keys (edit/bash) win; no other injected permission keys exist.
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, {
-      edit: "allow",
-      bash: "allow",
-    })
+    // User-specified keys (edit/bash) win; injected defaults fill the remaining permission keys.
+    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: "allow", bash: "allow", read: { "*": "deny", "docs/plan/**": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/**": "allow" }, glob: { "*": "deny", "docs/plan/**": "allow" } })
   })
 
   it("keeps injected delegation-first defaults when the user only sets unrelated permission keys", () => {
@@ -141,12 +135,7 @@ describe("Gem Team config hook injection", () => {
 
     injectGemTeamAgents(config)
 
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, {
-      edit: { "*": "deny", "docs/plan/**": "allow" },
-      bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" },
-      "intellij-debugger_*": "deny",
-      "github_*": "deny",
-    })
+    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/**": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/**": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/**": "allow" }, glob: { "*": "deny", "docs/plan/**": "allow" }, "intellij-debugger_*": "deny", "github_*": "deny" })
     assert.equal(config.agent?.["gem-orchestrator"]?.model, "user-model")
   })
 
