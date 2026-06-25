@@ -1,0 +1,360 @@
+plan_id: 20260614-debug-agents-injection
+objective: 检查 agents 注入为什么没有效果，并完成最小修复/验证。
+created_at: "2026-06-14T00:00:00+08:00"
+created_by: gem-planner
+status: in_progress
+tldr: |
+  中等复杂度调试计划：先由 debugger 在真实 OpenCode 加载链路、dist/asset 路径、用户同 slug agent 覆盖语义之间定位根因；再由 implementer 做最小修复并补齐回归测试；最后由 devops/reviewer 验证本地 CLI 加载、dist/package 形态和 PRD 边界。
+
+plan_metrics:
+  wave_1_task_count: 1
+  total_dependencies: 5
+  risk_score: medium
+quality_warnings:
+  - GitHub remote install/load 仍是 docs/installation-poc.md 中的 pending 项；本计划先要求可重复本地 CLI/package-path 回归，远程 GitHub 验证若需要凭据或外部环境则记录为限制。
+  - T2 原子性预算为 <=300 changed lines，且只能修改 T1 证明必要的文件；若根因需要更大范围变更，必须停止并 replan。
+
+open_questions:
+  - question: 真实失败发生在 OpenCode 未加载插件、加载旧 dist、generated assets 缺失，还是同 slug 用户配置保留导致看似未注入？
+    context: 直接调用 injectGemTeamAgents 与 plugin.server().config() 的现有单测已覆盖成功路径，但缺少真实 OpenCode CLI/安装缓存链路回归。
+    type: research
+    affects:
+      - T1-diagnose-runtime-injection
+      - T2-minimal-injection-fix
+  - question: 当前环境是否可执行真实 opencode plugin/agent list 命令？
+    context: docs/installation-poc.md 已记录本地 path install 成功，但 GitHub remote install 仍未端到端证明。
+    type: nice_to_know
+    affects:
+      - T3-cli-regression
+
+pre_mortem:
+  overall_risk_level: medium
+  critical_failure_modes:
+    - scenario: 只修复直接注入函数，遗漏 OpenCode 实际加载的是 dist/src/index.js 或缓存包。
+      likelihood: medium
+      impact: high
+      mitigation: debugger 必须比较 src 与 dist 入口、package exports、generated asset resolution、OpenCode CLI 加载路径。
+    - scenario: 将保留 existing 同 slug agent 字段误判为缺陷，破坏“不覆盖用户 agent.model/配置”的 PRD 契约。
+      likelihood: medium
+      impact: high
+      mitigation: implementer 只修复加载/资产/回归覆盖问题，不改变 mergeMissingAgentFields 的用户配置优先语义，除非 debugger 证明违反 PRD。
+    - scenario: GitHub remote install 因环境/网络/凭据不可测，导致验证被误写为通过。
+      likelihood: medium
+      impact: medium
+      mitigation: devops 仅声明实际执行过的验证；无法执行则更新证据限制，不发布最终 GitHub 安装成功结论。
+  assumptions:
+    - 用户报告的“注入没有效果”优先按运行时加载/安装链路问题处理，而非直接注入函数完全失效。
+    - 最小修复应保持 OpenCode 原生 agent 配置优先，不新增模型路由、role_models 或 provider-side routing。
+
+tasks:
+  - id: T1-diagnose-runtime-injection
+    title: 定位 agents 注入运行时失效根因
+    description: 对比直接 config hook 成功路径与真实 OpenCode 加载路径，确认失效发生在插件加载、dist 陈旧、generated assets resolution、package exports、OpenCode 缓存安装，还是同 slug existing 配置保留语义。
+    wave: 1
+    agent: gem-debugger
+    status: completed
+    evidence:
+      summary: >-
+        T1 did not reproduce a code-level injection failure. In an isolated OpenCode CLI run,
+        local package-path install succeeded and `opencode agent list` showed the built-in
+        primary agents plus all 16 injected `gem-*` agents. `npm run validate:dist` passed,
+        and `npm pack --dry-run --json` confirmed `agents/generated/*` and `dist/src/*` are
+        included in the package payload.
+      key_points:
+        - Dist entrypoints are present and importable via ./dist/src/index.js.
+        - Generated assets resolve from package payload; npm pack includes agents/generated/*.
+        - Existing same-slug preservation semantics remain intentional and were not implicated.
+        - The user's reported failure is more likely stale local install/config context or a
+          different runtime environment than the current workspace state.
+    covers:
+      - root-cause-analysis
+      - runtime-load-path
+      - generated-assets
+    dependencies: []
+    conflicts_with: []
+    context_files:
+      - path: src/index.ts
+        description: PluginModule default export；server config hook 调用 injectGemTeamAgents。
+      - path: src/hooks/config.ts
+        description: agents 注入与 existing/generated merge 逻辑。
+      - path: src/agents/generated-loader.ts
+        description: manifest 与 *.agent.md 的运行时路径解析。
+      - path: package.json
+        description: main/exports 指向 dist/src/index.js，scripts 使用 compile 而非 build。
+      - path: test/plugin-config.test.ts
+        description: 现有单测直接调用 src hook，未覆盖真实 CLI 安装/缓存链路。
+      - path: docs/installation-poc.md
+        description: 本地 path install 已验证，GitHub remote install 仍 pending。
+    flags:
+      flaky: false
+      retries_used: 0
+      requires_design_validation: false
+    acceptance_criteria:
+      - AC-03: OpenCode 加载后可用全部 16 个真实 slug。
+      - AC-10: 注入默认 agent 信息时不得覆盖用户已有 OpenCode agent.model，且不得补写插件侧模型字段。
+      - AC-14: config hook 动态注入 gem-orchestrator 与 15 个非 orchestrator gem-* agents，且不使用 chat.params 设置实际请求 model。
+      - AC-16/AC-17: PoC 或本地可重复验证需证明插件加载与 16 agents 可见；若 GitHub remote 不可验证必须明确限制。
+    success_criteria:
+      - 输出一个明确 root_cause，包含证据路径与复现/反证步骤。
+      - 区分代码缺陷、构建产物陈旧、安装/缓存形态、用户配置覆盖语义四类原因。
+      - 给出最小修复建议，不要求大规模重构。
+    handoff:
+      do_not_reinvestigate:
+        - 不重复证明 injectGemTeamAgents 直接调用可注入 16 agents；现有 test/plugin-config.test.ts 已覆盖。
+        - 不重新设计 Gem Team 编排或 agent 行为。
+      target_files:
+        - src/index.ts
+        - src/hooks/config.ts
+        - src/agents/generated-loader.ts
+        - package.json
+        - test/plugin-config.test.ts
+        - docs/installation-poc.md
+      acceptance_checks:
+        - npm test
+        - npm run typecheck
+        - npm run validate:dist
+        - npm run validate:no-model-ids
+
+  - id: T2-minimal-injection-fix
+    title: 实施最小 agents 注入修复与回归覆盖
+    description: 基于 T1 diagnosis 修复最小必要代码/测试/构建产物问题；重点覆盖真实 dist/package 加载与 generated assets 存在性，不改变用户已有 agent 配置优先级。
+    wave: 2
+    agent: gem-implementer
+    status: completed
+    covers:
+      - minimal-fix
+      - unit-regression
+      - dist-regression
+    dependencies:
+      - T1-diagnose-runtime-injection
+    conflicts_with: []
+    context_files:
+      - path: src/index.ts
+        description: 插件入口；修复 hook wiring 时的目标文件。
+      - path: src/hooks/config.ts
+        description: 注入逻辑；仅在诊断证明必要时修改。
+      - path: src/agents/generated-loader.ts
+        description: generated assets 路径解析；疑似运行时安装形态相关。
+      - path: test/plugin-config.test.ts
+        description: 添加或调整回归测试的首选位置。
+      - path: scripts/validate-dist.mjs
+        description: 若 dist/package smoke 缺口由 T1 证明，可补充验证。
+    flags:
+      flaky: false
+      retries_used: 0
+      requires_design_validation: false
+    debugger_diagnosis:
+      root_cause: 待 T1 输出后注入；implementer 不得在无诊断结论时盲改业务代码。
+      target_files:
+        - src/index.ts
+        - src/hooks/config.ts
+        - src/agents/generated-loader.ts
+        - test/plugin-config.test.ts
+        - scripts/validate-dist.mjs
+      fix_recommendations: 按 T1 的最小修复建议执行；优先补运行时加载/asset/dist 回归，避免改变 PRD 定义的模型与 existing agent 保留契约。
+      injected_at: runtime-after-T1
+    acceptance_criteria:
+      - AC-03: OpenCode 加载后可用全部 16 个真实 slug。
+      - AC-04: gem-orchestrator 是入口 agent，但不能作为自身 child/subagent。
+      - AC-10: 不覆盖用户已有 OpenCode agent.model，且不补写插件侧模型字段。
+      - AC-11/AC-13/AC-22: 不新增插件侧模型路由、role_models 或具体模型 ID。
+      - AC-14: 通过 config hook 注入 agents，不使用 chat.params 覆盖实际请求 model。
+    success_criteria:
+      - 新增或更新的测试能在缺失/陈旧 dist、generated assets resolution、或 package entry smoke 中捕获 T1 发现的根因。
+      - npm test、npm run typecheck、npm run validate:dist、npm run validate:no-model-ids 通过。
+      - 变更保持最小，不引入 provider/model routing 或 orchestrator self-routing。
+      - 原子性预算：总 changed lines <=300；目标文件必须是 T1 diagnosis 明确列出的必要文件，超出预算或新增目标文件需退回 replan。
+    evidence:
+      summary: >-
+        Added runtime-adjacent regression coverage without changing business logic: a node:test smoke now imports
+        the compiled dist entrypoint and verifies its config hook injects all 16 canonical gem-* slugs, and
+        validate:dist now executes the compiled plugin entry to assert runtime injection plus same-slug preservation.
+      key_points:
+        - Changed files stayed within the T1-approved scope, plus this required plan status update.
+        - No src business logic changed; src/index.ts, src/hooks/config.ts, and src/agents/generated-loader.ts were untouched.
+        - Same-slug preservation remains intentional and is now called out more explicitly in regression coverage.
+        - Verified with npm test, npm run validate:dist, npm run typecheck, and npm run validate:no-model-ids.
+      changed_lines_estimate: 95
+    tech_stack:
+      - TypeScript 5.9.3
+      - Node.js ESM
+      - OpenCode plugin SDK @opencode-ai/plugin ^1.15.13
+      - node:test
+    test_coverage: 补齐 T1 指向的最小回归；优先覆盖 dist/package import smoke 和 generated assets 加载失败模式。
+    diag:
+      required_from: T1-diagnose-runtime-injection
+    handoff:
+      do_not_reinvestigate:
+        - 保留 existing agent 字段是设计要求；不要把 same-slug user config 覆盖 generated prompt/mode 视为默认缺陷。
+        - 不增加 role_models、agent_complexity_models、per-agent model overrides、provider-side routing、具体 model ID。
+      required_test_first: 先写或调整能复现 T1 根因的最小失败测试，再修复。
+      target_files:
+        - src/index.ts
+        - src/hooks/config.ts
+        - src/agents/generated-loader.ts
+        - test/plugin-config.test.ts
+        - scripts/validate-dist.mjs
+      minimal_change: 只改 T1 证明与注入失效直接相关的代码/测试/验证脚本；总 changed lines <=300；不得修改 T1 未列为必要的文件；不做无关清理。
+      acceptance_checks:
+        - npm test
+        - npm run typecheck
+        - npm run validate:dist
+        - npm run validate:no-model-ids
+
+  - id: T3-cli-regression
+    title: 验证 OpenCode 本地 CLI/package-path 加载与 agent 可见性
+    description: 在临时 fixture 中执行可重复本地 OpenCode 插件加载验证，确认 package entry、dist、generated assets 与 config hook 在 CLI agent list 中生效；若环境缺少 opencode CLI，则记录阻塞证据和替代 smoke 验证。
+    wave: 3
+    agent: gem-devops
+    status: completed
+    covers:
+      - cli-regression
+      - package-path-install
+      - runtime-evidence
+    dependencies:
+      - T2-minimal-injection-fix
+    conflicts_with: []
+    context_files:
+      - path: docs/installation-poc.md
+        description: 既有 PoC 证据、限制和安全边界。
+      - path: package.json
+        description: OpenCode package target detection 入口。
+      - path: dist/src/index.js
+        description: 编译后的实际 package entry。
+    flags:
+      flaky: false
+      retries_used: 0
+      requires_design_validation: false
+    acceptance_criteria:
+      - AC-16: PoC 可证明插件加载成功，或如不能执行则准确记录限制。
+      - AC-17: PoC 可证明 16 个 agents 可见。
+      - AC-18/AC-19: 用户已有 agent.model 不被覆盖；未配置时不补写模型字段。
+      - AC-21: gem-orchestrator 不会路由到自身。
+    success_criteria:
+      - 在隔离临时目录运行 npm run compile 后执行 opencode plugin <repo-path> --force 与 opencode agent list，统计 16 个 gem-* agents。
+      - CLI 隔离必须设置临时 HOME/USERPROFILE、XDG_CONFIG_HOME、XDG_CACHE_HOME、OPENCODE_CONFIG_DIR（或当前 OpenCode 支持的等价 config dir env），并在临时工作目录内创建一次性 config；禁止读取或修改用户/全局 OpenCode 配置。
+      - 验证输出需 redaction 后记录，不打印 secrets，不写全局 OpenCode 配置。
+      - 将验证命令、结果和限制反馈给 reviewer；必要时更新 docs/installation-poc.md 的证据而不夸大 GitHub remote 状态。
+    evidence:
+      summary: >-
+        In an approved isolated temp environment, OpenCode CLI 1.17.4 successfully installed the
+        local path plugin via `opencode plugin E:\Projects\opencode-gem-team --force`, wrote only
+        fixture-local `.opencode/opencode.json`, and `opencode agent list` reported all 16 canonical
+        `gem-*` agents. Debug logs showed config reads only from the temp XDG paths, the temp
+        OPENCODE_CONFIG_DIR, and the fixture-local `.opencode` file. A second isolated fixture with an
+        existing same-slug `gem-reviewer` override preserved that override visibly: the agent list
+        showed `gem-reviewer (primary)` while all 16 `gem-*` agents remained present.
+      key_points:
+        - `opencode plugin` output included `Plugin package ready`, `Detected server target`, and `Plugin config updated`.
+        - The local install fixture `.opencode/opencode.json` contained only the local plugin path entry.
+        - Captured `opencode agent list` output contained 16 `gem-*` lines, with `gem-orchestrator (primary)` and 15 other generated agents.
+        - Same-slug preservation remained observable in CLI output: preexisting `gem-reviewer.mode=primary` stayed primary instead of the generated subagent default.
+        - GitHub remote install/load remains unverified and must stay documented as pending.
+    environment: development
+    requires_approval: false
+    devops_security_sensitive: false
+    handoff:
+      do_not_reinvestigate:
+        - 不尝试读取全局 OpenCode 配置或秘密。
+        - 不把本地 path install 结果包装成 GitHub remote install 成功。
+        - 不使用默认 HOME/USERPROFILE、默认 XDG config/cache、或用户现有 OpenCode 配置路径执行 CLI 验证。
+      target_files:
+        - docs/installation-poc.md
+      acceptance_checks:
+        - npm run compile
+        - npm run validate:dist
+        - opencode plugin <repo-path> --force in temp fixture with isolated HOME/USERPROFILE, XDG_CONFIG_HOME, XDG_CACHE_HOME, and OPENCODE_CONFIG_DIR if CLI exists
+        - opencode agent list in temp fixture with the same isolated env if CLI exists
+
+  - id: T4-review-fix-and-boundaries
+    title: 审查修复、测试覆盖与 PRD 边界
+    description: 审查 T2/T3 输出是否真正解决注入无效问题，且没有违反模型配置边界、orchestrator self-routing 禁止、generated assets 同步契约或文档证据边界。
+    wave: 4
+    agent: gem-reviewer
+    status: pending
+    covers:
+      - code-review
+      - product-boundary-review
+      - regression-checks
+    dependencies:
+      - T2-minimal-injection-fix
+      - T3-cli-regression
+    conflicts_with: []
+    context_files:
+      - path: docs/PRD.md
+        description: 产品验收标准和禁止项。
+      - path: AGENTS.md
+        description: 仓库级 invariants。
+      - path: docs/installation-poc.md
+        description: 安装/加载证据边界。
+      - path: test/plugin-config.test.ts
+        description: 注入回归测试。
+    flags:
+      flaky: false
+      retries_used: 0
+      requires_design_validation: false
+    acceptance_criteria:
+      - AC-03/AC-17: 16 个 gem-* agents 可见。
+      - AC-04/AC-21: gem-orchestrator 不自路由。
+      - AC-10/AC-18/AC-19: 不覆盖用户 model，不补写模型字段。
+      - AC-11/AC-13/AC-22: 无 role_models、agent_complexity_models、具体 model ID。
+      - AC-16: 加载成功证据准确，不夸大未验证 GitHub remote install。
+    success_criteria:
+      - 审查确认 root cause、修复和回归测试之间存在直接对应关系。
+      - 审查确认所有列出的验证命令通过或有明确环境阻塞说明。
+      - 审查确认无无关业务代码改动。
+    requires_review: true
+    review_depth: standard
+    review_security_sensitive: false
+    handoff:
+      do_not_reinvestigate:
+        - 不重新做完整架构调研；重点核查 T1-T3 的证据链和 diff。
+      target_files:
+        - src/index.ts
+        - src/hooks/config.ts
+        - src/agents/generated-loader.ts
+        - test/plugin-config.test.ts
+        - scripts/validate-dist.mjs
+        - docs/installation-poc.md
+      acceptance_checks:
+        - npm test
+        - npm run lint
+        - npm run validate:sync
+        - npm run validate:dist
+        - npm run validate:no-model-ids
+
+implementation_specification:
+  - 任务按 debugger → implementer → devops → reviewer 串联；实现前必须有 T1 root_cause。
+  - 最小修复优先覆盖运行时加载链路：dist/src entry、package exports、generated assets 路径解析、OpenCode CLI package-path install。
+  - 不改变 Gem Team upstream agent 行为，不新增插件侧模型路由，不覆盖已有 OpenCode agent.model。
+  - T2 执行预算为 <=300 changed lines；仅允许修改 T1 diagnosis 证明必要的目标文件，超出则需要 replan。
+  - T3 必须使用临时 HOME/USERPROFILE、XDG_CONFIG_HOME、XDG_CACHE_HOME、OPENCODE_CONFIG_DIR 或 OpenCode 等价隔离配置路径，禁止读取/修改用户或全局 OpenCode 配置。
+
+contracts:
+  - from_task: T1-diagnose-runtime-injection
+    to_task: T2-minimal-injection-fix
+    interface: debugger_diagnosis
+    format: root_cause, reproduction_steps, eliminated_causes, target_files, minimal_fix_recommendations
+  - from_task: T2-minimal-injection-fix
+    to_task: T3-cli-regression
+    interface: verification_build
+    format: compiled dist present, changed files summary, commands to run, expected 16 gem-* agent list result
+  - from_task: T2-minimal-injection-fix
+    to_task: T4-review-fix-and-boundaries
+    interface: fix_summary
+    format: root_cause_link, changed_files, changed_lines_count, tests_added_or_updated, acceptance_checks, confirmation that changed_lines_count <=300 and files were T1-proven necessary
+  - from_task: T3-cli-regression
+    to_task: T4-review-fix-and-boundaries
+    interface: runtime_evidence
+    format: commands, isolated temp HOME/USERPROFILE and config/cache paths used, observed agent count/slugs, limitations, redaction/no-secret assurance, confirmation that user/global OpenCode config was not read or mutated
+
+reviewer_focus:
+  - runtime_load_path_vs_direct_hook_tests
+  - dist_and_generated_assets_packaging
+  - user_agent_model_preservation
+  - no_model_routing_or_concrete_model_ids
+  - installation_poc_claim_accuracy
+  - T2_atomicity_budget_and_T1_file_scope
+  - T3_cli_isolation_no_global_config_mutation
+
+prd_update_recommended: false

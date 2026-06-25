@@ -1,0 +1,378 @@
+{
+  "context_envelope": {
+    "meta": {
+      "plan_id": "20260614-debug-agents-injection",
+      "created_at": "2026-06-14T00:00:00+08:00",
+      "last_updated": "2026-06-14T00:00:00+08:00",
+      "version": 1,
+      "source": [
+        "user-provided context snapshot",
+        "AGENTS.md",
+        "docs/PRD.md",
+        "src/index.ts",
+        "src/hooks/config.ts",
+        "src/agents/generated-loader.ts",
+        "test/plugin-config.test.ts",
+        "docs/installation-poc.md",
+        "package.json",
+        "agents/generated/manifest.json"
+      ]
+    },
+    "scope": {
+      "purpose": [
+        "Reusable debugging context for agents injection runtime/load failures.",
+        "Avoids re-discovering PRD constraints, injection wiring, package entrypoints, and known PoC limitations."
+      ],
+      "applies_to": [
+        "Gem Team agents injection in OpenCode plugin config hook",
+        "dist/package-path/GitHub-install validation for opencode-gem-team"
+      ],
+      "non_goals": [
+        "No provider/model routing changes.",
+        "No upstream Gem Team agent behavior redesign.",
+        "No unrelated code cleanup."
+      ]
+    },
+    "tech_stack": [
+      {
+        "name": "TypeScript",
+        "version": "5.9.3",
+        "usage_context": "ESM plugin source compiled to dist/src for package entrypoints.",
+        "config_files": ["package.json", "tsconfig.json"]
+      },
+      {
+        "name": "OpenCode plugin SDK",
+        "version": "^1.15.13",
+        "usage_context": "PluginModule default export with server hooks; config hook injects agents.",
+        "config_files": ["package.json", "src/index.ts"]
+      },
+      {
+        "name": "node:test",
+        "version": "Node built-in",
+        "usage_context": "Unit/integration-style tests compiled then run from dist/test/**/*.test.js.",
+        "config_files": ["package.json", "test/plugin-config.test.ts"]
+      }
+    ],
+    "conventions": [
+      "Use npm run compile; package entrypoints target ./dist/src/index.js.",
+      "npm test runs compile first and then node --test dist/test/**/*.test.js.",
+      "docs/PRD.md is product source of truth; AGENTS.md is terse agent-facing repo guidance.",
+      "Generated agent assets live under agents/generated and must remain aligned with manifest hashes."
+    ],
+    "constraints": {
+      "hard": [
+        "Do not add role_models, agent_complexity_models, per-agent model overrides, provider-side routing, or concrete model IDs.",
+        "Do not override existing user agent.model during generated default injection.",
+        "Do not let gem-orchestrator route to itself.",
+        "Do not claim GitHub remote install success unless actually verified end-to-end.",
+        "T2 minimal fix budget is <=300 changed lines and may only touch files T1 proves necessary; otherwise replan.",
+        "T3 CLI regression must run with isolated temp HOME/USERPROFILE, XDG_CONFIG_HOME, XDG_CACHE_HOME, and OPENCODE_CONFIG_DIR or current OpenCode equivalent; never read or mutate user/global OpenCode config."
+      ],
+      "soft": [
+        "Prefer minimal additive tests/validation over invasive rewrites.",
+        "Keep README/AGENTS/docs aligned only if behavior or verified install evidence changes."
+      ],
+      "compatibility": [
+        "OpenCode package target detection requires main or exports ./server to resolve a server target; current package points both to dist/src/index.js.",
+        "Generated loader searches process.cwd()/agents/generated and paths relative to compiled module for package installs."
+      ],
+      "security_requirements": [
+        "Do not read, print, or persist API keys/tokens/cookies/private keys.",
+        "Run OpenCode CLI verification in isolated temp fixtures; avoid global config mutation."
+      ]
+    },
+    "architecture_snapshot": {
+      "key_dirs": {
+        "src/": ["Plugin source, hooks, generated loader, sync validation."],
+        "agents/generated/": ["Synced Gem Team agent markdown bodies and manifest.json."],
+        "test/": ["Node test coverage for plugin config injection and sync/package behavior."],
+        "scripts/": ["Sync and validation scripts including dist/package checks."],
+        "docs/": ["PRD, installation PoC evidence, and plan artifacts."]
+      },
+      "patterns": [
+        "Plugin default export satisfies PluginModule with id and async server function.",
+        "server config hook mutates OpenCode config by calling injectGemTeamAgents(config).",
+        "Injection creates config.agent if missing, then writes 16 generated agents by canonical slug.",
+        "Existing same-slug user config is merged over generated defaults via {...generated, ...existing}."
+      ],
+      "key_components": [
+        {
+          "name": "plugin entrypoint",
+          "location": "src/index.ts:6-20",
+          "responsibility": ["Expose PluginModule", "Register config hook", "Call injectGemTeamAgents"],
+          "confidence": 0.98
+        },
+        {
+          "name": "injectGemTeamAgents",
+          "location": "src/hooks/config.ts:18-31",
+          "responsibility": ["Initialize config.agent", "Inject generated agent description/mode/prompt", "Preserve existing same-slug fields"],
+          "confidence": 0.98
+        },
+        {
+          "name": "generated agent loader",
+          "location": "src/agents/generated-loader.ts:24-75",
+          "responsibility": ["Load and validate manifest", "Read generated markdown bodies", "Verify SHA-256 hashes", "Resolve package/runtime asset paths"],
+          "confidence": 0.95
+        },
+        {
+          "name": "plugin config tests",
+          "location": "test/plugin-config.test.ts:10-91",
+          "responsibility": ["Direct injection tests", "Plugin config hook smoke", "Model preservation", "No default model", "Orchestrator routing target check"],
+          "confidence": 0.95
+        },
+        {
+          "name": "installation PoC evidence",
+          "location": "docs/installation-poc.md:10-61",
+          "responsibility": ["Record verified local path install", "Record pending GitHub remote install", "Define safe install guidance boundary"],
+          "confidence": 0.92
+        }
+      ]
+    },
+    "research_digest": {
+      "relevant_files": [
+        {
+          "path": "src/index.ts",
+          "purpose": ["Plugin entrypoint and hook registration."],
+          "why_relevant": ["If OpenCode loads this module, config hook calls injectGemTeamAgents."],
+          "key_elements": [
+            {
+              "element": "server config hook",
+              "type": "function",
+              "location": "src/index.ts:6-14",
+              "description": "Returns Hooks with config async callback that calls injectGemTeamAgents(config)."
+            }
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 0.98
+        },
+        {
+          "path": "src/hooks/config.ts",
+          "purpose": ["Agent injection implementation."],
+          "why_relevant": ["Direct function writes generated agents into config.agent and preserves existing same-slug fields."],
+          "key_elements": [
+            {
+              "element": "injectGemTeamAgents",
+              "type": "function",
+              "location": "src/hooks/config.ts:18-31",
+              "description": "Iterates getGeneratedGemTeamAgents and writes base description/mode/prompt; existing configs are merged over generated defaults."
+            },
+            {
+              "element": "mergeMissingAgentFields",
+              "type": "function",
+              "location": "src/hooks/config.ts:35-40",
+              "description": "Uses object spread order {...generated, ...existing}; preserves user prompt/mode/model and arbitrary fields."
+            }
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 0.98
+        },
+        {
+          "path": "src/agents/generated-loader.ts",
+          "purpose": ["Runtime loading of generated manifest and agent markdown assets."],
+          "why_relevant": ["A package/install path issue here can make OpenCode load fail even though direct source tests pass."],
+          "key_elements": [
+            {
+              "element": "resolveGeneratedPath",
+              "type": "function",
+              "location": "src/agents/generated-loader.ts:65-75",
+              "description": "Searches process.cwd()/agents/generated and module-relative candidates; throws if asset not found."
+            },
+            {
+              "element": "loadGeneratedGemTeamAgents",
+              "type": "function",
+              "location": "src/agents/generated-loader.ts:33-63",
+              "description": "Validates manifest, reads 16 canonical agent prompts, checks prompt hashes."
+            }
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 0.95
+        },
+        {
+          "path": "package.json",
+          "purpose": ["Runtime package entrypoints and validation commands."],
+          "why_relevant": ["OpenCode package-style loading uses dist/src/index.js via main/exports; stale/missing dist can make injection appear ineffective."],
+          "key_elements": [
+            {
+              "element": "main/exports",
+              "type": "pattern",
+              "location": "package.json:7-16",
+              "description": "Both package root and ./server export point to ./dist/src/index.js with declarations."
+            },
+            {
+              "element": "scripts",
+              "type": "pattern",
+              "location": "package.json:18-27",
+              "description": "compile/typecheck/test/lint/sync/validate commands; no build script by design."
+            }
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 0.96
+        },
+        {
+          "path": "test/plugin-config.test.ts",
+          "purpose": ["Existing injection tests and regression gap."],
+          "why_relevant": ["Tests prove direct source hook works but do not fully prove real OpenCode CLI/cache install path."],
+          "key_elements": [
+            {
+              "element": "Gem Team config hook injection suite",
+              "type": "pattern",
+              "location": "test/plugin-config.test.ts:10-91",
+              "description": "Covers 16-agent direct injection, plugin.server config hook, model preservation, no default model field, no orchestrator self target, prompt hash match."
+            }
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "codebase",
+          "confidence": 0.95
+        },
+        {
+          "path": "docs/installation-poc.md",
+          "purpose": ["Installation/load evidence and limitations."],
+          "why_relevant": ["Records verified local path install, pending GitHub remote source, dist strategy, and safe install boundaries."],
+          "key_elements": [
+            {
+              "element": "Evidence table",
+              "type": "pattern",
+              "location": "docs/installation-poc.md:10-23",
+              "description": "Local package-path install and agent visibility verified; GitHub remote install pending."
+            },
+            {
+              "element": "Safe install guidance boundary",
+              "type": "pattern",
+              "location": "docs/installation-poc.md:37-61",
+              "description": "Only npm run compile + local path plugin install is verified; observed GitHub syntax is not final proof."
+            }
+          ],
+          "security_sensitivity": "none",
+          "contains_secrets": false,
+          "reliability": "docs",
+          "confidence": 0.92
+        }
+      ],
+      "patterns_found": [
+        {
+          "name": "Generated defaults under existing user config",
+          "category": "configuration-merge",
+          "confidence": 0.98,
+          "source": "codebase_analysis",
+          "example_location": ["src/hooks/config.ts:35-40", "test/plugin-config.test.ts:43-66"]
+        },
+        {
+          "name": "Package entrypoint depends on compiled dist",
+          "category": "runtime-packaging",
+          "confidence": 0.96,
+          "source": "codebase_analysis",
+          "example_location": ["package.json:7-16", "docs/installation-poc.md:24-35"]
+        },
+        {
+          "name": "Local path install verified, GitHub source pending",
+          "category": "installation-evidence",
+          "confidence": 0.92,
+          "source": "doc",
+          "example_location": ["docs/installation-poc.md:12-23", "docs/installation-poc.md:55-61"]
+        }
+      ],
+      "dependencies": {
+        "internal": [
+          "src/index.ts -> src/hooks/config.ts -> src/agents/generated-loader.ts -> agents/generated/manifest.json + *.agent.md",
+          "test/plugin-config.test.ts imports src modules directly, then npm test compiles and runs dist/test"
+        ],
+        "external": [
+          "@opencode-ai/plugin ^1.15.13",
+          "OpenCode CLI for package-path install and agent list verification"
+        ]
+      },
+      "gotchas": [
+        {
+          "text": "Existing same-slug user agent config can mask generated prompt/mode by design; this is not automatically a bug because PRD requires preserving user agent.model and existing config fields.",
+          "confidence": 0.95
+        },
+        {
+          "text": "Direct unit tests can pass while OpenCode loads stale or missing dist/src/index.js in package-style installs.",
+          "confidence": 0.9
+        },
+        {
+          "text": "Generated asset lookup can fail in installed/cache layouts if agents/generated is not present at expected package-relative paths.",
+          "confidence": 0.82
+        },
+        {
+          "text": "Plan review requires T2 to stay atomic: <=300 changed lines and only T1-proven necessary files.",
+          "confidence": 0.98
+        },
+        {
+          "text": "CLI validation evidence is only acceptable when executed under temporary config/home/cache paths and with redacted output.",
+          "confidence": 0.98
+        }
+      ],
+      "domain_context": {
+        "security_considerations": [
+          {
+            "area": "OpenCode CLI verification",
+            "location": "docs/installation-poc.md:8-9",
+            "concern": "Use isolated temp HOME/USERPROFILE, XDG_CONFIG_HOME, XDG_CACHE_HOME, and OPENCODE_CONFIG_DIR or OpenCode equivalent; avoid reading/printing environment secrets or mutating global OpenCode config."
+          }
+        ],
+        "testing_patterns": {
+          "framework": "node:test + assert/strict",
+          "coverage_areas": ["config hook injection", "model preservation", "manifest prompt hash", "routing target exclusion", "dist package smoke via scripts"],
+          "test_organization": "Source tests under test/ compile to dist/test and run via npm test.",
+          "mock_patterns": ["Construct OpenCodeConfigWithAgents objects directly", "Call plugin.server(...).config hook directly"]
+        },
+        "error_handling": "generated-loader throws explicit errors for invalid manifest, missing slug, missing generated asset, or prompt hash mismatch.",
+        "data_flow": "OpenCode loads package entry dist/src/index.js -> plugin.server returns config hook -> hook mutates config.agent -> generated-loader reads manifest/prompts -> OpenCode sees gem-* agents."
+      },
+      "open_questions": [
+        {
+          "question": "Which runtime segment caused the user's observed injection failure?",
+          "context": "Current evidence supports direct injection but not necessarily installed/cached OpenCode load path.",
+          "type": "research",
+          "affects": ["T1-diagnose-runtime-injection", "T2-minimal-injection-fix"]
+        }
+      ]
+    },
+    "prior_decisions": [
+      {
+        "decision": "Preserve existing same-slug agent fields over generated defaults.",
+        "rationale": ["PRD requires not overriding existing OpenCode agent.model", "Existing tests assert model, prompt, mode, permission, and arbitrary user fields are preserved"],
+        "evidence": ["docs/PRD.md:94-100", "src/hooks/config.ts:35-40", "test/plugin-config.test.ts:43-66"],
+        "confidence": 0.98,
+        "linked_constraints": ["Do not override existing user agent.model"],
+        "linked_patterns": ["Generated defaults under existing user config"]
+      },
+      {
+        "decision": "Use compile/dist package entrypoints instead of build/prep lifecycle scripts.",
+        "rationale": ["package.json main/exports point to dist/src/index.js", "docs record build script was renamed compile to avoid git-dependency preparation trigger"],
+        "evidence": ["package.json:7-27", "docs/installation-poc.md:21-35"],
+        "confidence": 0.94,
+        "linked_constraints": ["Package installs require compiled dist"],
+        "linked_patterns": ["Package entrypoint depends on compiled dist"]
+      }
+    ],
+    "reuse_notes": {
+      "do_not_re_read": [
+        "docs/PRD.md unless acceptance criteria changed or contradiction appears.",
+        "AGENTS.md unless repo guidance changed."
+      ],
+      "safe_to_assume": [
+        "injectGemTeamAgents direct invocation currently injects 16 agents in source-level tests.",
+        "Existing user same-slug config preservation is intentional and PRD-backed.",
+        "GitHub remote install/load remains unverified unless a later task records new end-to-end evidence."
+      ],
+      "verify_before_use": [
+        "Whether dist/src is current after any source edits; run npm run compile and validate:dist.",
+        "Whether opencode CLI exists and which version is being used before CLI regression.",
+        "Whether agents/generated assets are present in any installed/cache package layout under test.",
+        "Whether T2 changed_files and changed_lines_count remain within the <=300 line budget and T1-proven file scope.",
+        "Whether T3 evidence includes the exact temporary HOME/config/cache paths and confirms no user/global OpenCode config access or mutation."
+      ]
+    }
+  }
+}
