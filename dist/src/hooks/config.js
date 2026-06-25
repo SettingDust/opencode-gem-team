@@ -9,7 +9,10 @@ const GEM_ORCHESTRATOR_SLUG = "gem-orchestrator";
  *
  * Carve-outs preserve legitimate orchestration work:
  * - `edit` allows `docs/plan/**` so the orchestrator can persist plan/wave status.
- * - `bash` allows `git *` for the post-gate commit/diff steps.
+ * - `bash` allows `git *` and `rtk git *` for the post-gate commit/diff steps.
+ *   `rtk git *` is required because openrtk rewrites git commands before
+ *   OpenCode's permission check. The carve-out stays limited to git only; we do
+ *   not allow broader `rtk *` because that would bypass read/grep/list gating.
  * - read/grep/glob/list default to `ask` so the orchestrator can silently read
  *   its own orchestration surface (plan files, .gem-team.yaml, docs/, AGENTS.md)
  *   but must prompt the user before reading anything else. Exploratory reads
@@ -23,7 +26,7 @@ const GEM_ORCHESTRATOR_SLUG = "gem-orchestrator";
  */
 const GEM_ORCHESTRATOR_PERMISSION = {
     edit: { "*": "deny", "docs/plan/**": "allow" },
-    bash: { "*": "deny", "git *": "allow" },
+    bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" },
     read: {
         "*": "ask",
         "docs/**": "allow",

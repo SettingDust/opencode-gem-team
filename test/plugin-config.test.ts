@@ -72,7 +72,7 @@ describe("Gem Team config hook injection", () => {
 
     assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, {
       edit: { "*": "deny", "docs/plan/**": "allow" },
-      bash: { "*": "deny", "git *": "allow" },
+      bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" },
       read: {
         "*": "ask",
         "docs/**": "allow",
@@ -139,7 +139,7 @@ describe("Gem Team config hook injection", () => {
 
     assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, {
       edit: { "*": "deny", "docs/plan/**": "allow" },
-      bash: { "*": "deny", "git *": "allow" },
+      bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" },
       read: {
         "*": "ask",
         "docs/**": "allow",
