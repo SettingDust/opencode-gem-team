@@ -123,7 +123,7 @@ OpenCode Gem Team 插件是一个面向 OpenCode 的 agent 集成插件，核心
 - `config` hook 负责在 OpenCode 加载配置时动态注入 Gem Team agents。
 - 注入范围包含 `gem-orchestrator` 与 15 个非 orchestrator 的 `gem-*` agents。
 - 注入默认 agent 信息时，必须先检测 OpenCode 已有 agent 配置；若用户已配置 OpenCode 原生 `agent.model`，插件不得覆盖。
-- 仅对 `gem-orchestrator` 注入默认 `permission`，在权限层强制其 delegation-first 契约：`edit` 默认 deny（仅放行 `docs/plan/**` 以便持久化 plan/wave 状态），`bash` 默认 deny（仅放行 `git *` 以支持 gate 通过后的 commit/diff）；`read`/`grep`/`glob`/`list` 默认 ask（仅静默放行编排自身所需的 `docs/**`、`**/.gem-team.yaml`、`AGENTS.md` 等编排面，读取其余路径会向用户弹确认）。探索性读取无法 hard-deny，因为 Phase 0 评估与深度调研共用同一组工具；`ask` 把尝试暴露给用户充当限流器，从而压制编排器的自主调研倾向。该默认值同样遵循"用户已有字段优先"语义；若用户为 `gem-orchestrator` 自定义了 `permission`，插件不得覆盖。OpenCode 无独立 `write` 权限键，`edit` 规则同时管控 `edit` 与 `write` 工具。
+- 仅对 `gem-orchestrator` 注入默认 `permission`，在权限层强制其 delegation-first 契约：`edit` 默认 deny（仅放行 `docs/plan/**` 以便持久化 plan/wave 状态），`bash` 默认 deny（仅放行 `git *` 以支持 gate 通过后的 commit/diff）；`read`/`grep`/`glob`/`list` 默认 `allow`。读取本身是只读且低风险，权限层也无法区分 Phase 0 评估读取与深度调研，因为它们共用同一组工具；同时 `ask` 会触发交互式阻塞，而用户拒绝会直接中止当前 turn。delegation-first 的硬保证因此只依赖 `edit`/`bash` 的 graceful deny 与 prompt 指引，不依赖读工具 gating。该默认值同样遵循"用户已有字段优先"语义；若用户为 `gem-orchestrator` 自定义了 `permission`，插件不得覆盖。OpenCode 无独立 `write` 权限键，`edit` 规则同时管控 `edit` 与 `write` 工具。
 - 插件不得使用 `chat.params` 设置实际请求 model；本插件只负责 agent 注册/注入与同步校验。
 
 kimchi 参考边界：本项目不照搬 provider virtual models、profiles、telemetry、slash commands、provider auto-router、context auto-compaction 或 model fallback chain。

@@ -13,29 +13,22 @@ const GEM_ORCHESTRATOR_SLUG = "gem-orchestrator";
  *   `rtk git *` is required because openrtk rewrites git commands before
  *   OpenCode's permission check. The carve-out stays limited to git only; we do
  *   not allow broader `rtk *` because that would bypass read/grep/list gating.
- * - read/grep/glob/list default to `ask` so the orchestrator can silently read
- *   its own orchestration surface (plan files, .gem-team.yaml, docs/, AGENTS.md)
- *   but must prompt the user before reading anything else. Exploratory reads
- *   cannot be hard-denied because Phase 0 assessment shares the same tools as
- *   deep research; `ask` surfaces the attempt and lets the user act as a rate
- *   limiter, since self-driven research needs many reads in a row.
- *
  * OpenCode evaluates the LAST matching rule, so broad rules are listed first and
  * narrow carve-outs last. There is no separate `write` permission key in OpenCode;
  * the `edit` rule gates both the `edit` and `write` tools.
+ * Read-family access stays `allow` because reads are read-only and low-risk, the
+ * permission layer cannot distinguish Phase 0 evaluation reads from deep research,
+ * and `ask` would block interactively in a way that aborts the turn on denial. The
+ * delegation-first guarantee is enforced by the graceful `edit`/`bash` denies plus
+ * prompt guidance, not by gating read-only tools.
  */
 const GEM_ORCHESTRATOR_PERMISSION = {
     edit: { "*": "deny", "docs/plan/**": "allow" },
     bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" },
-    read: {
-        "*": "ask",
-        "docs/**": "allow",
-        "**/.gem-team.yaml": "allow",
-        "AGENTS.md": "allow",
-    },
-    grep: { "*": "ask", "docs/plan/**": "allow" },
-    glob: { "*": "ask", "docs/plan/**": "allow" },
-    list: { "*": "ask", "docs/plan/**": "allow" },
+    read: "allow",
+    grep: "allow",
+    glob: "allow",
+    list: "allow",
 };
 export function injectGemTeamAgents(config) {
     config.agent ??= {};
