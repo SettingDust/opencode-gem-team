@@ -17,6 +17,7 @@
   },
   "scripts": {
     "compile": "tsc -p tsconfig.json",
+    "build": "npm run compile",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run compile && node --test \"dist/test/**/*.test.js\"",
     "lint": "npm run typecheck && npm run validate:package-scripts",

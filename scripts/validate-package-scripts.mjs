@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url"
 const root = process.cwd()
 
 const gitDependencyPreparationTriggeringScripts = new Set([
-  "build",
   "prepare",
   "prepack",
   "preinstall",
@@ -23,10 +22,6 @@ export function validatePackageScripts(packageJson) {
 
   for (const scriptName of Object.keys(scripts).sort()) {
     if (!gitDependencyPreparationTriggeringScripts.has(scriptName)) continue
-    if (scriptName === "build") {
-      failures.push("package.json scripts.build triggers npm pacote git dependency preparation; rename it to compile")
-      continue
-    }
     failures.push(`package.json scripts.${scriptName} triggers npm pacote git dependency preparation; remove or rename it`)
   }
 

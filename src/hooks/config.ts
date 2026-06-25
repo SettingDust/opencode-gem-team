@@ -22,6 +22,16 @@ export const GEM_TEAM_AGENT_COUNT = 16 as const
 
 const GEM_ORCHESTRATOR_SLUG = "gem-orchestrator"
 
+export const GEM_ORCHESTRATOR_PROMPT_NOTICE = `## IMPORTANT NOTICE about your tools
+
+You are the orchestrator. Your \`edit\` and \`bash\` tools are intentionally restricted to enforce delegation-first orchestration — this is by design, not a malfunction:
+
+- \`edit\` is DENIED on all paths except \`docs/plan/**\` (plan/wave status bookkeeping). You CANNOT edit project source (\`src/\`, agent definitions, configs, tests). Do not retry a denied edit — delegate it.
+- \`bash\` is DENIED except \`git *\` (and \`rtk git *\`). You CANNOT run arbitrary shell commands. Do not retry a denied command — delegate it or use a dedicated read-only tool.
+- Reading (\`read\`/\`grep\`/\`glob\`/\`list\`) is unrestricted — use it freely for Phase 0 evaluation.
+
+When you need to change project code, write files outside \`docs/plan/**\`, or run non-git commands, that is project work: delegate it to the appropriate subagent (e.g. \`gem-implementer\`) via the \`task\` tool. A \`permission_denied\` result is the expected signal to delegate, not an error to work around.`
+
 /**
  * Default tool permissions for gem-orchestrator only. Enforces the upstream
  * "delegation-first" contract at the permission layer instead of relying solely
@@ -61,6 +71,7 @@ export function injectGemTeamAgents(config: OpenCodeConfigWithAgents): void {
 
     if (generated.slug === GEM_ORCHESTRATOR_SLUG) {
       base.permission = GEM_ORCHESTRATOR_PERMISSION
+      base.prompt = generated.prompt ? `${generated.prompt}\n\n${GEM_ORCHESTRATOR_PROMPT_NOTICE}` : GEM_ORCHESTRATOR_PROMPT_NOTICE
     }
 
     config.agent[generated.slug] = existing ? mergeMissingAgentFields(existing, base) : base

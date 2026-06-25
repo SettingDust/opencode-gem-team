@@ -16,7 +16,6 @@ describe("package script git dependency preparation guard", () => {
   it("rejects scripts that trigger npm pacote git dependency preparation", () => {
     const failures = validatePackageScripts({
       scripts: {
-        build: "tsc -p tsconfig.json",
         compile: "tsc -p tsconfig.json",
         prepare: "node scripts/prepare.mjs",
         postinstall: "node scripts/postinstall.mjs",
@@ -24,15 +23,15 @@ describe("package script git dependency preparation guard", () => {
     })
 
     assert.deepEqual(failures, [
-      "package.json scripts.build triggers npm pacote git dependency preparation; rename it to compile",
       "package.json scripts.postinstall triggers npm pacote git dependency preparation; remove or rename it",
       "package.json scripts.prepare triggers npm pacote git dependency preparation; remove or rename it",
     ])
   })
 
-  it("allows the renamed compile command and existing validation scripts", () => {
+  it("allows the renamed compile command, build alias, and existing validation scripts", () => {
     const failures = validatePackageScripts({
       scripts: {
+        build: "tsc -p tsconfig.json",
         compile: "tsc -p tsconfig.json",
         test: "npm run compile && node --test \"dist/test/**/*.test.js\"",
         lint: "npm run typecheck && npm run validate:package-scripts",

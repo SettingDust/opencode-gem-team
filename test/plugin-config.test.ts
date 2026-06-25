@@ -4,7 +4,7 @@ import { describe, it } from "node:test"
 
 import plugin from "../src/index.js"
 import { getGeneratedGemTeamAgents, getGemOrchestratorRoutingTargets } from "../src/agents/generated-loader.js"
-import { GEM_TEAM_AGENT_COUNT, injectGemTeamAgents, type OpenCodeConfigWithAgents } from "../src/hooks/config.js"
+import { GEM_ORCHESTRATOR_PROMPT_NOTICE, GEM_TEAM_AGENT_COUNT, injectGemTeamAgents, type OpenCodeConfigWithAgents } from "../src/hooks/config.js"
 import { CANONICAL_GEM_TEAM_SLUGS } from "../src/sync/validation.js"
 
 describe("Gem Team config hook injection", () => {
@@ -81,6 +81,28 @@ describe("Gem Team config hook injection", () => {
         false,
         `${slug} should not get a default permission`,
       )
+    }
+  })
+
+  it("appends the delegation-first notice to gem-orchestrator prompt", () => {
+    const config: OpenCodeConfigWithAgents = {}
+
+    injectGemTeamAgents(config)
+
+    const prompt = config.agent?.["gem-orchestrator"]?.prompt ?? ""
+
+    assert.ok(prompt.includes("IMPORTANT NOTICE about your tools"))
+    assert.ok(prompt.includes("delegate"))
+    assert.ok(prompt.includes(GEM_ORCHESTRATOR_PROMPT_NOTICE))
+  })
+
+  it("does not append the delegation-first notice to non-orchestrator prompts", () => {
+    const config: OpenCodeConfigWithAgents = {}
+
+    injectGemTeamAgents(config)
+
+    for (const slug of CANONICAL_GEM_TEAM_SLUGS.filter((slug) => slug !== "gem-orchestrator")) {
+      assert.equal(config.agent?.[slug]?.prompt?.includes("IMPORTANT NOTICE about your tools"), false, `${slug} should not get the notice`)
     }
   })
 
