@@ -85,7 +85,7 @@ describe("Gem Team config hook injection", () => {
     assert.ok(prompt.includes("Current phase: <2 | 3>"))
     assert.ok(prompt.includes("Action MUST be exactly one of the values listed above"))
     assert.equal(prompt.includes("Required agent"), false)
-    assert.ok(prompt.includes("Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | git | bookkeeping | clarify>"))
+    assert.ok(prompt.includes("Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | skill>"))
     assert.ok(prompt.includes("Current phase: <2 | 3>\nComplexity: <TRIVIAL|LOW|MEDIUM|HIGH>\nWave completed: <N, or n/a outside Phase 3>\nNext step: <...>"))
     assert.ok(prompt.includes(GEM_ORCHESTRATOR_PROMPT_NOTICE))
   })
@@ -93,7 +93,7 @@ describe("Gem Team config hook injection", () => {
   it("uses the complexity-driven decision block fields in the correct order", () => {
     const phaseIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Phase: <current phase>")
     const complexityIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>")
-    const actionIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | git | bookkeeping | clarify>")
+    const actionIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | skill>")
     const decisionPathIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Decision path: <...>")
 
     assert.notEqual(phaseIndex, -1)
