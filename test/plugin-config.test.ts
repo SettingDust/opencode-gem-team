@@ -90,7 +90,11 @@ describe("Gem Team config hook injection", () => {
 
     assert.ok(prompt.includes("IMPORTANT NOTICE about your tools"))
     assert.ok(prompt.includes("delegate"))
-    assert.ok(prompt.includes("Before delegating, follow your defined agent roles and route each task to the subagent whose specialization matches it."))
+    assert.ok(prompt.includes("When delegating in Phase 0 (TRIVIAL/LOW) or Phase 3, match task type to agent strictly:"))
+    assert.ok(prompt.includes("gem-researcher"))
+    assert.ok(prompt.includes("gem-reviewer"))
+    assert.ok(prompt.includes("gem-skill-creator"))
+    assert.ok(prompt.includes("Do NOT route research to implementer. Do NOT route review to implementer."))
     assert.ok(prompt.includes(GEM_ORCHESTRATOR_PROMPT_NOTICE))
   })
 
