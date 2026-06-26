@@ -90,6 +90,7 @@ describe("Gem Team config hook injection", () => {
 
     assert.ok(prompt.includes("IMPORTANT NOTICE about your tools"))
     assert.ok(prompt.includes("delegate"))
+    assert.ok(prompt.includes("Before delegating, follow your defined agent roles and route each task to the subagent whose specialization matches it."))
     assert.ok(prompt.includes(GEM_ORCHESTRATOR_PROMPT_NOTICE))
   })
 

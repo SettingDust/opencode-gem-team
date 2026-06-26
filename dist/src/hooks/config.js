@@ -11,6 +11,7 @@ export const GEM_ORCHESTRATOR_PROMPT_NOTICE = [
     "- Reading (`read`/`grep`/`glob`/`list`) is limited to orchestration artifacts (plan/bookkeeping/config/conventions); do not expect project-source reads to work here.",
     "",
     "When you need to change project code, write files outside `docs/plan/**`, or run non-git commands, that is project work: delegate it to the appropriate subagent (e.g. `gem-implementer`) via the `task` tool. A `permission_denied` result is the expected signal to delegate, not an error to work around.",
+    "Before delegating, follow your defined agent roles and route each task to the subagent whose specialization matches it.",
 ].join('\n');
 // Default tool permissions for gem-orchestrator only. Enforces delegation-first
 // at the permission layer instead of relying solely on the prompt: the
