@@ -124,7 +124,7 @@ OpenCode Gem Team 插件是一个面向 OpenCode 的 agent 集成插件，核心
 - 注入范围包含 `gem-orchestrator` 与 15 个非 orchestrator 的 `gem-*` agents。
 - 注入默认 agent 信息时，必须先检测 OpenCode 已有 agent 配置；若用户已配置 OpenCode 原生 `agent.model`，插件不得覆盖。
 - 仅对 `gem-orchestrator` 注入默认 `permission`，保留 `permission_denied` 作为明确的委派信号；若用户为 `gem-orchestrator` 自定义了 `permission`，插件不得覆盖。OpenCode 无独立 `write` 权限键，`edit` 规则同时管控 `edit` 与 `write` 工具。
-- `gem-orchestrator` 的 system prompt 会追加一段泛化到所有路径的强制 decision-block 自陈要求：在 delegating via `task`、更新 `docs/plan/*`、运行 git、澄清或执行任何动作之前，都必须先 verbalize `Phase`、`Action type`、`Target` 与 `Reasoning`；同时必须遵循工具失败处理协议：先分析错误类型，再决定修参重试、因 `permission_denied` 而委派、校验相对路径后重试/继续发现，或将阻塞升级；调用工具时必须使用相对路径而非绝对路径。
+- `gem-orchestrator` 的 system prompt 会追加一段泛化到所有路径的强制 decision-block 自陈要求：在 delegating via `task`、更新 `docs/plan/*`、运行 git、澄清或执行任何动作之前，都必须先 verbalize `Phase`、`Action type`、`Target` 与 `Reasoning`；同时必须遵循工具失败处理协议：先分析错误类型，再决定修参重试、因 `permission_denied` 而委派、校验相对路径后重试/继续发现，或将阻塞升级；调用工具时必须使用相对路径而非绝对路径；并且在关键 workflow checkpoint 强制输出 checkpoint block，自陈当前 `phase`、`complexity` 与 `next step`，其中 Phase 2 完成计划生成/加载后必须输出 Phase 2 checkpoint，Phase 3 每个 wave 完成后必须输出包含 `Wave completed` 的 Phase 3 checkpoint。
 - 插件不得使用 `chat.params` 设置实际请求 model；本插件只负责 agent 注册/注入与同步校验。
 
 kimchi 参考边界：本项目不照搬 provider virtual models、profiles、telemetry、slash commands、provider auto-router、context auto-compaction 或 model fallback chain。

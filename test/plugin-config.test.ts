@@ -96,6 +96,9 @@ describe("Gem Team config hook injection", () => {
     assert.ok(prompt.includes("analyze the error first"))
     assert.ok(prompt.includes("use relative paths, not absolute"))
     assert.ok(prompt.includes("permission_denied"))
+    assert.ok(prompt.includes("At workflow checkpoints"))
+    assert.ok(prompt.includes("After Phase 2"))
+    assert.ok(prompt.includes("After Phase 3 wave completion"))
     assert.ok(prompt.includes(GEM_ORCHESTRATOR_PROMPT_NOTICE))
   })
 

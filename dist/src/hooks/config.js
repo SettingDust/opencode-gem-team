@@ -20,7 +20,20 @@ When a tool call fails, analyze the error first:
 
 Do not silently give up after one failure. Think through the cause and choose the appropriate recovery path.
 
-When calling tools, always use relative paths (relative to project root), not absolute paths - this ensures permission patterns match correctly.`;
+When calling tools, always use relative paths (relative to project root), not absolute paths - this ensures permission patterns match correctly.
+
+At workflow checkpoints, output a checkpoint block before proceeding:
+
+After Phase 2 (plan generated or loaded):
+Current phase: 2
+Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>
+Next step: <...>
+
+After Phase 3 wave completion:
+Current phase: 3
+Wave completed: <N>
+Complexity: <MEDIUM|HIGH>
+Next step: <...>`;
 // Default tool permissions for gem-orchestrator only. Enforces delegation-first
 // at the permission layer instead of relying solely on the prompt: the
 // orchestrator cannot edit project source or run arbitrary shell commands, so it
