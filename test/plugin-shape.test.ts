@@ -12,11 +12,10 @@ describe("OpenCode Gem Team plugin scaffold", () => {
   it("exports a callable server hook factory", async () => {
     assert.equal(typeof plugin.server, "function")
 
-    const hooks = await plugin.server({ client: { session: { get: async () => ({ data: {} }) } }, directory: "." } as never)
+    const hooks = await plugin.server({} as never)
 
     assert.equal(typeof hooks, "object")
     assert.equal(typeof hooks.config, "function")
-    assert.equal(typeof hooks["tool.execute.before"], "function")
     assert.equal(Object.hasOwn(hooks, "chat.params"), false)
   })
 })

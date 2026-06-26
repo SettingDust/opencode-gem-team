@@ -2,15 +2,13 @@ import type { Hooks, Plugin, PluginModule } from "@opencode-ai/plugin"
 
 import { PLUGIN_ID } from "./constants.js"
 import { injectGemTeamAgents } from "./hooks/config.js"
-import { createGemOrchestratorToolGuard } from "./hooks/tool-guard.js"
 
-const server: Plugin = async (input, options) => {
+const server: Plugin = async (_input, options) => {
   void options
   const hooks: Hooks = {
     config: async (config) => {
       injectGemTeamAgents(config)
     },
-    "tool.execute.before": createGemOrchestratorToolGuard(input.client, input.directory),
   }
 
   return hooks
