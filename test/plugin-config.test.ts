@@ -70,7 +70,7 @@ describe("Gem Team config hook injection", () => {
 
     injectGemTeamAgents(config)
 
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/**": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/**": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/**": "allow" }, glob: { "*": "deny", "docs/plan/**": "allow" } })
+    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" } })
 
     for (const slug of CANONICAL_GEM_TEAM_SLUGS.filter((slug) => slug !== "gem-orchestrator")) {
       assert.equal(
@@ -92,6 +92,9 @@ describe("Gem Team config hook injection", () => {
     assert.ok(prompt.includes("Before EVERY action"))
     assert.ok(prompt.includes("you MUST first output a decision block"))
     assert.ok(prompt.includes("Acting without a verbalized decision block is a workflow violation"))
+    assert.ok(prompt.includes("When a tool call fails"))
+    assert.ok(prompt.includes("analyze the error first"))
+    assert.ok(prompt.includes("use relative paths, not absolute"))
     assert.ok(prompt.includes("permission_denied"))
     assert.ok(prompt.includes(GEM_ORCHESTRATOR_PROMPT_NOTICE))
   })
@@ -118,7 +121,7 @@ describe("Gem Team config hook injection", () => {
     injectGemTeamAgents(config)
 
     // User-specified keys (edit/bash) win; injected defaults fill the remaining permission keys.
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: "allow", bash: "allow", read: { "*": "deny", "docs/plan/**": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/**": "allow" }, glob: { "*": "deny", "docs/plan/**": "allow" } })
+    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: "allow", bash: "allow", read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" } })
   })
 
   it("keeps injected delegation-first defaults when the user only sets unrelated permission keys", () => {
@@ -138,7 +141,7 @@ describe("Gem Team config hook injection", () => {
 
     injectGemTeamAgents(config)
 
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/**": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/**": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/**": "allow" }, glob: { "*": "deny", "docs/plan/**": "allow" }, "intellij-debugger_*": "deny", "github_*": "deny" })
+    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" }, "intellij-debugger_*": "deny", "github_*": "deny" })
     assert.equal(config.agent?.["gem-orchestrator"]?.model, "user-model")
   })
 

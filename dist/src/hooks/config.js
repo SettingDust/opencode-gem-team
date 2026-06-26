@@ -3,24 +3,34 @@ export const GEM_TEAM_AGENT_COUNT = 16;
 const GEM_ORCHESTRATOR_SLUG = "gem-orchestrator";
 export const GEM_ORCHESTRATOR_PROMPT_NOTICE = `## IMPORTANT NOTICE about your workflow
 
-You are the orchestrator. Before EVERY action — delegating via \`task\`, updating plan bookkeeping under \`docs/plan/**\`, running git, clarifying, or anything else — you MUST first output a decision block:
+You are the orchestrator. Before EVERY action - delegating via \`task\`, updating plan bookkeeping under \`docs/plan/*\`, running git, clarifying, or anything else - you MUST first output a decision block:
 
 Phase: <current phase>
 Action type: <delegate | plan-bookkeeping | git | clarify | ...>
 Target: <gem-<slug> when delegating, otherwise the file or command>
 Reasoning: <why this action and target fit the current phase and your workflow/role>
 
-Only after emitting this block may you act. Acting without a verbalized decision block is a workflow violation. If an action is denied (\`permission_denied\`), that is the expected signal to delegate it — do not retry.`;
+Only after emitting this block may you act. Acting without a verbalized decision block is a workflow violation.
+
+When a tool call fails, analyze the error first:
+- Schema/parameter error (\`invalid_params\`, missing required field) -> fix the parameter and retry
+- Permission denied (\`permission_denied\`) -> delegate the action to the appropriate subagent; do not retry
+- File/resource not found -> verify the path is correct (use relative paths, not absolute); retry or delegate discovery
+- Other errors -> determine if it's transient (retry), a blocker (escalate), or requires delegation
+
+Do not silently give up after one failure. Think through the cause and choose the appropriate recovery path.
+
+When calling tools, always use relative paths (relative to project root), not absolute paths - this ensures permission patterns match correctly.`;
 // Default tool permissions for gem-orchestrator only. Enforces delegation-first
 // at the permission layer instead of relying solely on the prompt: the
 // orchestrator cannot edit project source or run arbitrary shell commands, so it
 // is forced to delegate project work to subagents.
 //
 // Carve-outs preserve legitimate orchestration work only:
-// - `edit` allows `docs/plan/**` so the orchestrator can persist plan/wave status.
+// - `edit` allows `docs/plan/*` so the orchestrator can persist plan/wave status.
 // - `bash` allows `git *` and `rtk git *` for the post-gate commit/diff steps.
 // - `read`/`grep`/`glob` are strictly denied everywhere except orchestration
-//   artifacts: `docs/plan/**`, `**/.gem-team.yaml`, and `**/AGENTS.md`.
+//   artifacts: `docs/plan/*`, `**/.gem-team.yaml`, and `**/AGENTS.md`.
 //
 // Use `deny`, not `ask`: `ask` would block the turn with an interactive prompt
 // that can abort the conversation if rejected, while `deny` returns
@@ -30,7 +40,7 @@ Only after emitting this block may you act. Acting without a verbalized decision
 // the `edit` rule gates both the `edit` and `write` tools.
 // `read` is also implicitly covered by OpenCode's default `.env` deny; the `*`
 // `deny` baseline already covers that too.
-const GEM_ORCHESTRATOR_PERMISSION = { edit: { "*": "deny", "docs/plan/**": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/**": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/**": "allow" }, glob: { "*": "deny", "docs/plan/**": "allow" } };
+const GEM_ORCHESTRATOR_PERMISSION = { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" } };
 export function injectGemTeamAgents(config) {
     config.agent ??= {};
     for (const generated of getGeneratedGemTeamAgents()) {
