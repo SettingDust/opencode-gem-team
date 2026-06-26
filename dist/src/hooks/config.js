@@ -28,6 +28,12 @@ export const GEM_ORCHESTRATOR_PROMPT_NOTICE = [
     "- Refactoring / dead code removal / complexity reduction → `gem-code-simplifier`",
     "- Challenge assumptions / find edge cases / critique plan → `gem-critic`",
     "- Skill authoring / agent authoring / meta-agent updates / generator changes → `gem-skill-creator`",
+    "Before every delegation in Phase 0 (TRIVIAL/LOW) or Phase 3, you MUST first output a delegation decision block:",
+    "Phase: <current phase>",
+    "Task type: <research|implementation|review|debug|planning|docs|design|devops|test|refactor|...>",
+    "Selected agent: gem-<slug>",
+    "Reasoning: <why this agent's specialization matches the task type, per the routing table above>",
+    "Only after emitting this block may you issue the `task()` call. Choosing an agent without a verbalized delegation decision block is a workflow violation.",
     "Do NOT route research to implementer. Do NOT route review to implementer. Do NOT route mobile implementation to desktop implementer. Each agent is specialized — respect the boundary.",
 ].join('\n');
 // Default tool permissions for gem-orchestrator only. Enforces delegation-first
