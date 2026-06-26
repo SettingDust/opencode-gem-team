@@ -48,12 +48,14 @@ At workflow checkpoints, output a checkpoint block before proceeding:
 After Phase 2 (plan generated or loaded):
 Current phase: 2
 Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>
+Required agent: <...>
 Next step: <...>
 
 After Phase 3 wave completion:
 Current phase: 3
 Wave completed: <N>
 Complexity: <MEDIUM|HIGH>
+Required agent: <...>
 Next step: <...>`
 export function injectGemTeamAgents(config: OpenCodeConfigWithAgents): void {
   config.agent ??= {}
