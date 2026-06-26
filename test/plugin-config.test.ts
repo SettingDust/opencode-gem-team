@@ -83,9 +83,9 @@ describe("Gem Team config hook injection", () => {
     assert.ok(prompt.includes("At workflow checkpoints"))
     assert.ok(prompt.includes("After Phase 2"))
     assert.ok(prompt.includes("After Phase 3 wave completion"))
-    assert.ok(prompt.includes("Required agent"))
-    assert.ok(prompt.includes("Current phase: 2\nComplexity: <TRIVIAL|LOW|MEDIUM|HIGH>\nRequired agent: <...>\nNext step: <...>"))
-    assert.ok(prompt.includes("Current phase: 3\nWave completed: <N>\nComplexity: <MEDIUM|HIGH>\nRequired agent: <...>\nNext step: <...>"))
+    assert.equal(prompt.includes("Required agent"), false)
+    assert.ok(prompt.includes("Current phase: 2\nComplexity: <TRIVIAL|LOW|MEDIUM|HIGH>\nNext step: <...>"))
+    assert.ok(prompt.includes("Current phase: 3\nWave completed: <N>\nComplexity: <MEDIUM|HIGH>\nNext step: <...>"))
     assert.ok(prompt.includes(GEM_ORCHESTRATOR_PROMPT_NOTICE))
   })
 
