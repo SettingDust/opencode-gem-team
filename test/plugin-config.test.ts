@@ -65,22 +65,6 @@ describe("Gem Team config hook injection", () => {
     })
   })
 
-  it("injects delegation-first permission for gem-orchestrator only", () => {
-    const config: OpenCodeConfigWithAgents = {}
-
-    injectGemTeamAgents(config)
-
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" } })
-
-    for (const slug of CANONICAL_GEM_TEAM_SLUGS.filter((slug) => slug !== "gem-orchestrator")) {
-      assert.equal(
-        Object.hasOwn(config.agent?.[slug] ?? {}, "permission"),
-        false,
-        `${slug} should not get a default permission`,
-      )
-    }
-  })
-
   it("appends the delegation-first notice to gem-orchestrator prompt", () => {
     const config: OpenCodeConfigWithAgents = {}
 
@@ -112,24 +96,7 @@ describe("Gem Team config hook injection", () => {
     }
   })
 
-  it("lets user-defined orchestrator permission keys win while keeping injected defaults for unset keys", () => {
-    const config: OpenCodeConfigWithAgents = {
-      agent: {
-        "gem-orchestrator": {
-          permission: { edit: "allow", bash: "allow" },
-        },
-      },
-    }
-
-    injectGemTeamAgents(config)
-
-    // User-specified keys (edit/bash) win; injected defaults fill the remaining permission keys.
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: "allow", bash: "allow", read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" } })
-  })
-
-  it("keeps injected delegation-first defaults when the user only sets unrelated permission keys", () => {
-    // Real-world regression: a user who only denies a few MCP tools on the orchestrator
-    // must NOT silently lose the injected edit/bash/read delegation-first guards.
+  it("preserves user-defined orchestrator permission without adding defaults", () => {
     const config: OpenCodeConfigWithAgents = {
       agent: {
         "gem-orchestrator": {
@@ -144,7 +111,10 @@ describe("Gem Team config hook injection", () => {
 
     injectGemTeamAgents(config)
 
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" }, "intellij-debugger_*": "deny", "github_*": "deny" })
+    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, {
+      "intellij-debugger_*": "deny",
+      "github_*": "deny",
+    })
     assert.equal(config.agent?.["gem-orchestrator"]?.model, "user-model")
   })
 
