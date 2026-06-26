@@ -88,15 +88,11 @@ describe("Gem Team config hook injection", () => {
 
     const prompt = config.agent?.["gem-orchestrator"]?.prompt ?? ""
 
-    assert.ok(prompt.includes("IMPORTANT NOTICE about your tools"))
-    assert.ok(prompt.includes("delegate"))
-    assert.ok(prompt.includes("When delegating in Phase 0 (TRIVIAL/LOW) or Phase 3, match task type to agent strictly:"))
-    assert.ok(prompt.includes("delegation decision block"))
-    assert.ok(prompt.includes("Task type: <research|implementation|review|debug|planning|docs|design|devops|test|refactor|...>"))
-    assert.ok(prompt.includes("gem-researcher"))
-    assert.ok(prompt.includes("gem-reviewer"))
-    assert.ok(prompt.includes("gem-skill-creator"))
-    assert.ok(prompt.includes("Do NOT route research to implementer. Do NOT route review to implementer."))
+    assert.ok(prompt.includes("IMPORTANT NOTICE about your workflow"))
+    assert.ok(prompt.includes("Before EVERY action"))
+    assert.ok(prompt.includes("you MUST first output a decision block"))
+    assert.ok(prompt.includes("Acting without a verbalized decision block is a workflow violation"))
+    assert.ok(prompt.includes("permission_denied"))
     assert.ok(prompt.includes(GEM_ORCHESTRATOR_PROMPT_NOTICE))
   })
 
@@ -106,7 +102,7 @@ describe("Gem Team config hook injection", () => {
     injectGemTeamAgents(config)
 
     for (const slug of CANONICAL_GEM_TEAM_SLUGS.filter((slug) => slug !== "gem-orchestrator")) {
-      assert.equal(config.agent?.[slug]?.prompt?.includes("IMPORTANT NOTICE about your tools"), false, `${slug} should not get the notice`)
+      assert.equal(config.agent?.[slug]?.prompt?.includes("IMPORTANT NOTICE about your workflow"), false, `${slug} should not get the notice`)
     }
   })
 

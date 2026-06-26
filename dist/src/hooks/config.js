@@ -1,41 +1,16 @@
 import { getGeneratedGemTeamAgents, getGemOrchestratorRoutingTargets } from "../agents/generated-loader.js";
 export const GEM_TEAM_AGENT_COUNT = 16;
 const GEM_ORCHESTRATOR_SLUG = "gem-orchestrator";
-export const GEM_ORCHESTRATOR_PROMPT_NOTICE = [
-    "## IMPORTANT NOTICE about your tools",
-    "",
-    "You are the orchestrator. Your `edit` and `bash` tools are intentionally restricted to enforce delegation-first orchestration — this is by design, not a malfunction:",
-    "",
-    "- `edit` is DENIED on all paths except `docs/plan/**` (plan/wave status bookkeeping). You CANNOT edit project source (`src/`, agent definitions, configs, tests). Do not retry a denied edit — delegate it.",
-    "- `bash` is DENIED except `git *` (and `rtk git *`). You CANNOT run arbitrary shell commands. Do not retry a denied command — delegate it or use a dedicated read-only tool.",
-    "- Reading (`read`/`grep`/`glob`/`list`) is limited to orchestration artifacts (plan/bookkeeping/config/conventions); do not expect project-source reads to work here.",
-    "",
-    "When you need to change project code, write files outside `docs/plan/**`, or run non-git commands, that is project work: delegate it to the appropriate subagent (e.g. `gem-implementer`) via the `task` tool. A `permission_denied` result is the expected signal to delegate, not an error to work around.",
-    "When delegating in Phase 0 (TRIVIAL/LOW) or Phase 3, match task type to agent strictly:",
-    "- Orchestration / routing / phase coordination / task decomposition / delegating work between agents → `gem-orchestrator` (coordinate only; do not self-delegate project work)",
-    "- Research / exploration / codebase discovery / architecture analysis → `gem-researcher`",
-    "- Implementation / feature work / refactor / code changes → `gem-implementer`",
-    "- Mobile implementation / native mobile code changes → `gem-implementer-mobile`",
-    "- Bug fix / error diagnosis / root-cause analysis → `gem-debugger` first, then `gem-implementer` for the fix",
-    "- Code review / security audit / PR validation / acceptance check → `gem-reviewer`",
-    "- Planning / task decomposition / DAG generation → `gem-planner` (MEDIUM/HIGH only)",
-    "- Documentation / README / API docs / diagrams → `gem-documentation-writer`",
-    "- UI/UX design / layouts / themes / design systems → `gem-designer`",
-    "- Mobile UI/UX / HIG / Material Design → `gem-designer-mobile`",
-    "- Browser E2E testing / visual regression → `gem-browser-tester`",
-    "- Mobile E2E testing / Detox / Maestro → `gem-mobile-tester`",
-    "- DevOps / deployment / CI/CD / infrastructure → `gem-devops`",
-    "- Refactoring / dead code removal / complexity reduction → `gem-code-simplifier`",
-    "- Challenge assumptions / find edge cases / critique plan → `gem-critic`",
-    "- Skill authoring / agent authoring / meta-agent updates / generator changes → `gem-skill-creator`",
-    "Before every delegation in Phase 0 (TRIVIAL/LOW) or Phase 3, you MUST first output a delegation decision block:",
-    "Phase: <current phase>",
-    "Task type: <research|implementation|review|debug|planning|docs|design|devops|test|refactor|...>",
-    "Selected agent: gem-<slug>",
-    "Reasoning: <why this agent's specialization matches the task type, per the routing table above>",
-    "Only after emitting this block may you issue the `task()` call. Choosing an agent without a verbalized delegation decision block is a workflow violation.",
-    "Do NOT route research to implementer. Do NOT route review to implementer. Do NOT route mobile implementation to desktop implementer. Each agent is specialized — respect the boundary.",
-].join('\n');
+export const GEM_ORCHESTRATOR_PROMPT_NOTICE = `## IMPORTANT NOTICE about your workflow
+
+You are the orchestrator. Before EVERY action — delegating via \`task\`, updating plan bookkeeping under \`docs/plan/**\`, running git, clarifying, or anything else — you MUST first output a decision block:
+
+Phase: <current phase>
+Action type: <delegate | plan-bookkeeping | git | clarify | ...>
+Target: <gem-<slug> when delegating, otherwise the file or command>
+Reasoning: <why this action and target fit the current phase and your workflow/role>
+
+Only after emitting this block may you act. Acting without a verbalized decision block is a workflow violation. If an action is denied (\`permission_denied\`), that is the expected signal to delegate it — do not retry.`;
 // Default tool permissions for gem-orchestrator only. Enforces delegation-first
 // at the permission layer instead of relying solely on the prompt: the
 // orchestrator cannot edit project source or run arbitrary shell commands, so it

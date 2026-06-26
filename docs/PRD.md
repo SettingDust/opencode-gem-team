@@ -123,10 +123,8 @@ OpenCode Gem Team 插件是一个面向 OpenCode 的 agent 集成插件，核心
 - `config` hook 负责在 OpenCode 加载配置时动态注入 Gem Team agents。
 - 注入范围包含 `gem-orchestrator` 与 15 个非 orchestrator 的 `gem-*` agents。
 - 注入默认 agent 信息时，必须先检测 OpenCode 已有 agent 配置；若用户已配置 OpenCode 原生 `agent.model`，插件不得覆盖。
-- 仅对 `gem-orchestrator` 注入默认 `permission`，在权限层强制其 delegation-first 契约：`edit` 默认 deny（仅放行 `docs/plan/**` 以便持久化 plan/wave 状态），`bash` 默认 deny（仅放行 `git *` 以支持 gate 通过后的 commit/diff）；`read`/`grep`/`glob`/`list` 留给 OpenCode 的默认 `*: allow` 基线。读取本身是只读且低风险，权限层也无法区分 Phase 0 评估读取与深度调研，因为它们共用同一组工具；同时 `ask` 会触发交互式阻塞，而用户拒绝会直接中止当前 turn。delegation-first 的硬保证因此只依赖 `edit`/`bash` 的 graceful deny 与 prompt 指引，不依赖读工具 gating。该默认值同样遵循"用户已有字段优先"语义；若用户为 `gem-orchestrator` 自定义了 `permission`，插件不得覆盖。OpenCode 无独立 `write` 权限键，`edit` 规则同时管控 `edit` 与 `write` 工具。
-- `gem-orchestrator` 的 system prompt 会追加一个 delegation-first NOTICE，提前说明 `edit`/`bash` 边界，减少 `permission_denied` 后的无效重试，并把它引导到 subagent 委派。
-- 该 NOTICE 追加一份硬路由表：按任务类型明确映射到对应 agent，避免编排器自行推断并把 research/review 等任务误派给 `gem-implementer`。
-- 该 NOTICE 还必须要求 orchestrator 在 Phase 0（TRIVIAL/LOW）与 Phase 3 的每次委派前，先输出一个 delegation decision block，至少 verbalize `Phase`、`Task type`、`Selected agent` 与 `Reasoning`，然后才能调用 `task()`；未先输出该 block 视为 workflow violation。
+- 仅对 `gem-orchestrator` 注入默认 `permission`，保留 `permission_denied` 作为明确的委派信号；若用户为 `gem-orchestrator` 自定义了 `permission`，插件不得覆盖。OpenCode 无独立 `write` 权限键，`edit` 规则同时管控 `edit` 与 `write` 工具。
+- `gem-orchestrator` 的 system prompt 会追加一段泛化到所有路径的强制 decision-block 自陈要求：在 delegating via `task`、更新 `docs/plan/**`、运行 git、澄清或执行任何动作之前，都必须先 verbalize `Phase`、`Action type`、`Target` 与 `Reasoning`；若动作返回 `permission_denied`，应将其视为预期的委派信号，不要重试。
 - 插件不得使用 `chat.params` 设置实际请求 model；本插件只负责 agent 注册/注入与同步校验。
 
 kimchi 参考边界：本项目不照搬 provider virtual models、profiles、telemetry、slash commands、provider auto-router、context auto-compaction 或 model fallback chain。
