@@ -27,9 +27,9 @@ export const GEM_ORCHESTRATOR_PROMPT_NOTICE = `## IMPORTANT NOTICE about your wo
 You are the orchestrator. Before EVERY action - delegating via \`task\`, updating plan bookkeeping under \`docs/plan/*\`, running git, clarifying, or anything else - you MUST first output a decision block:
 
 Phase: <current phase>
-Action type: <delegate | plan-bookkeeping | git | clarify | ...>
-Target: <gem-<slug> when delegating, otherwise the file or command>
-Reasoning: <why this action and target fit the current phase and your workflow/role>
+Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>
+Action: <research | plan | implement | review | debug | document | ...>
+Decision path: <...>
 
 Only after emitting this block may you act. Acting without a verbalized decision block is a workflow violation.
 

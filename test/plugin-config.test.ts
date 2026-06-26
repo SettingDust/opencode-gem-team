@@ -89,6 +89,24 @@ describe("Gem Team config hook injection", () => {
     assert.ok(prompt.includes(GEM_ORCHESTRATOR_PROMPT_NOTICE))
   })
 
+  it("uses the complexity-driven decision block fields in the correct order", () => {
+    const phaseIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Phase: <current phase>")
+    const complexityIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>")
+    const actionIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Action: <research | plan | implement | review | debug | document | ...>")
+    const decisionPathIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Decision path: <...>")
+
+    assert.notEqual(phaseIndex, -1)
+    assert.notEqual(complexityIndex, -1)
+    assert.notEqual(actionIndex, -1)
+    assert.notEqual(decisionPathIndex, -1)
+    assert.equal(GEM_ORCHESTRATOR_PROMPT_NOTICE.includes("Action type:"), false)
+    assert.equal(GEM_ORCHESTRATOR_PROMPT_NOTICE.includes("Target:"), false)
+    assert.equal(GEM_ORCHESTRATOR_PROMPT_NOTICE.includes("Reasoning:"), false)
+    assert.ok(phaseIndex < complexityIndex)
+    assert.ok(complexityIndex < actionIndex)
+    assert.ok(actionIndex < decisionPathIndex)
+  })
+
   it("does not append the delegation-first notice to non-orchestrator prompts", () => {
     const config: OpenCodeConfigWithAgents = {}
 
