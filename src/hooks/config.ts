@@ -63,8 +63,10 @@ Next step: <...>`
 // Carve-outs preserve legitimate orchestration work only:
 // - `edit` allows `docs/plan/*` so the orchestrator can persist plan/wave status.
 // - `bash` allows `git *` and `rtk git *` for the post-gate commit/diff steps.
-// - `read`/`grep`/`glob` are strictly denied everywhere except orchestration
-//   artifacts: `docs/plan/*`, `**/.gem-team.yaml`, and `**/AGENTS.md`.
+// - `read` is strictly denied everywhere except orchestration artifacts:
+//   `docs/plan/*`, `**/.gem-team.yaml`, and `**/AGENTS.md`.
+// - `grep`/`glob` are guarded by a runtime plugin hook instead of permission
+//   injection, and only allow `docs/plan/**` for gem-orchestrator.
 //
 // Use `deny`, not `ask`: `ask` would block the turn with an interactive prompt
 // that can abort the conversation if rejected, while `deny` returns
@@ -74,7 +76,7 @@ Next step: <...>`
 // the `edit` rule gates both the `edit` and `write` tools.
 // `read` is also implicitly covered by OpenCode's default `.env` deny; the `*`
 // `deny` baseline already covers that too.
-const GEM_ORCHESTRATOR_PERMISSION: OpenCodePermissionConfig = { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" } }
+const GEM_ORCHESTRATOR_PERMISSION: OpenCodePermissionConfig = { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" } }
 
 export function injectGemTeamAgents(config: OpenCodeConfigWithAgents): void {
   config.agent ??= {}

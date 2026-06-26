@@ -1,11 +1,13 @@
 import { PLUGIN_ID } from "./constants.js";
 import { injectGemTeamAgents } from "./hooks/config.js";
-const server = async (_input, options) => {
+import { createGemOrchestratorToolGuard } from "./hooks/tool-guard.js";
+const server = async (input, options) => {
     void options;
     const hooks = {
         config: async (config) => {
             injectGemTeamAgents(config);
         },
+        "tool.execute.before": createGemOrchestratorToolGuard(input.client, input.directory),
     };
     return hooks;
 };

@@ -5,6 +5,7 @@ import { describe, it } from "node:test"
 import plugin from "../src/index.js"
 import { getGeneratedGemTeamAgents, getGemOrchestratorRoutingTargets } from "../src/agents/generated-loader.js"
 import { GEM_ORCHESTRATOR_PROMPT_NOTICE, GEM_TEAM_AGENT_COUNT, injectGemTeamAgents, type OpenCodeConfigWithAgents } from "../src/hooks/config.js"
+import { createGemOrchestratorToolGuard } from "../src/hooks/tool-guard.js"
 import { CANONICAL_GEM_TEAM_SLUGS } from "../src/sync/validation.js"
 
 describe("Gem Team config hook injection", () => {
@@ -19,7 +20,7 @@ describe("Gem Team config hook injection", () => {
   })
 
   it("uses the plugin config hook to inject agents", async () => {
-    const hooks = await plugin.server({} as never, { complexity_models: { medium: "legacy-tier-model" } })
+    const hooks = await plugin.server({ client: { session: { get: async () => ({ data: {}, error: undefined, request: {} as never, response: {} as never }) } }, directory: "." } as never, { complexity_models: { medium: "legacy-tier-model" } })
     const config: OpenCodeConfigWithAgents = {}
 
     await hooks.config?.(config as never)
@@ -70,7 +71,7 @@ describe("Gem Team config hook injection", () => {
 
     injectGemTeamAgents(config)
 
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" } })
+    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" } })
 
     for (const slug of CANONICAL_GEM_TEAM_SLUGS.filter((slug) => slug !== "gem-orchestrator")) {
       assert.equal(
@@ -124,7 +125,7 @@ describe("Gem Team config hook injection", () => {
     injectGemTeamAgents(config)
 
     // User-specified keys (edit/bash) win; injected defaults fill the remaining permission keys.
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: "allow", bash: "allow", read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" } })
+    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: "allow", bash: "allow", read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" } })
   })
 
   it("keeps injected delegation-first defaults when the user only sets unrelated permission keys", () => {
@@ -144,8 +145,67 @@ describe("Gem Team config hook injection", () => {
 
     injectGemTeamAgents(config)
 
-    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, grep: { "*": "deny", "docs/plan/*": "allow" }, glob: { "*": "deny", "docs/plan/*": "allow" }, "intellij-debugger_*": "deny", "github_*": "deny" })
+    assert.deepEqual(config.agent?.["gem-orchestrator"]?.permission, { edit: { "*": "deny", "docs/plan/*": "allow" }, bash: { "*": "deny", "git *": "allow", "rtk git *": "allow" }, read: { "*": "deny", "docs/plan/*": "allow", "**/.gem-team.yaml": "allow", "**/AGENTS.md": "allow" }, "intellij-debugger_*": "deny", "github_*": "deny" })
     assert.equal(config.agent?.["gem-orchestrator"]?.model, "user-model")
+  })
+
+  it("registers a tool.execute.before hook for the plugin server", async () => {
+    const hooks = await plugin.server({ client: { session: { get: async () => ({ data: {}, error: undefined, request: {} as never, response: {} as never }) } }, directory: "." } as never)
+
+    assert.equal(typeof hooks["tool.execute.before"], "function")
+  })
+
+  it("does not restrict non-orchestrator agents", async () => {
+    const guard = createGemOrchestratorToolGuard(
+      { session: { get: async () => ({ data: { agent: "gem-reviewer" }, error: undefined, request: {} as never, response: {} as never }) } } as never,
+      ".",
+    )
+
+    await assert.doesNotReject(async () => {
+      await guard({ tool: "grep", sessionID: "s1", callID: "c1" }, { args: { path: "src" } })
+    })
+  })
+
+  it("allows gem-orchestrator grep/glob only under docs/plan", async () => {
+    const guard = createGemOrchestratorToolGuard(
+      { session: { get: async () => ({ data: { agent: "gem-orchestrator" }, error: undefined, request: {} as never, response: {} as never }) } } as never,
+      ".",
+    )
+
+    for (const tool of ["grep", "glob"] as const) {
+      await assert.doesNotReject(async () => {
+        await guard({ tool, sessionID: "s1", callID: "c1" }, { args: { path: "docs/plan" } })
+      })
+      await assert.doesNotReject(async () => {
+        await guard({ tool, sessionID: "s1", callID: "c1" }, { args: { path: "docs/plan/foo" } })
+      })
+      await assert.doesNotReject(async () => {
+        await guard({ tool, sessionID: "s1", callID: "c1" }, { args: { path: "docs\\plan\\foo" } })
+      })
+    }
+  })
+
+  it("rejects gem-orchestrator grep/glob outside docs/plan or without path", async () => {
+    const guard = createGemOrchestratorToolGuard(
+      { session: { get: async () => ({ data: { agent: "gem-orchestrator" }, error: undefined, request: {} as never, response: {} as never }) } } as never,
+      ".",
+    )
+
+    for (const tool of ["grep", "glob"] as const) {
+      for (const args of [{ path: "." }, { path: "src" }, { path: "docs" }, { path: "docs/planner" }, { path: "mydocs/plan" }, {}]) {
+        await assert.rejects(
+          async () => {
+            await guard({ tool, sessionID: "s1", callID: "c1" }, { args })
+          },
+          (error: unknown) => {
+            assert.match(String(error), /gem-orchestrator path restriction/)
+            assert.match(String(error), /docs\/plan\/\*\*/)
+            assert.match(String(error), /subagent/)
+            return true
+          },
+        )
+      }
+    }
   })
 
   it("does not create a model field for newly injected agents", () => {
