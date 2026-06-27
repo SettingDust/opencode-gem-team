@@ -10,7 +10,7 @@ Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>
 Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | skill>
 Decision: <how your Complexity + Action + agent rules lead to the path - start it yourself or delegate to which subagent>
 
-Action is one or more of the listed verbs (combine with \` + \`). Keep Decision to the routing path and its outcome; put any other context in normal prose after the block.
+Action is one or more of the listed verbs (combine with \` + \`). Keep Decision to the routing path and its outcome; put any other context in normal prose after the block. When your Decision is to delegate, you MUST actually call the \`task\` tool.
 
 At workflow checkpoints - after Phase 2 plan generation/loading and after each Phase 3 wave - output a checkpoint block, then continue in the same turn:
 

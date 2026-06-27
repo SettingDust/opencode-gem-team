@@ -78,7 +78,7 @@ describe("Gem Team config hook injection", () => {
     assert.ok(prompt.includes("then carry out that action in the same turn"))
     assert.ok(prompt.includes("At workflow checkpoints"))
     assert.ok(prompt.includes("Current phase: <2 | 3>"))
-    assert.ok(prompt.includes("Action is one or more of the listed verbs (combine with ` + `). Keep Decision to the routing path and its outcome; put any other context in normal prose after the block."))
+    assert.ok(prompt.includes("Action is one or more of the listed verbs (combine with ` + `). Keep Decision to the routing path and its outcome; put any other context in normal prose after the block. When your Decision is to delegate, you MUST actually call the `task` tool."))
     assert.equal(prompt.includes("Correct pattern:"), false)
     assert.equal(prompt.includes("Never output a decision block as your final message."), false)
     assert.equal(prompt.includes("Required agent"), false)
@@ -93,7 +93,9 @@ describe("Gem Team config hook injection", () => {
     const complexityIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>")
     const actionIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | skill>")
     const decisionIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Decision: <how your Complexity + Action + agent rules lead to the path - start it yourself or delegate to which subagent>")
-    const actionNoteIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Action is one or more of the listed verbs (combine with ` + `). Keep Decision to the routing path and its outcome; put any other context in normal prose after the block.")
+    const actionNoteIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("Action is one or more of the listed verbs (combine with ` + `). Keep Decision to the routing path and its outcome; put any other context in normal prose after the block. When your Decision is to delegate, you MUST actually call the `task` tool.")
+
+    assert.ok(GEM_ORCHESTRATOR_PROMPT_NOTICE.includes("When your Decision is to delegate, you MUST actually call the `task` tool."))
     const checkpointIndex = GEM_ORCHESTRATOR_PROMPT_NOTICE.indexOf("At workflow checkpoints - after Phase 2 plan generation/loading and after each Phase 3 wave - output a checkpoint block, then continue in the same turn:")
 
     assert.notEqual(phaseIndex, -1)
