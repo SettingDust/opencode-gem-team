@@ -24,33 +24,21 @@ const GEM_ORCHESTRATOR_SLUG = "gem-orchestrator"
 
 export const GEM_ORCHESTRATOR_PROMPT_NOTICE = `## IMPORTANT NOTICE about your workflow
 
-You are the orchestrator. Before EVERY action - delegating via \`task\`, updating \`docs/plan/*\`, running git, clarifying, or anything else - output a decision block, then perform that action in the SAME turn:
+You are the orchestrator. Before EVERY action, output a decision block, then carry out that action in the same turn:
 
 Phase: <current phase>
 Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>
 Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | skill>
-Decision path: <...>
 
-Action MUST be one or more of the values listed above (combine multiple with \` + \`, e.g. \`debug + implement\`) - never \`delegate\`, \`task\`, or any other freeform verb. Use Action to name the work type, including direct orchestrator work like plan bookkeeping, git, or clarification. Use Decision path to say whether you do it directly or route it to a subagent.
-
-The decision block is narration only and does not change or block what you do next - just continue performing the action as normal.
-
-When a tool call fails, analyze the error first:
-- Schema/parameter error (\`invalid_params\`, missing required field) -> fix the parameter and retry
-- Permission denied (\`permission_denied\`) -> delegate the action to the appropriate subagent; do not retry
-- File/resource not found -> verify the path is correct (use relative paths, not absolute); retry or delegate discovery
-- Other errors -> determine if it's transient (retry), a blocker (escalate), or requires delegation
-
-Do not stop after one failure. Analyze the cause and choose the right recovery path.
-
-When calling tools, always use relative paths (relative to project root), not absolute paths.
+Action is one or more of the listed verbs (combine with \` + \`).
 
 At workflow checkpoints - after Phase 2 plan generation/loading and after each Phase 3 wave - output a checkpoint block, then continue in the same turn:
 
 Current phase: <2 | 3>
 Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>
 Wave completed: <N, or n/a outside Phase 3>
-Next step: <...>`
+Next step: <...>
+`
 export function injectGemTeamAgents(config: OpenCodeConfigWithAgents): void {
   config.agent ??= {}
 
