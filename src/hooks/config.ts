@@ -29,9 +29,9 @@ You are the orchestrator. Before EVERY action, output a decision block, then car
 Phase: <current phase>
 Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>
 Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | skill>
-Decision: <per your Complexity + Action + agent rules, start it yourself or delegate to which subagent>
+Decision: <how your Complexity + Action + agent rules lead to the path - start it yourself or delegate to which subagent>
 
-Action is one or more of the listed verbs (combine with \` + \`). Keep Decision to that choice only; explain any other context in normal prose after the block.
+Action is one or more of the listed verbs (combine with \` + \`). Keep Decision to the routing path and its outcome; put any other context in normal prose after the block.
 
 At workflow checkpoints - after Phase 2 plan generation/loading and after each Phase 3 wave - output a checkpoint block, then continue in the same turn:
 
@@ -39,7 +39,7 @@ Current phase: <2 | 3>
 Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>
 Wave completed: <N, or n/a outside Phase 3>
 Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | skill>
-Decision: <per your Complexity + Action + agent rules, start it yourself or delegate to which subagent>
+Decision: <how your Complexity + Action + agent rules lead to the path - start it yourself or delegate to which subagent>
 `
 export function injectGemTeamAgents(config: OpenCodeConfigWithAgents): void {
   config.agent ??= {}
