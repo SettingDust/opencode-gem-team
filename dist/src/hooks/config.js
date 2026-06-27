@@ -17,7 +17,8 @@ At workflow checkpoints - after Phase 2 plan generation/loading and after each P
 Current phase: <2 | 3>
 Complexity: <TRIVIAL|LOW|MEDIUM|HIGH>
 Wave completed: <N, or n/a outside Phase 3>
-Next step: <...>
+Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | skill>
+Decision: <delegate to which subagent or handle directly, per your Complexity + Action + agent rules>
 `;
 export function injectGemTeamAgents(config) {
     config.agent ??= {};

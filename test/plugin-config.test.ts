@@ -84,7 +84,7 @@ describe("Gem Team config hook injection", () => {
     assert.equal(prompt.includes("Required agent"), false)
     assert.ok(prompt.includes("Action: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | skill>"))
     assert.ok(prompt.includes("Decision: <delegate to which subagent or handle directly, per your Complexity + Action + agent rules>"))
-    assert.ok(prompt.includes("Current phase: <2 | 3>\nComplexity: <TRIVIAL|LOW|MEDIUM|HIGH>\nWave completed: <N, or n/a outside Phase 3>\nNext step: <...>"))
+    assert.ok(prompt.includes("Current phase: <2 | 3>\nComplexity: <TRIVIAL|LOW|MEDIUM|HIGH>\nWave completed: <N, or n/a outside Phase 3>\nAction: <research | plan | implement | review | critic | debug | document | design | test | devops | simplify | skill>\nDecision: <delegate to which subagent or handle directly, per your Complexity + Action + agent rules>"))
     assert.ok(prompt.includes(GEM_ORCHESTRATOR_PROMPT_NOTICE))
   })
 
