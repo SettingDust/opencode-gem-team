@@ -2,6 +2,7 @@ import type { Hooks, Plugin, PluginModule } from "@opencode-ai/plugin"
 
 import { PLUGIN_ID } from "./constants.js"
 import { injectGemTeamAgents } from "./hooks/config.js"
+import { createRoleReminderHooks } from "./hooks/role-reminder.js"
 
 const server: Plugin = async (_input, options) => {
   void options
@@ -9,6 +10,7 @@ const server: Plugin = async (_input, options) => {
     config: async (config) => {
       injectGemTeamAgents(config)
     },
+    ...createRoleReminderHooks(),
   }
 
   return hooks
