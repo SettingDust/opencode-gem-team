@@ -1,78 +1,34 @@
+import { randomUUID } from "crypto"
 import type { Hooks } from "@opencode-ai/plugin"
 
-type RoleReminderState = {
-  turns: number
-  lastTool: string | undefined
-}
-
-const ROLE_REMINDER_TURN_INTERVAL = 8
 export const ROLE_REMINDER_TEXT =
-  "Remember: follow your agent role and instructions as defined in your system prompt."
+  "You are the gem-orchestrator. Follow Phase 0->4 strictly. Never execute project_work directly - always delegate by calling the `task` tool."
 
-const sessionState = new Map<string, RoleReminderState>()
+const ROLE_REMINDER_SUFFIX = `\n<system-reminder>${ROLE_REMINDER_TEXT}</system-reminder>`
 
-function getSessionState(sessionID: string): RoleReminderState {
-  const existing = sessionState.get(sessionID)
-
-  if (existing) {
-    return existing
-  }
-
-  const created: RoleReminderState = {
-    turns: 0,
-    lastTool: undefined,
-  }
-
-  sessionState.set(sessionID, created)
-  return created
-}
-
-function shouldInjectReminder(state: RoleReminderState): boolean {
-  return (state.turns > 0 && state.turns % ROLE_REMINDER_TURN_INTERVAL === 0) || state.lastTool === "task"
-}
-
-export function createRoleReminderHooks(): Pick<Hooks, "chat.message" | "tool.execute.after" | "experimental.chat.system.transform"> {
+export function createRoleReminderHooks(): Pick<Hooks, "chat.message"> {
   return {
-    "chat.message": async (input) => {
-      const sessionID = input?.sessionID
+    "chat.message": async (input, output) => {
+      if (input.agent !== "gem-orchestrator") return
 
-      if (!sessionID) {
-        return
+      const sessionID = input.sessionID
+      const messageID = input.messageID
+
+      if (typeof sessionID !== "string" || typeof messageID !== "string") return
+
+      const reminderPart = {
+        type: "text" as const,
+        text: ROLE_REMINDER_SUFFIX,
+        id: randomUUID(),
+        messageID,
+        sessionID,
       }
 
-      getSessionState(sessionID).turns += 1
-    },
-    "tool.execute.after": async (input) => {
-      const sessionID = input?.sessionID
-
-      if (!sessionID) {
-        return
-      }
-
-      getSessionState(sessionID).lastTool = input?.tool
-    },
-    "experimental.chat.system.transform": async (input, output) => {
-      const sessionID = input?.sessionID
-
-      if (!sessionID || !Array.isArray(output?.system)) {
-        return
-      }
-
-      const state = sessionState.get(sessionID)
-
-      if (!state || !shouldInjectReminder(state)) {
-        return
-      }
-
-      if (!output.system.includes(ROLE_REMINDER_TEXT)) {
-        output.system.push(ROLE_REMINDER_TEXT)
-      }
-
-      state.lastTool = undefined
+      output?.parts?.push(reminderPart as (typeof output.parts)[number])
     },
   }
 }
 
 export function resetRoleReminderState(): void {
-  sessionState.clear()
+  void 0
 }

@@ -1,11 +1,13 @@
 import { PLUGIN_ID } from "./constants.js";
 import { injectGemTeamAgents } from "./hooks/config.js";
+import { createRoleReminderHooks } from "./hooks/role-reminder.js";
 const server = async (_input, options) => {
     void options;
     const hooks = {
         config: async (config) => {
             injectGemTeamAgents(config);
         },
+        ...createRoleReminderHooks(),
     };
     return hooks;
 };
